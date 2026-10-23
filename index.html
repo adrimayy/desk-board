@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desk Board</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Desk Board">
+<meta name="theme-color" content="#e9e4d7">
+<meta name="robots" content="noindex">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen&family=Hanken+Grotesk:wght@400;600;700&display=swap">
+<style>
+/* A cream device with sage keycaps and a mint backlit LCD. Landscape: LCD left, keycaps right. Portrait: keycaps underneath. */
+:root {
+  --case: #e9e4d7;
+  --case-edge: #d5cdbb;
+  --cap-cream: #f4f0e7;
+  --cap-cream-side: #cdc5b2;
+  --cap-sage: #86a98c;
+  --cap-sage-side: #5f8567;
+  --lcd-hi: #e2f1da;
+  --lcd: #bfdcb8;
+  --lcd-lo: #9cc49b;
+  --lcd-rim: #7fa682;
+  --ink: #15301b;
+  --ink-soft: #3b5f42;
+  --ghost: rgba(21, 48, 27, 0.08);
+  --legend: #4f6b54;
+  --alert: #8a2f1c;
+  --f-pixel: "VT323", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-label: "Silkscreen", ui-monospace, monospace;
+  --f-ui: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--case);
+  color: var(--ink);
+  font-family: var(--f-pixel);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+[hidden] { display: none !important; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-side); outline-offset: 3px; }
+
+.device {
+  height: 100%;
+  display: flex;
+  gap: 16px;
+  padding-top: max(14px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- LCD ---------- */
+.lcd {
+  flex: 1;
+  min-width: 0;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 45% 35%, var(--lcd-hi) 0%, var(--lcd) 55%, var(--lcd-lo) 100%);
+  box-shadow: inset 0 0 0 3px var(--lcd-rim), inset 0 3px 10px rgba(21, 48, 27, 0.18), 0 0 26px rgba(170, 214, 160, 0.45), 0 1px 0 #fff;
+  padding: 12px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.label { font: 400 11px/1 var(--f-label); letter-spacing: 0.04em; color: var(--ink-soft); }
+.label.alert { color: var(--alert); }
+
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; border-bottom: 2px solid rgba(21, 48, 27, 0.55); padding-bottom: 6px; }
+.clock-wrap { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.seg { position: relative; display: inline-block; line-height: 0.78; }
+.seg .ghost { color: var(--ghost); }
+.seg .live { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.clock-row { display: flex; align-items: flex-end; gap: 8px; }
+.clock { font-size: clamp(64px, 25vh, 104px); }
+.ampm { font: 400 13px/1 var(--f-label); padding-bottom: 4px; }
+.focus { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.timer { font-size: clamp(48px, 18vh, 76px); }
+.focus.is-rest .timer, .focus.is-rest .label:first-child { color: var(--ink-soft); }
+.tally { font-size: 19px; line-height: 1; color: var(--ink-soft); white-space: nowrap; }
+
+.mid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 22px; }
+.col { display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; }
+.now-title { font-size: 33px; line-height: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-meta { font-size: 19px; line-height: 1; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.steps li { display: flex; gap: 8px; min-width: 0; font-size: 22px; line-height: 1; }
+.steps li::before { content: ">"; flex: none; color: var(--ink-soft); }
+.steps li.first::before { color: var(--ink); }
+.steps li:not(.first) { color: var(--ink-soft); font-size: 20px; }
+.steps .lead { display: none; }
+.steps .txt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cells { display: flex; gap: 2px; margin-top: 4px; }
+.cells span { flex: 1; height: 9px; background: rgba(21, 48, 27, 0.12); }
+.cells span.on { background: var(--ink); }
+.later { font-size: 19px; line-height: 1.05; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
+
+.due-head { display: flex; justify-content: space-between; gap: 8px; }
+.due-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.due-row { display: grid; grid-template-columns: 3.4ch minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.05; align-items: baseline; padding: 0 4px; }
+.due-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.due-row .meta { white-space: nowrap; color: var(--ink-soft); }
+.due-row.soon-0 { background: var(--ink); color: var(--lcd-hi); }
+.due-row.soon-0 .meta { color: var(--lcd); }
+.due-row.none .meta { color: var(--alert); }
+.due-row.soon-0.none .meta { color: #f2c9a8; }
+.due-row.past { opacity: 0.45; }
+.note { margin: 0; font-size: 19px; line-height: 1.1; color: var(--ink-soft); }
+
+/* Check-in strip on the LCD */
+.checkin { display: flex; align-items: center; gap: 10px; background: var(--ink); color: var(--lcd-hi); padding: 5px 6px 5px 12px; border-radius: 3px; }
+.checkin-q { margin: 0; flex: 1; min-width: 0; font-size: 21px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.checkin-q b { font-weight: 400; }
+.chip-btn { font: 400 10px/1 var(--f-label); letter-spacing: 0.04em; text-transform: uppercase; border: 0; border-radius: 6px; padding: 0 12px; min-height: 32px; color: var(--ink); background: var(--cap-cream); box-shadow: 0 3px 0 var(--cap-cream-side); }
+.chip-btn.primary { background: var(--cap-sage); box-shadow: 0 3px 0 var(--cap-sage-side); }
+.chip-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--cap-cream-side); }
+
+/* ---------- Keycaps ---------- */
+.keys { width: 104px; flex: none; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 16px; }
+.brand { font: 400 10px/1 var(--f-label); letter-spacing: 0.08em; color: var(--legend); text-align: center; }
+.leds { display: flex; justify-content: center; gap: 10px; }
+.led { width: 7px; height: 7px; border-radius: 50%; background: #cfc8b6; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15); }
+.led.on { background: #8fd18a; box-shadow: 0 0 6px rgba(143, 209, 138, 0.9); }
+.led.warn { background: #e08a5f; box-shadow: 0 0 6px rgba(224, 138, 95, 0.9); }
+.cap {
+  font: 400 11px/1 var(--f-label);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  border: 0;
+  border-radius: 12px;
+  min-height: 84px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 12px;
+  background: linear-gradient(180deg, #96b79b 0%, var(--cap-sage) 100%);
+  box-shadow: 0 6px 0 var(--cap-sage-side), inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 14px rgba(70, 90, 70, 0.18);
+}
+.cap.cream { background: linear-gradient(180deg, #fbf8f1 0%, var(--cap-cream) 100%); box-shadow: 0 6px 0 var(--cap-cream-side), inset 0 1px 0 #fff, 0 8px 14px rgba(70, 90, 70, 0.12); min-height: 60px; color: var(--legend); }
+.cap:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--cap-sage-side), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.cap.cream:active { box-shadow: 0 2px 0 var(--cap-cream-side), inset 0 1px 0 #fff; }
+
+/* ---------- Setup ---------- */
+.sheet { position: fixed; inset: 0; z-index: 20; background: rgba(40, 52, 42, 0.45); display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); -webkit-user-select: text; user-select: text; }
+.sheet-card { width: 100%; max-width: 560px; background: var(--cap-cream); border-radius: 16px; box-shadow: 0 6px 0 var(--cap-cream-side), 0 16px 40px rgba(30, 40, 30, 0.25); padding: 18px; display: flex; flex-direction: column; gap: 12px; font-family: var(--f-ui); color: var(--ink); }
+.sheet-card h2 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+.sheet-card .note { font: 400 0.9rem/1.4 var(--f-ui); color: var(--legend); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field .label { color: var(--legend); }
+.field input { width: 100%; background: #fff; border: 1px solid var(--case-edge); border-radius: 10px; color: var(--ink); font: 16px var(--f-ui); padding: 10px 12px; }
+.sheet-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn { font: 600 0.85rem/1 var(--f-ui); color: var(--ink); background: var(--cap-sage); border: 0; border-radius: 10px; padding: 0 16px; min-height: 40px; box-shadow: 0 3px 0 var(--cap-sage-side); }
+.btn.ghost { background: #fff; box-shadow: 0 3px 0 var(--case-edge); }
+.btn:disabled { opacity: 0.55; }
+.share-link { font: 0.75rem/1.4 ui-monospace, Menlo, monospace; color: var(--legend); word-break: break-all; background: #fff; border: 1px solid var(--case-edge); border-radius: 10px; padding: 10px 12px; }
+
+/* Portrait: keycaps go underneath and the LCD columns stack. */
+@media (orientation: portrait) {
+  .device { flex-direction: column; overflow-y: auto; height: auto; min-height: 100%; }
+  body { overflow-y: auto; }
+  .lcd { flex: none; }
+  .top { flex-wrap: wrap; }
+  .mid { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .focus { align-items: flex-start; }
+  .keys { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+  .keys .brand, .keys .leds { display: none; }
+  .keys #sync { flex-basis: 100%; }
+  .cap { flex: 1; min-height: 64px; }
+  .cap.cream { min-height: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .cap:active, .chip-btn:active { transform: none; } }
+</style>
+</head>
+<body>
+<main class="device">
+  <section class="lcd" aria-label="Desk board display">
+    <div class="top">
+      <div class="clock-wrap">
+        <span class="label" id="date"></span>
+        <span class="clock-row"><span class="seg clock" aria-live="off"><span class="ghost" aria-hidden="true">88:88</span><span class="live" id="clock-hm">--:--</span></span><span class="ampm" id="clock-ampm"></span></span>
+      </div>
+      <div class="focus" id="focus" aria-label="Focus timer">
+        <span class="label" id="timer-phase">Focus · 25 min</span>
+        <span class="seg timer"><span class="ghost" aria-hidden="true">88:88</span><span class="live" id="timer-text">25:00</span></span>
+        <span class="tally" id="tally">No pomodoros yet</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="col" id="now-card">
+        <span class="label" id="now-label">Today</span>
+        <div class="now-title" id="now-title">Loading calendar</div>
+        <div class="now-meta" id="now-meta"></div>
+        <ul class="steps" id="now-steps" hidden></ul>
+        <div class="cells" id="now-bar" hidden role="img" aria-label="Block progress"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="later" id="later"></div>
+      </div>
+      <div class="col">
+        <div class="due-head"><span class="label">Due</span><span class="label" id="due-more"></span></div>
+        <ol class="due-list" id="due-list"></ol>
+        <p class="note" id="due-note">Looking for deadlines</p>
+        <span style="flex: 1"></span>
+        <span class="tally" id="follow"></span>
+      </div>
+    </div>
+
+    <section class="checkin" id="checkin" aria-live="polite" hidden>
+      <p class="checkin-q" id="checkin-q"></p>
+      <button class="chip-btn primary" data-r="done" type="button">Done</button>
+      <button class="chip-btn" data-r="partly" type="button">Partly</button>
+      <button class="chip-btn" data-r="missed" type="button">Missed</button>
+    </section>
+  </section>
+
+  <section class="keys" aria-label="Controls">
+    <span class="brand">DESK·BOARD</span>
+    <div class="leds" aria-hidden="true"><span class="led" id="led-sync"></span><span class="led" id="led-run"></span><span class="led" id="led-due"></span></div>
+    <button class="cap" id="timer-toggle" type="button">Start</button>
+    <button class="cap cream" id="timer-reset" type="button">Reset</button>
+    <span class="label" id="sync" style="text-align: center; color: var(--legend)"></span>
+  </section>
+</main>
+
+<div class="sheet" id="setup" role="dialog" aria-modal="true" aria-labelledby="setup-h" hidden>
+  <form class="sheet-card" id="setup-form" novalidate>
+    <h2 id="setup-h">Connect your calendar</h2>
+    <p class="note">Paste the web app URL and key from your Apps Script. They're stored only on this device.</p>
+    <label class="field"><span class="label">Web app URL</span>
+      <input id="setup-url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec">
+    </label>
+    <label class="field"><span class="label">Key</span>
+      <input id="setup-key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="32 letters and numbers">
+    </label>
+    <p class="note" id="setup-status"></p>
+    <div id="share-wrap" hidden>
+      <p class="note">Open this link on the iPhone, then Share → Add to Home Screen. The board will already be connected.</p>
+      <div class="share-link" id="share-link"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn" type="submit" id="setup-save">Connect</button>
+      <button class="btn ghost" type="button" id="setup-copy" hidden>Copy phone link</button>
+      <button class="btn ghost" type="button" id="setup-close">Close</button>
+    </div>
+  </form>
+</div>
+
+<script src="shorten.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Fits real calendar titles into small spaces (see shorten.js).
+  var Shorten = window.Shorten || {
+    shorten: function (t) { return [String(t)]; }, shortenStep: function (t) { return [String(t)]; },
+    fit: function (el, v) { el.textContent = v[0]; }, fitChars: function (v) { return v[0]; }
+  };
+  function fitTitle(el, text) {
+    var key = text + "|" + el.clientWidth;
+    if (el._fitKey === key) return;
+    Shorten.fit(el, Shorten.shorten(text));
+    el._fitKey = text + "|" + el.clientWidth;
+  }
+  function shortText(text, n) { return Shorten.fitChars(Shorten.shorten(text), n); }
+
+  var $ = function (s) { return document.querySelector(s); };
+  var pad = function (n) { return String(n).padStart(2, "0"); };
+  var DAY = 86400000;
+  var REFRESH_MS = 2 * 60 * 1000;
+  var dayKey = function (d) { d = new Date(d); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+  var startOfDay = function (d) { d = new Date(d); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+  var fmtTime = function (d) { return new Date(d).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
+  function fmtRange(s, e) {
+    var a = fmtTime(s), b = fmtTime(e);
+    if (/[AP]M$/i.test(a) && a.slice(-2) === b.slice(-2)) return a.slice(0, -3) + "–" + b;
+    return a + "–" + b;
+  }
+  function fmtDur(ms) {
+    var m = Math.max(1, Math.ceil(ms / 60000));
+    if (m >= 60) { var h = Math.floor(m / 60), r = m % 60; return r ? h + "h " + r + "m" : h + "h"; }
+    return m + " min";
+  }
+  function store(key, val) { try { if (val === undefined) return JSON.parse(localStorage.getItem(key) || "null"); localStorage.setItem(key, JSON.stringify(val)); } catch (e) { return null; } }
+
+  /* ---------- Connection settings ---------- */
+  function readConfig() {
+    var c = null;
+    try {
+      var h = new URLSearchParams(location.hash.slice(1));
+      if (h.get("u") && h.get("k")) { c = { url: h.get("u"), key: h.get("k") }; store("deskboard", c); }
+    } catch (e) {}
+    if (!c) c = store("deskboard");
+    return c && c.url && c.key ? c : null;
+  }
+  var cfg = readConfig();
+  function phoneLink(c) {
+    return location.origin + location.pathname + "#u=" + encodeURIComponent(c.url) + "&k=" + encodeURIComponent(c.key);
+  }
+
+  /* ---------- Server ---------- */
+  function apiGet(action) {
+    var sep = cfg.url.indexOf("?") < 0 ? "?" : "&";
+    return fetch(cfg.url + sep + "action=" + action + "&key=" + encodeURIComponent(cfg.key), { cache: "no-store", redirect: "follow" })
+      .then(readJson);
+  }
+  function apiPost(body) {
+    body.key = cfg.key;
+    return fetch(cfg.url, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+      .then(readJson)
+      .then(function (d) { if (!d.ok) throw d; return d; });
+  }
+  function readJson(r) {
+    return r.text().then(function (t) {
+      try { return JSON.parse(t); } catch (e) { throw { error: "not_json" }; }
+    });
+  }
+  function errorText(err) {
+    if (err && err.error === "unauthorized") return "The key doesn't match your script. Hold the date to open setup.";
+    if (err && err.error === "not_json") return "Your script asked for a sign-in. Redeploy it with access set to Anyone.";
+    return "Can't reach your calendar script. Trying again shortly.";
+  }
+
+  /* ---------- Clock ---------- */
+  var clockFmt = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
+  var dateFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", month: "short" });
+  function renderClock(now) {
+    var hm = "", ap = "";
+    clockFmt.formatToParts(now).forEach(function (p) {
+      if (p.type === "dayPeriod") ap = p.value;
+      else if (p.type === "hour" || p.type === "minute" || (p.type === "literal" && p.value.trim() === ":")) hm += p.value;
+    });
+    $("#clock-hm").textContent = /^\d:/.test(hm) ? "0" + hm : hm;   // "05:36" so digits sit on the LCD's 88:88
+    $("#clock-ampm").textContent = ap;
+    $("#date").textContent = dateFmt.format(now);
+  }
+
+  /* ---------- Calendar data ---------- */
+  var events = [];
+  var conn = { status: cfg ? "loading" : "error", message: cfg ? "" : "Hold the date to connect your calendar.", at: 0, stale: false };
+
+  function plainText(html) {
+    return String(html || "")
+      .replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li|ul|ol)>/gi, "\n").replace(/<li[^>]*>/gi, "- ")
+      .replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+  }
+  function stepsFrom(text) {
+    var out = [];
+    text.split(/\n/).forEach(function (line) {
+      var m = /^\s*(?:[-•*·]|\d+[.)])\s+(.+)/.exec(line);
+      if (m) out.push(m[1].trim());
+    });
+    return out.slice(0, 6);
+  }
+  function localDate(s) { var p = String(s).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]).getTime(); }
+  function parseEvents(list) {
+    return (Array.isArray(list) ? list : []).map(function (e) {
+      var allDay = !!e.allDay, start, end;
+      if (allDay) { start = localDate(e.startDate); end = e.endDate ? localDate(e.endDate) : start + DAY; }
+      else { start = Number(e.start); end = Number(e.end); }
+      var text = plainText(e.desc);
+      var ci = /^\s*Check-in:\s*(Done|Partly|Missed)\b/im.exec(text);
+      var pc = /^\s*Pomodoros:\s*(\d+)/im.exec(text);
+      return {
+        id: String(e.id || ""), src: String(e.cal || "primary"), title: String(e.title || "Busy"), where: String(e.where || ""),
+        allDay: allDay, start: start, end: end,
+        steps: e.cal === "canvas" ? [] : stepsFrom(text),
+        checkin: ci ? ci[1].toLowerCase() : null,
+        pomos: pc ? Number(pc[1]) : 0
+      };
+    }).filter(function (e) { return !isNaN(e.start) && !isNaN(e.end); });
+  }
+
+  var loading = false;
+  function load() {
+    if (!cfg || loading) return;
+    loading = true;
+    apiGet("data").then(function (d) {
+      if (!d.ok) throw d;
+      events = parseEvents(d.events);
+      conn = { status: "ok", message: "", at: Date.now(), stale: false };
+      applyState(d.state);
+      renderAll(true);
+    }).catch(function (err) {
+      if (err && err.error === "unauthorized") conn = { status: "error", message: errorText(err), at: 0, stale: false };
+      else if (conn.status === "ok") conn.stale = true;
+      else conn = { status: "error", message: errorText(err), at: 0, stale: false };
+      renderAll(false);
+    }).then(function () { loading = false; });
+  }
+
+  function allEvents() { return conn.status === "ok" ? events : []; }
+  function ready() { return conn.status === "ok"; }
+
+  /* ---------- Deadlines ---------- */
+  var DUE_RX = /\b(due|quiz|exam|test|midterm|final|drill)\b/i;
+  var EXAM_RX = /\b(quiz|exam|test|midterm)\b/i;
+  var NOT_DUE_RX = /\b(prep|start|out)\b/i;
+  var STOP = { due: 1, the: 1, and: 1, of: 1, a: 1, to: 1, "for": 1, "in": 1, on: 1, by: 1, pm: 1, am: 1, "this": 1, week: 1, part: 1 };
+
+  function isDeadline(e) {
+    if (e.src === "canvas") return true;
+    if (NOT_DUE_RX.test(e.title)) return false;
+    if (e.allDay) return DUE_RX.test(e.title);
+    return (e.end - e.start <= 30 * 60000 && DUE_RX.test(e.title)) || EXAM_RX.test(e.title);
+  }
+  function splitCanvas(title) {
+    var m = /^(.*?)\s*\[([^\]]+)\]\s*$/.exec(title);
+    if (!m) return { title: title, course: "" };
+    var course = m[2].split(" - ").slice(1).join(" - ") || m[2];
+    course = course.toLowerCase().replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); })
+      .replace(/\b(Of|And|To|In|For|The)\b/g, function (w, x, i) { return i ? w.toLowerCase() : w; });
+    return { title: m[1], course: course };
+  }
+  function tokens(s) {
+    var set = {};
+    String(s).toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) { if (w && !STOP[w]) set[w] = 1; });
+    return set;
+  }
+  function shared(a, b) { var n = 0; for (var k in a) if (b[k]) n++; return n; }
+  function sharesNumber(a, b) { for (var k in a) if (/^\d+$/.test(k) && b[k]) return true; return false; }
+  function dayGap(a, b) {
+    var p = a.split("-").map(Number), q = b.split("-").map(Number);
+    return Math.round((new Date(p[0], p[1] - 1, p[2]) - new Date(q[0], q[1] - 1, q[2])) / DAY);
+  }
+  function dueTitle(t) {
+    var s = String(t).replace(/\s*\bdue\b(\s+\d{1,2}(:\d{2})?\s*(am|pm))?/i, "").replace(/\s{2,}/g, " ").trim();
+    return s || t;
+  }
+
+  function buildDeadlines(now) {
+    var today = dayKey(now);
+    var items = allEvents().filter(isDeadline).map(function (e) {
+      var parts = e.src === "canvas" ? splitCanvas(e.title) : { title: e.title, course: "" };
+      var dueAt = e.allDay ? null : (e.src === "canvas" ? e.start : e.end);
+      var day = e.allDay ? dayKey(e.start) : dayKey(dueAt);
+      return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course) };
+    }).filter(function (d) { return d.day >= today; });
+
+    // One row per assignment. Canvas wins on date and time; your shorter name wins on display.
+    var merged = [];
+    items.sort(function (a, b) { return (b.src === "canvas") - (a.src === "canvas"); });
+    items.forEach(function (d) {
+      var twin = merged.filter(function (m) {
+        var n = shared(m.tok, d.tok);
+        if (m.day === d.day) {
+          if (n >= 2) return true;
+          return n >= 1 && m.dueAt && d.dueAt && Math.abs(m.dueAt - d.dueAt) <= 30 * 60000;
+        }
+        if (m.src === "canvas" && d.src !== "canvas") {
+          return Math.abs(dayGap(m.day, d.day)) <= 10 && n >= 2 && sharesNumber(m.tok, d.tok);
+        }
+        return false;
+      })[0];
+      if (!twin) { merged.push(d); return; }
+      if (twin.src === "canvas" && d.src !== "canvas") {
+        if (d.title.length < twin.title.length) { twin.title = d.title; twin.raw = d.raw; }
+      } else if (!twin.dueAt && d.dueAt) {
+        twin.dueAt = d.dueAt;
+      }
+      if (!twin.course && d.course) twin.course = d.course;
+      for (var k in d.tok) twin.tok[k] = 1;
+    });
+    merged.sort(function (a, b) {
+      if (a.day !== b.day) return a.day < b.day ? -1 : 1;
+      return (a.dueAt || 0) - (b.dueAt || 0);
+    });
+    return merged;
+  }
+
+  // Work time already on the calendar before each deadline; nothing blocked gets flagged.
+  var GENERIC = { lab: 1, reading: 1, essay: 1, report: 1, quiz: 1, exam: 1, test: 1, review: 1, work: 1, practice: 1,
+    finish: 1, start: 1, prep: 1, submit: 1, weekly: 1, "final": 1, draft: 1, exercise: 1, intro: 1, introductory: 1,
+    experimental: 1, university: 1, writing: 1, lesson: 1, week: 1, "short": 1, part: 1, mon: 1, tue: 1, wed: 1, thu: 1, fri: 1, sat: 1, sun: 1 };
+  function distinct(tok) {
+    var o = {};
+    for (var k in tok) if (!GENERIC[k] && !/^\d+$/.test(k) && k.length > 1) o[k] = 1;
+    return o;
+  }
+  function plannedFor(d, now) {
+    var t = now.getTime(), p = d.day.split("-").map(Number);
+    var dueEnd = d.dueAt || new Date(p[0], p[1] - 1, p[2], 12).getTime();
+    if (dueEnd <= t) return { show: false, min: 0 };
+    var key = distinct(d.tok), min = 0, seen = {};
+    allEvents().forEach(function (ev) {
+      if (ev.src === "canvas" || ev.allDay) return;
+      if (ev.end - ev.start < 30 * 60000 || ev.end <= t || ev.start >= dueEnd) return;
+      if (EXAM_RX.test(ev.title)) return;
+      var sk = ev.title.toLowerCase() + "|" + ev.start;
+      if (seen[sk]) return; seen[sk] = 1;
+      if (shared(key, tokens(ev.title)) >= 1) min += (Math.min(ev.end, dueEnd) - Math.max(ev.start, t)) / 60000;
+    });
+    return { show: min > 0 || dueEnd - t <= 7 * DAY, min: Math.round(min) };
+  }
+  function fmtHours(m) { return m < 60 ? m + "m" : (Math.round(m / 30) / 2) + "h"; }
+
+  function dueDayLabel(day, now) {
+    var p = day.split("-").map(Number), d = new Date(p[0], p[1] - 1, p[2]);
+    var diff = Math.round((d.getTime() - startOfDay(now).getTime()) / DAY);
+    if (diff === 0) return { text: "Tdy", soon: 0 };
+    if (diff === 1) return { text: "Tmr", soon: 1 };
+    if (diff < 7) return { text: d.toLocaleDateString("en-US", { weekday: "short" }), soon: 2 };
+    return { text: (d.getMonth() + 1) + "/" + d.getDate(), soon: 3 };
+  }
+
+  function renderDue(now) {
+    var list = $("#due-list"), note = $("#due-note"), more = $("#due-more");
+    list.replaceChildren();
+    if (!ready()) {
+      more.textContent = "";
+      note.hidden = false;
+      note.textContent = conn.status === "loading" ? "Looking for deadlines" : "Deadlines will show here once the calendar connects.";
+      return;
+    }
+    var all = buildDeadlines(now), MAX = 5, t = now.getTime();
+    all.slice(0, MAX).forEach(function (d) {
+      var lab = dueDayLabel(d.day, now);
+      var plan = plannedFor(d, now);
+      var li = document.createElement("li");
+      li.className = "due-row soon-" + lab.soon + (d.dueAt && d.dueAt < t ? " past" : "") + (plan.show && !plan.min ? " none" : "");
+      var day = document.createElement("span"); day.textContent = lab.text;
+      var tt = document.createElement("span"); tt.className = "t";
+      // Right column: due time if it has one, then planned hours (or a warning when none are blocked).
+      var bits = [];
+      if (d.dueAt && lab.soon <= 1) bits.push(clockShort(d.dueAt));
+      if (plan.show) bits.push(plan.min ? fmtHours(plan.min) : "0h");
+      var meta = document.createElement("span"); meta.className = "meta"; meta.textContent = bits.join(" ");
+      li.append(day, tt, meta);
+      list.append(li);
+      Shorten.fit(tt, Shorten.shorten(d.raw || d.title));
+    });
+    more.textContent = all.length > MAX ? "+" + (all.length - MAX) + " more" : "2 wks";
+    note.hidden = all.length > 0;
+    note.textContent = "Nothing due in the next two weeks.";
+  }
+
+  /* ---------- Days ---------- */
+  function buildDayFor(date) {
+    var s = startOfDay(date).getTime(), e = s + DAY, seen = {}, timed = [], chips = [];
+    allEvents().forEach(function (ev) {
+      if (ev.src === "canvas") return;
+      if (ev.end <= s || ev.start >= e) return;
+      var key = ev.title.toLowerCase() + "|" + ev.start;
+      if (seen[key]) return; seen[key] = 1;
+      if (ev.allDay) { if (!isDeadline(ev)) chips.push(ev); return; }
+      if (isDeadline(ev) && ev.end - ev.start <= 30 * 60000) return;
+      timed.push(ev);
+    });
+    timed.sort(function (a, b) { return a.start - b.start || a.end - b.end; });
+    return { timed: timed, chips: chips };
+  }
+  function blockAt(ms) {
+    return buildDayFor(new Date(ms)).timed
+      .filter(function (b) { return b.start <= ms && b.end > ms; })
+      .sort(function (a, b) { return b.start - a.start; })[0] || null;
+  }
+
+  /* ---------- Now card ---------- */
+  function renderNow(now, today) {
+    var card = $("#now-card"), label = $("#now-label"), title = $("#now-title"), meta = $("#now-meta"), bar = $("#now-bar");
+    card.classList.remove("is-live", "is-error");
+    var t = now.getTime();
+
+    if (!ready()) {
+      if (conn.status === "error") {
+        card.classList.add("is-error");
+        label.textContent = "Calendar"; title.textContent = conn.message;
+      } else {
+        label.textContent = "Today"; title.textContent = "Loading your calendar";
+      }
+      meta.textContent = ""; bar.hidden = true; fillSteps([], false); return;
+    }
+
+    var live = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
+    var cur = live.sort(function (a, b) { return b.start - a.start; })[0];
+    var next = today.timed.filter(function (i) { return i.start > t; })[0];
+
+    if (cur) {
+      card.classList.add("is-live");
+      label.textContent = "Now";
+      fitTitle(title, cur.title);
+      meta.textContent = "Until " + fmtTime(cur.end) + " · " + fmtDur(cur.end - t) + " left" + (next ? " · then " + shortText(next.title, 22) : "");
+      var span = cur.end - cur.start, lit = span > 0 ? Math.round(Math.min(1, (t - cur.start) / span) * 10) : 0;
+      var cells = bar.children;
+      for (var ci = 0; ci < cells.length; ci++) cells[ci].className = ci < lit ? "on" : "";
+      bar.setAttribute("aria-label", "Block " + lit * 10 + "% done");
+      bar.hidden = false;
+      if (cur.steps.length) fillSteps(cur.steps, true);
+      else fillSteps(cur.where ? [cur.where] : [], false);
+    } else if (next) {
+      label.textContent = "Next";
+      fitTitle(title, next.title);
+      meta.textContent = fmtTime(next.start) + " · in " + fmtDur(next.start - t) + (next.where ? " · " + next.where : "");
+      bar.hidden = true;
+      fillSteps(next.steps, true);
+    } else {
+      // Day is done: show tomorrow's first move.
+      var tmr = new Date(startOfDay(now).getTime() + DAY + 3600000);
+      var first = buildDayFor(tmr).timed[0];
+      var dueTmr = buildDeadlines(now).filter(function (d) { return d.day === dayKey(tmr); }).map(function (d) { return shortText(d.raw || d.title, 18); });
+      label.textContent = "Tomorrow";
+      bar.hidden = true;
+      if (first) {
+        fitTitle(title, first.title);
+        meta.textContent = "Starts " + fmtTime(first.start) + (dueTmr.length ? " · Due: " + dueTmr.join(", ") : "");
+        fillSteps(first.steps, true);
+      } else {
+        title.textContent = "Nothing planned for tomorrow yet";
+        meta.textContent = (dueTmr.length ? "Due: " + dueTmr.join(", ") + " · " : "") + "Plan it tonight";
+        fillSteps([], false);
+      }
+    }
+  }
+  var lastStepsKey = null;
+  function fillSteps(steps, lead) {
+    var key = (lead ? "1" : "0") + steps.join("\u0001") + "|" + $("#now-card").clientWidth;
+    if (key === lastStepsKey) return;
+    lastStepsKey = key;
+    var list = $("#now-steps");
+    list.replaceChildren();
+    list.hidden = !steps.length;
+    steps.slice(0, 4).forEach(function (s, i) {
+      var li = document.createElement("li");
+      if (i === 0 && lead) {
+        li.className = "first";
+        var b = document.createElement("span"); b.className = "lead"; b.textContent = "Start with";
+        li.append(b);
+      }
+      var sp = document.createElement("span"); sp.className = "txt";
+      li.append(sp); list.append(li);
+      Shorten.fit(sp, Shorten.shortenStep(s));
+    });
+  }
+
+  /* ---------- Rest of today (one line) and status lights ---------- */
+  function clockShort(ms) { return fmtTime(ms).replace(/\s?([AP])M$/i, function (m, p) { return p.toLowerCase(); }); }
+  function renderToday(now, today) {
+    var t = now.getTime(), later = $("#later");
+    var cur = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
+    var upcoming = today.timed.filter(function (i) { return i.start > t; });
+    if (cur.length) upcoming = upcoming.slice(1);           // the next block is already on the main line
+    var parts = upcoming.slice(0, 3).map(function (i) { return clockShort(i.start) + " " + shortText(i.title, 16); });
+    var allDay = today.chips.map(function (e) { return shortText(e.title, 20); });
+    if (!ready()) later.textContent = "";
+    else if (parts.length) later.textContent = "Later: " + parts.join(" · ");
+    else if (allDay.length) later.textContent = "Today: " + allDay.join(" · ");
+    else later.textContent = "";
+
+    var sync = $("#sync");
+    sync.textContent = conn.stale ? "Offline" : (conn.at ? "Synced " + clockShort(conn.at) : "");
+    $("#led-sync").className = "led" + (ready() && !conn.stale ? " on" : (conn.status === "loading" ? "" : " warn"));
+    $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
+    var dueToday = ready() && buildDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
+    $("#led-due").className = "led" + (dueToday ? " warn" : "");
+  }
+
+  function renderAll(scroll) {
+    var now = new Date(), today = buildDayFor(now);
+    renderNow(now, today);
+    renderToday(now, today);
+    renderDue(now);
+    renderCheckin(now);
+    renderFollow(now);
+    renderTimer(now);
+  }
+
+  /* ---------- Focus timer (synced through the script) ---------- */
+  var LEN = { focus: 25 * 60000, rest: 5 * 60000 };
+  var pomo = { phase: "focus", endAt: null, left: LEN.focus };
+  var log = {}, holdServerTimerUntil = 0, lastLocalDone = null, audio = null;
+
+  function cleanTimer(t) {
+    t = t || {};
+    return {
+      phase: t.phase === "rest" ? "rest" : "focus",
+      endAt: typeof t.endAt === "number" ? t.endAt : null,
+      left: typeof t.left === "number" ? t.left : LEN.focus
+    };
+  }
+  function applyState(s) {
+    if (!s) return;
+    if (s.log && typeof s.log === "object") log = s.log;
+    if (Date.now() > holdServerTimerUntil && s.timer) pomo = cleanTimer(s.timer);
+    if (typeof s.lastDoneEnd === "number" && s.lastDoneEnd === pomo.endAt) lastLocalDone = s.lastDoneEnd;
+  }
+  function pushTimer() {
+    if (!cfg) return;
+    holdServerTimerUntil = Date.now() + 20000;
+    apiPost({ action: "timer", timer: pomo }).then(function (d) {
+      holdServerTimerUntil = 0;
+      if (d.state && d.state.log) log = d.state.log;
+    }, function () { holdServerTimerUntil = 0; });
+  }
+  function ensureAudio() {
+    try {
+      if (!audio) { var AC = window.AudioContext || window.webkitAudioContext; if (AC) audio = new AC(); }
+      if (audio && audio.resume) audio.resume();
+    } catch (e) { audio = null; }
+  }
+  function chime() {
+    if (!audio) return;
+    try {
+      var t0 = audio.currentTime;
+      [0, 0.22, 0.44].forEach(function (d, i) {
+        var o = audio.createOscillator(), g = audio.createGain();
+        o.type = "sine"; o.frequency.value = i === 2 ? 988 : 784;
+        g.gain.setValueAtTime(0.0001, t0 + d);
+        g.gain.exponentialRampToValueAtTime(0.22, t0 + d + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.38);
+        o.connect(g); g.connect(audio.destination);
+        o.start(t0 + d); o.stop(t0 + d + 0.42);
+      });
+    } catch (e) { /* sound is optional */ }
+  }
+  function weekCount(now) {
+    var n = 0;
+    for (var i = 0; i < 7; i++) n += Number(log[dayKey(now.getTime() - i * DAY)]) || 0;
+    return n;
+  }
+  function renderTimer(now) {
+    var remaining = pomo.endAt ? Math.max(0, pomo.endAt - now.getTime()) : pomo.left;
+    var secs = Math.ceil(remaining / 1000);
+    $("#timer-text").textContent = pad(Math.floor(secs / 60)) + ":" + pad(secs % 60);
+    $("#timer-phase").textContent = pomo.phase === "focus" ? "Focus · 25 min" : "Break · 5 min";
+    $("#focus").classList.toggle("is-rest", pomo.phase === "rest");
+    var paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
+    $("#timer-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
+    $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
+    var n = Number(log[dayKey(now)]) || 0, wk = weekCount(now);
+    var tally = (n ? "■".repeat(Math.min(n, 6)) + " " + n + " today" : "None yet today") + (wk ? " · " + wk + " wk" : "");
+    if ($("#tally").textContent !== tally) $("#tally").textContent = tally;
+  }
+  function tickTimer(now) {
+    var nowMs = now.getTime();
+    if (pomo.endAt && nowMs >= pomo.endAt) {
+      var ended = pomo.endAt, wasFocus = pomo.phase === "focus";
+      var blk = wasFocus ? blockAt(ended - 1000) : null;
+      pomo = { phase: wasFocus ? "rest" : "focus", endAt: null, left: wasFocus ? LEN.rest : LEN.focus };
+      if (lastLocalDone !== ended) {
+        lastLocalDone = ended;
+        if (wasFocus) {
+          var k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1;
+          if (blk && blk.src !== "canvas") blk.pomos += 1;
+        }
+        if (nowMs - ended < 10000) chime();
+        if (cfg) {
+          holdServerTimerUntil = Date.now() + 20000;
+          apiPost({
+            action: "pomoDone", ended: ended, focus: wasFocus, timer: pomo,
+            block: blk && blk.src !== "canvas" ? { cal: blk.src, id: blk.id, start: blk.start } : null
+          }).then(function (d) { holdServerTimerUntil = 0; if (d.state && d.state.log) log = d.state.log; },
+                  function () { holdServerTimerUntil = 0; });
+        }
+      }
+    }
+    renderTimer(now);
+  }
+  $("#timer-toggle").addEventListener("click", function () {
+    ensureAudio();
+    var n = Date.now();
+    if (pomo.endAt) { pomo.left = Math.max(0, pomo.endAt - n); pomo.endAt = null; }
+    else { pomo.endAt = n + pomo.left; }
+    pushTimer();
+    renderTimer(new Date());
+  });
+  $("#timer-reset").addEventListener("click", function () {
+    pomo = { phase: "focus", endAt: null, left: LEN.focus };
+    pushTimer();
+    renderTimer(new Date());
+  });
+
+  /* ---------- Check-ins (written onto the calendar block) ---------- */
+  var localChecks = {}, checkNote = null, shownCheck = null;
+  var SKIP_CHECK_RX = /\b(eat|break|lunch|dinner|breakfast|commute|sleep|head to)\b/i;
+  function blockKey(ev) { return ev.id + "@" + ev.start; }
+  function ratingOf(ev) { return localChecks[blockKey(ev)] || ev.checkin; }
+
+  function pendingCheckin(now) {
+    if (!ready()) return null;
+    var t = now.getTime();
+    return buildDayFor(now).timed.filter(function (ev) {
+      return ev.src === "study" && ev.end <= t && ev.end >= t - 6 * 3600000 &&
+        ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title) && !ratingOf(ev);
+    }).sort(function (a, b) { return b.end - a.end; })[0] || null;
+  }
+  function renderCheckin(now) {
+    var box = $("#checkin"), q = $("#checkin-q"), btns = box.querySelectorAll("button"), i;
+    if (checkNote && checkNote.until > now.getTime()) {
+      box.hidden = false; q.textContent = checkNote.text; shownCheck = null;
+      for (i = 0; i < btns.length; i++) btns[i].hidden = true;
+      return;
+    }
+    checkNote = null;
+    var ev = pendingCheckin(now);
+    if (ev && shownCheck && blockKey(ev) === blockKey(shownCheck) && !box.hidden) return;
+    shownCheck = ev;
+    if (!ev) { box.hidden = true; return; }
+    for (i = 0; i < btns.length; i++) btns[i].hidden = false;
+    var b = document.createElement("b"); b.textContent = shortText(ev.title, 30);
+    q.replaceChildren(document.createTextNode("How did "), b, document.createTextNode(" go?"));
+    box.hidden = false;
+  }
+  function renderFollow(now) {
+    var el = $("#follow"), t = now.getTime(), todayStart = startOfDay(now).getTime(), weekStart = todayStart - 6 * DAY;
+    var td = { done: 0, total: 0 }, wk = { score: 0, total: 0 };
+    allEvents().forEach(function (ev) {
+      if (ev.src !== "study" || ev.allDay || ev.end > t || ev.start < weekStart) return;
+      var r = ratingOf(ev); if (!r) return;
+      if (ev.start >= todayStart) { td.total++; if (r === "done") td.done++; }
+      wk.total++; wk.score += r === "done" ? 1 : r === "partly" ? 0.5 : 0;
+    });
+    if (!wk.total) { el.textContent = ""; return; }
+    el.textContent = (td.total ? td.done + "/" + td.total + " blocks done" : "No blocks rated") +
+      " · " + Math.round((wk.score / wk.total) * 100) + "% this wk";
+  }
+  $("#checkin").addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest("button[data-r]") : null;
+    if (!btn || !shownCheck) return;
+    var ev = shownCheck, r = btn.getAttribute("data-r"), key = blockKey(ev);
+    localChecks[key] = r;
+    checkNote = {
+      text: r === "done" ? "Logged. Nice work." : r === "partly" ? "Logged. Schedule the rest." : "Logged. Find it a new slot.",
+      until: Date.now() + 8000
+    };
+    apiPost({ action: "checkin", r: r, block: { cal: ev.src, id: ev.id, start: ev.start } }).catch(function () {
+      delete localChecks[key];
+      checkNote = { text: "That check-in didn't save. It will ask again.", until: Date.now() + 8000 };
+    });
+    var now = new Date();
+    renderCheckin(now); renderFollow(now);
+  });
+
+  /* ---------- Setup sheet ---------- */
+  function openSetup() {
+    $("#setup-url").value = cfg ? cfg.url : "";
+    $("#setup-key").value = cfg ? cfg.key : "";
+    $("#setup-status").textContent = "";
+    showShare(cfg);
+    $("#setup-close").hidden = !cfg;
+    $("#setup").hidden = false;
+  }
+  function showShare(c) {
+    $("#share-wrap").hidden = !c;
+    $("#setup-copy").hidden = !c;
+    $("#share-link").textContent = c ? phoneLink(c) : "";
+  }
+  $("#setup-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var c = { url: $("#setup-url").value.trim(), key: $("#setup-key").value.trim() };
+    if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(c.url) || !c.key) {
+      $("#setup-status").textContent = "Paste the full web app URL (it ends in /exec) and the key.";
+      return;
+    }
+    $("#setup-status").textContent = "Checking…";
+    $("#setup-save").disabled = true;
+    var prev = cfg; cfg = c;
+    apiGet("ping").then(function (d) {
+      if (!d.ok) throw d;
+      store("deskboard", c);
+      try { history.replaceState(null, "", "#u=" + encodeURIComponent(c.url) + "&k=" + encodeURIComponent(c.key)); } catch (e) {}
+      $("#setup-status").textContent = "Connected.";
+      $("#setup-close").hidden = false;
+      showShare(c);
+      conn = { status: "loading", message: "", at: 0, stale: false };
+      load();
+    }).catch(function (err) {
+      cfg = prev;
+      $("#setup-status").textContent = errorText(err);
+    }).then(function () { $("#setup-save").disabled = false; });
+  });
+  $("#setup-copy").addEventListener("click", function () {
+    var text = $("#share-link").textContent;
+    var done = function () { $("#setup-status").textContent = "Link copied."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { selectShare(); });
+    } else { selectShare(); }
+  });
+  function selectShare() {
+    var r = document.createRange(); r.selectNodeContents($("#share-link"));
+    var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    $("#setup-status").textContent = "Link selected. Copy it.";
+  }
+  $("#setup-close").addEventListener("click", function () { $("#setup").hidden = true; });
+
+  // Hold the date for one second to open setup.
+  var holdTimer = null;
+  function startHold() { holdTimer = setTimeout(openSetup, 1000); }
+  function endHold() { clearTimeout(holdTimer); }
+  ["touchstart", "mousedown"].forEach(function (n) { $("#date").addEventListener(n, startHold, { passive: true }); });
+  ["touchend", "touchcancel", "mouseup", "mouseleave"].forEach(function (n) { $("#date").addEventListener(n, endHold); });
+
+  /* ---------- Keep the screen on ---------- */
+  function keepAwake() {
+    try {
+      if ("wakeLock" in navigator && document.visibilityState === "visible") navigator.wakeLock.request("screen").catch(function () {});
+    } catch (e) { /* Guided Access auto-lock covers it */ }
+  }
+  document.addEventListener("visibilitychange", function () {
+    keepAwake();
+    if (document.visibilityState === "visible") load();
+  });
+  document.addEventListener("click", keepAwake, { once: true });
+  keepAwake();
+
+  /* ---------- Main loop ---------- */
+  var lastMinute = -1, lastDay = dayKey(new Date());
+  function tick() {
+    var now = new Date();
+    renderClock(now);
+    tickTimer(now);
+    var today = buildDayFor(now);
+    renderNow(now, today);
+    if (now.getMinutes() !== lastMinute) {
+      lastMinute = now.getMinutes();
+      renderToday(now, today, false);
+      renderDue(now);
+      renderCheckin(now);
+      renderFollow(now);
+    } else if (checkNote) {
+      renderCheckin(now);
+    }
+    if (dayKey(now) !== lastDay) { lastDay = dayKey(now); load(); }
+  }
+
+  // Re-fit titles when the phone rotates.
+  var resizeTimer = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { lastStepsKey = null; renderAll(false); }, 150);
+  });
+
+  renderAll(false);
+  tick();
+  setInterval(tick, 1000);
+  setInterval(load, REFRESH_MS);
+  if (cfg) load(); else openSetup();
+})();
+</script>
+</body>
+</html>
