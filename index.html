@@ -54,8 +54,10 @@ body {
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-side); outline-offset: 3px; }
 
+/* Pinned to the screen edges: iOS home-screen apps can report a stale 100% height after rotating. */
 .device {
-  height: 100%;
+  position: fixed;
+  inset: 0;
   display: flex;
   gap: 16px;
   padding-top: max(14px, env(safe-area-inset-top, 0px));
@@ -178,7 +180,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 /* Portrait: keycaps go underneath and the LCD columns stack. */
 @media (orientation: portrait) {
   /* Start below the frosted strip iOS draws under the status bar, and don't scroll. */
-  .device { flex-direction: column; height: 100%; padding-top: calc(env(safe-area-inset-top, 0px) + 30px); }
+  .device { flex-direction: column; padding-top: calc(env(safe-area-inset-top, 0px) + 30px); }
   body { overflow: hidden; }
   .lcd { flex: none; }
   .top { flex-wrap: wrap; }
