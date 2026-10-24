@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen&family=Hanken+Grotesk:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Silkscreen&family=Hanken+Grotesk:wght@400;600;700&display=swap">
 <style>
 /* A cream device with sage keycaps and a mint backlit LCD. Landscape: LCD left, keycaps right. Portrait: keycaps underneath. */
 :root {
@@ -33,7 +33,7 @@
   --ghost: rgba(21, 48, 27, 0.08);
   --legend: #4f6b54;
   --alert: #8a2f1c;
-  --f-pixel: "VT323", ui-monospace, "SF Mono", Menlo, monospace;
+  --f-pixel: "Jersey 10", ui-monospace, "SF Mono", Menlo, monospace;
   --f-label: "Silkscreen", ui-monospace, monospace;
   --f-ui: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   color-scheme: light;
@@ -86,20 +86,25 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .seg { position: relative; display: inline-block; line-height: 0.78; }
 .seg .ghost { color: var(--ghost); }
 .seg .live { position: absolute; left: 0; top: 0; white-space: nowrap; }
+/* Every digit gets the same cell so the live digits sit exactly on the faint 88:88. */
+.seg .c { display: inline-block; width: 0.43em; }
+.seg .c.k { width: 0.17em; }
 .clock-row { display: flex; align-items: flex-end; gap: 8px; }
 .clock { font-size: clamp(64px, 25vh, 104px); }
 .ampm { font: 400 13px/1 var(--f-label); padding-bottom: 4px; }
 .focus { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .timer { font-size: clamp(48px, 18vh, 76px); }
 .focus.is-rest .timer, .focus.is-rest .label:first-child { color: var(--ink-soft); }
-.tally { font-size: 19px; line-height: 1; color: var(--ink-soft); white-space: nowrap; }
+.tally { font-size: 19px; line-height: 1.2; color: var(--ink-soft); white-space: nowrap; }
 
 .mid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 22px; }
 .col { display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; }
-.now-title { font-size: 33px; line-height: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.now-meta { font-size: 19px; line-height: 1; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.steps li { display: flex; gap: 8px; min-width: 0; font-size: 22px; line-height: 1; }
+/* Lines never squeeze: when space runs out, the lowest lines drop off instead. */
+.col > *, .top, .checkin { flex-shrink: 0; }
+.now-title { font-size: 33px; line-height: 1.2; margin-bottom: -2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-meta { font-size: 19px; line-height: 1.25; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.steps li { display: flex; gap: 8px; min-width: 0; font-size: 22px; line-height: 1.2; }
 .steps li::before { content: ">"; flex: none; color: var(--ink-soft); }
 .steps li.first::before { color: var(--ink); }
 .steps li:not(.first) { color: var(--ink-soft); font-size: 20px; }
@@ -108,11 +113,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .cells { display: flex; gap: 2px; margin-top: 4px; }
 .cells span { flex: 1; height: 9px; background: rgba(21, 48, 27, 0.12); }
 .cells span.on { background: var(--ink); }
-.later { font-size: 19px; line-height: 1.05; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
+.later { font-size: 19px; line-height: 1.25; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
 
 .due-head { display: flex; justify-content: space-between; gap: 8px; }
 .due-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.due-row { display: grid; grid-template-columns: 3.4ch minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.05; align-items: baseline; padding: 0 4px; }
+.due-row { display: grid; grid-template-columns: 3.4ch minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
 .due-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .due-row .meta { white-space: nowrap; color: var(--ink-soft); }
 .due-row.soon-0 { background: var(--ink); color: var(--lcd-hi); }
@@ -124,7 +129,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
 /* Check-in strip on the LCD */
 .checkin { display: flex; align-items: center; gap: 10px; background: var(--ink); color: var(--lcd-hi); padding: 5px 6px 5px 12px; border-radius: 3px; }
-.checkin-q { margin: 0; flex: 1; min-width: 0; font-size: 21px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.checkin-q { margin: 0; flex: 1; min-width: 0; font-size: 21px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .checkin-q b { font-weight: 400; }
 .chip-btn { font: 400 10px/1 var(--f-label); letter-spacing: 0.04em; text-transform: uppercase; border: 0; border-radius: 6px; padding: 0 12px; min-height: 32px; color: var(--ink); background: var(--cap-cream); box-shadow: 0 3px 0 var(--cap-cream-side); }
 .chip-btn.primary { background: var(--cap-sage); box-shadow: 0 3px 0 var(--cap-sage-side); }
@@ -175,7 +180,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   /* Start below the frosted strip iOS draws under the status bar, and don't scroll. */
   .device { flex-direction: column; height: 100%; padding-top: calc(env(safe-area-inset-top, 0px) + 30px); }
   body { overflow: hidden; }
-  .lcd { flex: 1 1 auto; min-height: 0; }
+  .lcd { flex: none; }
   .top { flex-wrap: wrap; }
   .mid { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
   .focus { align-items: flex-start; }
@@ -185,6 +190,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   .cap { flex: 1; min-height: 64px; }
   .cap.cream { min-height: 64px; }
   .keys { flex: none; }
+  .checkin { flex-wrap: wrap; row-gap: 6px; padding: 6px 6px 8px 12px; }
+  .checkin-q { flex-basis: 100%; }
+  .chip-btn { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .cap:active, .chip-btn:active { transform: none; } }
 </style>
@@ -195,11 +203,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
     <div class="top">
       <div class="clock-wrap">
         <span class="label" id="date"></span>
-        <span class="clock-row"><span class="seg clock" aria-live="off"><span class="ghost" aria-hidden="true">88:88</span><span class="live" id="clock-hm">--:--</span></span><span class="ampm" id="clock-ampm"></span></span>
+        <span class="clock-row"><span class="seg clock" aria-live="off"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="clock-hm">--:--</span></span><span class="ampm" id="clock-ampm"></span></span>
       </div>
       <div class="focus" id="focus" aria-label="Focus timer">
         <span class="label" id="timer-phase">Focus · 25 min</span>
-        <span class="seg timer"><span class="ghost" aria-hidden="true">88:88</span><span class="live" id="timer-text">25:00</span></span>
+        <span class="seg timer"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="timer-text">25:00</span></span>
         <span class="tally" id="tally">No pomodoros yet</span>
       </div>
     </div>
@@ -264,6 +272,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
 <script src="shorten.js"></script>
 <script>
+/* Writes clock/timer text one character per fixed-width cell. */
+function segText(el, text) {
+  if (!el || el.dataset.v === text) return;
+  el.dataset.v = text;
+  el.innerHTML = String(text).split("").map(function (ch) {
+    return '<span class="c' + (ch === ":" ? " k" : "") + '">' + ch + "</span>";
+  }).join("");
+}
+document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.textContent); });
+
 (function () {
   "use strict";
 
@@ -346,7 +364,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
       if (p.type === "dayPeriod") ap = p.value;
       else if (p.type === "hour" || p.type === "minute" || (p.type === "literal" && p.value.trim() === ":")) hm += p.value;
     });
-    $("#clock-hm").textContent = /^\d:/.test(hm) ? "0" + hm : hm;   // "05:36" so digits sit on the LCD's 88:88
+    segText($("#clock-hm"), /^\d:/.test(hm) ? "0" + hm : hm);   // "05:36" so digits sit on the LCD's 88:88
     $("#clock-ampm").textContent = ap;
     $("#date").textContent = dateFmt.format(now);
   }
@@ -736,7 +754,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   function renderTimer(now) {
     var remaining = pomo.endAt ? Math.max(0, pomo.endAt - now.getTime()) : pomo.left;
     var secs = Math.ceil(remaining / 1000);
-    $("#timer-text").textContent = pad(Math.floor(secs / 60)) + ":" + pad(secs % 60);
+    segText($("#timer-text"), pad(Math.floor(secs / 60)) + ":" + pad(secs % 60));
     $("#timer-phase").textContent = pomo.phase === "focus" ? "Focus · 25 min" : "Break · 5 min";
     $("#focus").classList.toggle("is-rest", pomo.phase === "rest");
     var paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
