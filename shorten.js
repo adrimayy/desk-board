@@ -162,7 +162,7 @@
     if (/;\s/.test(a)) { a = a.split(/;\s*/)[0]; push(a); push(dropFiller(a)); }
     var m = /^(\S+\s+)?(.+)$/.exec(a);
     var lead = m && m[1] && /^(write|read|do|finish|start|review|make|run|get|check|build|submit|paste|uncomment|fix|test|add)\s$/i.test(m[1]) ? m[1] : "";
-    var items = (lead ? m[2] : a).split(/\s*,\s*|\s+and\s+/i).filter(Boolean);
+    var items = (lead ? m[2] : a).split(/\s*,\s*|\s+and\s+|\+(?!\s*\d)/i).filter(Boolean);
     if (items.length > 1) {
       for (var k = items.length - 1; k >= 1; k--) push(lead + items.slice(0, k).join(", ") + " +" + (items.length - k));
       if (lead) push(items[0] + " +" + (items.length - 1));

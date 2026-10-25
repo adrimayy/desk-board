@@ -107,8 +107,18 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .now-meta { font-size: 19px; line-height: 1.25; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .steps li { display: flex; gap: 8px; min-width: 0; font-size: 22px; line-height: 1.2; }
-.steps li::before { content: ">"; flex: none; color: var(--ink-soft); }
-.steps li.first::before { color: var(--ink); }
+.steps li::before { content: ""; flex: none; width: 0.5em; height: 0.5em; margin-top: 0.3em; border: 2px solid var(--ink-soft); }
+.steps li.first::before { border-color: var(--ink); }
+.steps li.ticked::before { background: var(--ink-soft); }
+.steps li.ticked .txt { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-soft); }
+.steps li.done-row .txt { text-decoration: none; }
+.steps li.digest::before { transform: rotate(45deg) scale(0.8); }
+.now-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.modes { display: flex; gap: 8px; }
+.mode { font: 400 10px/1 var(--f-label); letter-spacing: 0.04em; color: var(--ink-soft); white-space: nowrap; }
+.mode b { font-weight: 400; background: var(--ink); color: var(--lcd-hi); padding: 2px 3px 1px; margin-right: 4px; }
+.steps li.tap { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.steps li.tap:active { opacity: 0.6; }
 .steps li:not(.first) { color: var(--ink-soft); font-size: 20px; }
 .steps .lead { display: none; }
 .steps .txt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -119,7 +129,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
 .due-head { display: flex; justify-content: space-between; gap: 8px; }
 .due-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.due-row { display: grid; grid-template-columns: 3.4ch minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
+.due-more-row { font-size: 18px; line-height: 1.2; color: var(--ink-soft); padding: 2px 4px 0; }
+.due-row { display: grid; grid-template-columns: 4.6ch minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
 .due-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .due-row .meta { white-space: nowrap; color: var(--ink-soft); }
 .due-row.soon-0 { background: var(--ink); color: var(--lcd-hi); }
@@ -141,6 +152,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .keys { width: 104px; flex: none; display: flex; flex-direction: column; justify-content: center; align-items: stretch; gap: 16px; }
 .brand { font: 400 10px/1 var(--f-label); letter-spacing: 0.08em; color: var(--legend); text-align: center; }
 .leds { display: flex; justify-content: center; gap: 10px; }
+.led-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.led-name { font: 400 7px/1 var(--f-label); letter-spacing: 0.06em; color: var(--legend); text-transform: uppercase; }
 .led { width: 7px; height: 7px; border-radius: 50%; background: #cfc8b6; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15); }
 .led.on { background: #8fd18a; box-shadow: 0 0 6px rgba(143, 209, 138, 0.9); }
 .led.warn { background: #e08a5f; box-shadow: 0 0 6px rgba(224, 138, 95, 0.9); }
@@ -177,6 +190,35 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .btn:disabled { opacity: 0.55; }
 .share-link { font: 0.75rem/1.4 ui-monospace, Menlo, monospace; color: var(--legend); word-break: break-all; background: #fff; border: 1px solid var(--case-edge); border-radius: 10px; padding: 10px 12px; }
 
+/* ---------- Info key and sheet ---------- */
+.keys-foot { display: flex; align-items: center; justify-content: center; gap: 10px; }
+#sync { text-align: center; color: var(--legend); }
+.info-key { flex: none; width: 26px; height: 26px; border: 0; border-radius: 50%; padding: 0; font: italic 700 15px/1 Georgia, "Times New Roman", serif; color: var(--legend);
+  background: linear-gradient(180deg, #fbf8f1 0%, var(--cap-cream) 100%); box-shadow: 0 3px 0 var(--cap-cream-side), inset 0 1px 0 #fff; }
+.info-key:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--cap-cream-side); }
+.info-card { max-width: 640px; gap: 14px; }
+.info-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.info-now { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--lcd); color: var(--ink); font: 400 20px/1.2 var(--f-pixel); text-transform: uppercase; box-shadow: inset 0 0 0 2px var(--lcd-rim); }
+.info-sec h3 { margin: 0 0 4px; font: 400 11px/1.2 var(--f-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--legend); }
+.info-sec p { margin: 0 0 6px; font: 400 0.92rem/1.45 var(--f-ui); }
+.info-sec b { font-weight: 600; }
+.info-sec b.red { color: var(--alert); }
+.info-key-list { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; font: 400 0.92rem/1.35 var(--f-ui); }
+.info-key-list li { display: flex; align-items: center; gap: 10px; }
+.info-key-list.pacer { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 14px; }
+.ik { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; }
+.ik.box::before { content: ""; width: 12px; height: 12px; border: 2px solid var(--ink-soft); }
+.ik.box.diamond::before { transform: rotate(45deg) scale(0.85); }
+.ik.box.fill::before { background: var(--ink-soft); }
+.ik.bar { gap: 2px; }
+.ik.bar i { width: 5px; height: 6px; background: var(--ink); }
+.ik.bar i.off { background: rgba(21, 48, 27, 0.18); }
+.ik.led { width: 28px; }
+.ik.led::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #cfc8b6; }
+.ik.led.on::before { background: #8fd18a; box-shadow: 0 0 6px rgba(143, 209, 138, 0.9); }
+.ik.led.warn::before { background: #e08a5f; box-shadow: 0 0 6px rgba(224, 138, 95, 0.9); }
+.chip { flex: none; width: 22px; text-align: center; font: 400 11px/1 var(--f-label) !important; background: var(--ink); color: var(--lcd-hi); padding: 4px 0 3px; }
+
 /* Portrait: keycaps go underneath and the LCD columns stack. */
 @media (orientation: portrait) {
   /* Start below the frosted strip iOS draws under the status bar, and don't scroll. */
@@ -188,7 +230,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   .focus { align-items: flex-start; }
   .keys { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: stretch; }
   .keys .brand, .keys .leds { display: none; }
-  .keys #sync { flex-basis: 100%; }
+  /* The info key joins the keycap row; the sync line sits alone underneath. */
+  .keys .keys-foot { display: contents; }
+  .keys #sync { order: 10; flex-basis: 100%; }
+  .keys .info-key { width: 56px; height: auto; min-height: 64px; border-radius: 12px; font-size: 20px;
+    box-shadow: 0 6px 0 var(--cap-cream-side), inset 0 1px 0 #fff, 0 8px 14px rgba(70, 90, 70, 0.12); }
   .cap { flex: 1; min-height: 64px; }
   .cap.cream { min-height: 64px; }
   .keys { flex: none; }
@@ -216,7 +262,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
     <div class="mid">
       <div class="col" id="now-card">
-        <span class="label" id="now-label">Today</span>
+        <div class="now-head"><span class="label" id="now-label">Today</span><span class="modes" id="now-modes"></span></div>
         <div class="now-title" id="now-title">Loading calendar</div>
         <div class="now-meta" id="now-meta"></div>
         <ul class="steps" id="now-steps" hidden></ul>
@@ -242,10 +288,17 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
   <section class="keys" aria-label="Controls">
     <span class="brand">DESK·BOARD</span>
-    <div class="leds" aria-hidden="true"><span class="led" id="led-sync"></span><span class="led" id="led-run"></span><span class="led" id="led-due"></span></div>
+    <div class="leds" aria-hidden="true">
+      <span class="led-cell"><span class="led" id="led-sync"></span><span class="led-name">Sync</span></span>
+      <span class="led-cell"><span class="led" id="led-run"></span><span class="led-name">Timer</span></span>
+      <span class="led-cell"><span class="led" id="led-due"></span><span class="led-name">Due</span></span>
+    </div>
     <button class="cap" id="timer-toggle" type="button">Start</button>
     <button class="cap cream" id="timer-reset" type="button">Reset</button>
-    <span class="label" id="sync" style="text-align: center; color: var(--legend)"></span>
+    <div class="keys-foot">
+      <span class="label" id="sync"></span>
+      <button class="info-key" id="info-btn" type="button" aria-label="What's on the board">i</button>
+    </div>
   </section>
 </main>
 
@@ -272,6 +325,63 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   </form>
 </div>
 
+<div class="sheet" id="info" role="dialog" aria-modal="true" aria-labelledby="info-h" hidden>
+  <div class="sheet-card info-card">
+    <div class="info-top">
+      <h2 id="info-h">What's on the board</h2>
+      <button class="btn ghost" type="button" id="info-close">Close</button>
+    </div>
+    <p class="info-now" id="info-now"></p>
+
+    <section class="info-sec">
+      <h3>Clock and focus timer</h3>
+      <p><b>Start</b> runs a 25-minute focus round. When it ends the board chimes and a 5-minute break starts on its own; the next round waits for Start. <b>Reset</b> goes back to a fresh 25:00.</p>
+      <p>The squares under the timer count today's finished rounds. During a learning block the break first says what to digest (for example "add it to your map").</p>
+    </section>
+
+    <section class="info-sec">
+      <h3>Now, Next and Tomorrow</h3>
+      <p><b>Now</b> is the block you're in, <b>Next</b> is the next one today, and late at night <b>Tomorrow</b> shows your first block of the next day.</p>
+      <ul class="info-key-list">
+        <li><span class="ik box"></span>A step. Tap it when it's done; it's ticked on the calendar too.</li>
+        <li><span class="ik box diamond"></span>A digest step: process what you just read before reading more.</li>
+        <li><span class="ik box fill"></span>"2/4 steps done". Tap it to untick the last step.</li>
+        <li><span class="ik bar"><i></i><i></i><i></i><i class="off"></i></span>How much of the block's time has passed.</li>
+      </ul>
+      <p>The letters in the corner say what kind of learning the block is, and how to digest it:</p>
+      <ul class="info-key-list pacer">
+        <li><b class="chip">P</b>Procedural: practice it right away</li>
+        <li><b class="chip">A</b>Analogous: critique the comparison</li>
+        <li><b class="chip">C</b>Conceptual: add it to your map</li>
+        <li><b class="chip">E</b>Evidence: store it, rehearse later</li>
+        <li><b class="chip">R</b>Reference: make a flashcard</li>
+      </ul>
+    </section>
+
+    <section class="info-sec">
+      <h3>Due</h3>
+      <p>Everything due in the next two weeks, from Canvas and from calendar events with "due", "quiz", "exam", "test" or "midterm" in the title. When Canvas and your calendar disagree, Canvas wins.</p>
+      <p>The right column is <b>time planned</b>: hours already blocked on your Study Calendar before it's due. A red <b class="red">0h</b> means nothing is blocked yet. The dark row is due today; a faded row's time has passed.</p>
+    </section>
+
+    <section class="info-sec">
+      <h3>Check-ins</h3>
+      <p>After a Study block ends, the dark strip asks how it went. <b>Done</b>, <b>Partly</b> or <b>Missed</b> is written on the block and colors it green, yellow or red. "Follow-through" is today's done blocks and this week's average.</p>
+    </section>
+
+    <section class="info-sec">
+      <h3>Lights</h3>
+      <ul class="info-key-list" id="info-lights"></ul>
+    </section>
+
+    <section class="info-sec">
+      <h3>Where it comes from</h3>
+      <p>Your Columbia calendar, your Gmail calendar, Study Calendar, Classes and the Canvas feed. Changes show up within about two minutes. Without Wi-Fi the board keeps the last copy and says "Offline".</p>
+      <p>Hold the date for one second to open setup.</p>
+    </section>
+  </div>
+</div>
+
 <script src="shorten.js"></script>
 <script>
 /* Writes clock/timer text one character per fixed-width cell. */
@@ -292,11 +402,19 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     shorten: function (t) { return [String(t)]; }, shortenStep: function (t) { return [String(t)]; },
     fit: function (el, v) { el.textContent = v[0]; }, fitChars: function (v) { return v[0]; }
   };
+  // Text is fitted by measuring it, so fit again once the pixel font has loaded.
+  var fontEpoch = 0;
+  if (document.fonts && document.fonts.addEventListener) {
+    document.fonts.addEventListener("loadingdone", function () {
+      fontEpoch++; lastStepsKey = null;
+      if (typeof renderAll === "function") renderAll(false);
+    });
+  }
   function fitTitle(el, text) {
-    var key = text + "|" + el.clientWidth;
+    var key = text + "|" + el.clientWidth + "|" + fontEpoch;
     if (el._fitKey === key) return;
     Shorten.fit(el, Shorten.shorten(text));
-    el._fitKey = text + "|" + el.clientWidth;
+    el._fitKey = key;
   }
   function shortText(text, n) { return Shorten.fitChars(Shorten.shorten(text), n); }
 
@@ -335,14 +453,21 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
 
   /* ---------- Server ---------- */
+  // A request that hangs would otherwise block every later refresh, so each one gets 25 seconds.
+  function timedFetch(url, opts) {
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 25000) : null;
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(url, opts).then(function (r) { clearTimeout(timer); return r; }, function (e) { clearTimeout(timer); throw e; });
+  }
   function apiGet(action) {
     var sep = cfg.url.indexOf("?") < 0 ? "?" : "&";
-    return fetch(cfg.url + sep + "action=" + action + "&key=" + encodeURIComponent(cfg.key), { cache: "no-store", redirect: "follow" })
+    return timedFetch(cfg.url + sep + "action=" + action + "&key=" + encodeURIComponent(cfg.key), { cache: "no-store", redirect: "follow" })
       .then(readJson);
   }
   function apiPost(body) {
     body.key = cfg.key;
-    return fetch(cfg.url, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+    return timedFetch(cfg.url, { method: "POST", redirect: "follow", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
       .then(readJson)
       .then(function (d) { if (!d.ok) throw d; return d; });
   }
@@ -380,13 +505,32 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       .replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|li|ul|ol)>/gi, "\n").replace(/<li[^>]*>/gi, "- ")
       .replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
   }
+  // "- step", "- [ ] step" and "- [x] step" (a bare "[ ] step" works too).
   function stepsFrom(text) {
     var out = [];
     text.split(/\n/).forEach(function (line) {
-      var m = /^\s*(?:[-•*·]|\d+[.)])\s+(.+)/.exec(line);
-      if (m) out.push(m[1].trim());
+      var m = /^\s*(?:[-•*·]|\d+[.)])\s+(?:\[([ xX]?)\]\s*)?(.+)/.exec(line) || /^\s*()\[([ xX]?)\]\s+(.+)/.exec(line);
+      if (!m) return;
+      var box = m.length > 3 ? m[2] : m[1], txt = (m.length > 3 ? m[3] : m[2]).trim();
+      if (!txt) return;
+      var dg = /^digest\s*:\s*/i.exec(txt);
+      out.push({ text: txt, show: dg ? txt.slice(dg[0].length) : txt, digest: !!dg, done: /x/i.test(box || "") });
     });
-    return out.slice(0, 6);
+    return out.slice(0, 12);
+  }
+  /* PACER: what kind of learning a block is ("Mode: C+E" in its description),
+     and how to digest it. Consuming without digesting is how reading gets forgotten. */
+  var PACER = {
+    P: { name: "Procedural", verb: "practice it now", short: "Practice" },
+    A: { name: "Analogous", verb: "critique your analogy", short: "Critique" },
+    C: { name: "Conceptual", verb: "add it to your map", short: "Map" },
+    E: { name: "Evidence", verb: "store the evidence", short: "Store" },
+    R: { name: "Reference", verb: "make flashcards", short: "Cards" }
+  };
+  function modesFrom(text) {
+    var m = /^\s*Mode\s*:\s*([^\n]+)/im.exec(text);
+    if (!m) return [];
+    return "PACER".split("").filter(function (k) { return new RegExp("(^|[^A-Za-z])" + k + "([^A-Za-z]|$)").test(m[1].toUpperCase()); });
   }
   function localDate(s) { var p = String(s).split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]).getTime(); }
   function parseEvents(list) {
@@ -402,6 +546,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
         allDay: allDay, start: start, end: end,
         steps: e.cal === "canvas" ? [] : stepsFrom(text),
         checkin: ci ? ci[1].toLowerCase() : null,
+        modes: e.cal === "canvas" ? [] : modesFrom(text),
         pomos: pc ? Number(pc[1]) : 0
       };
     }).filter(function (e) { return !isNaN(e.start) && !isNaN(e.end); });
@@ -413,6 +558,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     loading = true;
     apiGet("data").then(function (d) {
       if (!d.ok) throw d;
+      store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state });
       events = parseEvents(d.events);
       conn = { status: "ok", message: "", at: Date.now(), stale: false };
       applyState(d.state);
@@ -424,6 +570,16 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       renderAll(false);
     }).then(function () { loading = false; });
   }
+
+  // Start from the last good copy so a relaunch without Wi-Fi still shows the day.
+  (function () {
+    var c = cfg && store("deskboard-cache");
+    if (!c || !c.events || Date.now() - c.at > 36 * 3600000) return;
+    events = parseEvents(c.events);
+    conn = { status: "ok", message: "", at: c.at, stale: true };
+    // Only the pomodoro log: a cached timer could be hours old.
+    setTimeout(function () { if (c.state && c.state.log) applyState({ log: c.state.log }); }, 0);
+  })();
 
   function allEvents() { return conn.status === "ok" ? events : []; }
   function ready() { return conn.status === "ok"; }
@@ -519,7 +675,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (dueEnd <= t) return { show: false, min: 0 };
     var key = distinct(d.tok), min = 0, seen = {};
     allEvents().forEach(function (ev) {
-      if (ev.src === "canvas" || ev.allDay) return;
+      if (ev.src !== "study" || ev.allDay) return;   // only work blocks count, not the class itself
       if (ev.end - ev.start < 30 * 60000 || ev.end <= t || ev.start >= dueEnd) return;
       if (EXAM_RX.test(ev.title)) return;
       var sk = ev.title.toLowerCase() + "|" + ev.start;
@@ -533,7 +689,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function dueDayLabel(day, now) {
     var p = day.split("-").map(Number), d = new Date(p[0], p[1] - 1, p[2]);
     var diff = Math.round((d.getTime() - startOfDay(now).getTime()) / DAY);
-    if (diff === 0) return { text: "Tdy", soon: 0 };
+    if (diff === 0) return { text: "Today", soon: 0 };
     if (diff === 1) return { text: "Tmr", soon: 1 };
     if (diff < 7) return { text: d.toLocaleDateString("en-US", { weekday: "short" }), soon: 2 };
     return { text: (d.getMonth() + 1) + "/" + d.getDate(), soon: 3 };
@@ -548,7 +704,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       note.textContent = conn.status === "loading" ? "Looking for deadlines" : "Deadlines will show here once the calendar connects.";
       return;
     }
-    var all = buildDeadlines(now), MAX = 5, t = now.getTime();
+    var portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+    var all = buildDeadlines(now), MAX = portrait ? 4 : 5, t = now.getTime();
     all.slice(0, MAX).forEach(function (d) {
       var lab = dueDayLabel(d.day, now);
       var plan = plannedFor(d, now);
@@ -560,12 +717,17 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       var bits = [];
       if (d.dueAt && lab.soon <= 1) bits.push(clockShort(d.dueAt));
       if (plan.show) bits.push(plan.min ? fmtHours(plan.min) : "0h");
-      var meta = document.createElement("span"); meta.className = "meta"; meta.textContent = bits.join(" ");
+      var meta = document.createElement("span"); meta.className = "meta"; meta.textContent = bits.join(" · ");
       li.append(day, tt, meta);
       list.append(li);
       Shorten.fit(tt, Shorten.shorten(d.raw || d.title));
     });
-    more.textContent = all.length > MAX ? "+" + (all.length - MAX) + " more" : "2 wks";
+    more.textContent = all.length ? "time planned" : "";
+    if (all.length > MAX) {
+      var extra = document.createElement("li"); extra.className = "due-more-row";
+      extra.textContent = "+" + (all.length - MAX) + " more in the next two weeks";
+      list.append(extra);
+    }
     note.hidden = all.length > 0;
     note.textContent = "Nothing due in the next two weeks.";
   }
@@ -590,6 +752,12 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       .filter(function (b) { return b.start <= ms && b.end > ms; })
       .sort(function (a, b) { return b.start - a.start; })[0] || null;
   }
+  // Pomodoros and digest prompts belong to your own Study blocks, never to a class or meeting.
+  function studyBlockAt(ms) {
+    return buildDayFor(new Date(ms)).timed
+      .filter(function (b) { return b.src === "study" && b.start <= ms && b.end > ms; })
+      .sort(function (a, b) { return b.start - a.start; })[0] || null;
+  }
 
   /* ---------- Now card ---------- */
   function renderNow(now, today) {
@@ -604,7 +772,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       } else {
         label.textContent = "Today"; title.textContent = "Loading your calendar";
       }
-      meta.textContent = ""; bar.hidden = true; fillSteps([], false); return;
+      meta.textContent = ""; bar.hidden = true; fillSteps([], false); renderModes(null); return;
     }
 
     var live = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
@@ -615,20 +783,22 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       card.classList.add("is-live");
       label.textContent = "Now";
       fitTitle(title, cur.title);
-      meta.textContent = "Until " + fmtTime(cur.end) + " · " + fmtDur(cur.end - t) + " left" + (next ? " · then " + shortText(next.title, 22) : "");
+      meta.textContent = "Until " + fmtTime(cur.end) + " · " + fmtDur(cur.end - t) + " left" + (cur.where && cur.steps.length ? " · " + cur.where : "") + (next ? " · then " + shortText(next.title, 22) : "");
       var span = cur.end - cur.start, lit = span > 0 ? Math.round(Math.min(1, (t - cur.start) / span) * 10) : 0;
       var cells = bar.children;
       for (var ci = 0; ci < cells.length; ci++) cells[ci].className = ci < lit ? "on" : "";
       bar.setAttribute("aria-label", "Block " + lit * 10 + "% done");
       bar.hidden = false;
-      if (cur.steps.length) fillSteps(cur.steps, true);
+      renderModes(cur);
+      if (cur.steps.length) fillSteps(cur.steps, true, cur);
       else fillSteps(cur.where ? [cur.where] : [], false);
     } else if (next) {
       label.textContent = "Next";
       fitTitle(title, next.title);
       meta.textContent = fmtTime(next.start) + " · in " + fmtDur(next.start - t) + (next.where ? " · " + next.where : "");
       bar.hidden = true;
-      fillSteps(next.steps, true);
+      renderModes(next);
+      fillSteps(next.steps, true, next);
     } else {
       // Day is done: show tomorrow's first move.
       var tmr = new Date(startOfDay(now).getTime() + DAY + 3600000);
@@ -639,34 +809,100 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       if (first) {
         fitTitle(title, first.title);
         meta.textContent = "Starts " + fmtTime(first.start) + (dueTmr.length ? " · Due: " + dueTmr.join(", ") : "");
-        fillSteps(first.steps, true);
+        renderModes(first);
+        fillSteps(first.steps, true, first);
       } else {
+        renderModes(null);
         title.textContent = "Nothing planned for tomorrow yet";
         meta.textContent = (dueTmr.length ? "Due: " + dueTmr.join(", ") + " · " : "") + "Plan it tonight";
         fillSteps([], false);
       }
     }
   }
-  var lastStepsKey = null;
-  function fillSteps(steps, lead) {
-    var key = (lead ? "1" : "0") + steps.join("\u0001") + "|" + $("#now-card").clientWidth;
-    if (key === lastStepsKey) return;
-    lastStepsKey = key;
-    var list = $("#now-steps");
-    list.replaceChildren();
-    list.hidden = !steps.length;
-    steps.slice(0, 4).forEach(function (s, i) {
-      var li = document.createElement("li");
-      if (i === 0 && lead) {
-        li.className = "first";
-        var b = document.createElement("span"); b.className = "lead"; b.textContent = "Start with";
-        li.append(b);
-      }
-      var sp = document.createElement("span"); sp.className = "txt";
-      li.append(sp); list.append(li);
-      Shorten.fit(sp, Shorten.shortenStep(s));
+  /* Steps are checkboxes: tap one to tick it off (it's written back to the calendar
+     as "[x]"), tap the "done" row to untick the last one. */
+  function renderModes(ev) {
+    var box = $("#now-modes"), modes = ev && ev.modes ? ev.modes : [];
+    var key = modes.join("");
+    if (box.dataset.k === key) return;
+    box.dataset.k = key;
+    box.replaceChildren();
+    modes.slice(0, 3).forEach(function (k) {
+      var m = document.createElement("span"); m.className = "mode"; m.title = PACER[k].name + ": " + PACER[k].verb;
+      var b = document.createElement("b"); b.textContent = k;
+      m.append(b, document.createTextNode(PACER[k].short));
+      box.append(m);
     });
   }
+  var lastStepsKey = null, stepBlock = null, stepView = [], stepFlash = null;
+  var localSteps = {};   // blockKey|text -> true/false until the calendar catches up
+  function stepState(ev, s) {
+    var k = ev ? blockKey(ev) + "|" + s.text : null;
+    return k && k in localSteps ? localSteps[k] : s.done;
+  }
+  function fillSteps(steps, lead, ev) {
+    steps = steps.map(function (s) { return typeof s === "string" ? { text: s, done: false } : s; });
+    var items = steps.map(function (s) { return { text: s.text, show: s.show || s.text, digest: !!s.digest, done: stepState(ev, s) }; });
+    var key = (lead ? "1" : "0") + (ev ? blockKey(ev) : "") + JSON.stringify(items) + (stepFlash || "") + "|" + $("#now-card").clientWidth;
+    if (key === lastStepsKey) return;
+    lastStepsKey = key;
+    stepBlock = ev || null;
+    var list = $("#now-steps");
+    list.replaceChildren();
+    list.hidden = !items.length;
+    var open = items.filter(function (s) { return !s.done || s.text === stepFlash; });
+    var done = items.filter(function (s) { return s.done; });
+    stepView = [];
+    var room = done.length ? 3 : 4;
+    open.slice(0, room).forEach(function (s, i) {
+      var li = document.createElement("li");
+      li.className = (i === 0 && lead && !s.done ? "first" : "") + (ev ? " tap" : "") + (s.done ? " ticked" : "") + (s.digest ? " digest" : "");
+      li.dataset.i = stepView.length; stepView.push({ kind: "step", text: s.text, done: s.done });
+      if (i === 0 && lead) { var b = document.createElement("span"); b.className = "lead"; b.textContent = "Start with"; li.append(b); }
+      var sp = document.createElement("span"); sp.className = "txt";
+      li.append(sp); list.append(li);
+      Shorten.fit(sp, Shorten.shortenStep(s.show));
+    });
+    var doneShown = done.filter(function (s) { return s.text !== stepFlash; }).length;
+    if (doneShown) {
+      var li = document.createElement("li");
+      li.className = "done-row ticked" + (ev ? " tap" : "");
+      li.dataset.i = stepView.length; stepView.push({ kind: "undo" });
+      var sp = document.createElement("span"); sp.className = "txt";
+      sp.textContent = doneShown === items.length ? "All " + items.length + " steps done" : doneShown + "/" + items.length + " steps done";
+      li.append(sp); list.append(li);
+    }
+  }
+  function saveStep(ev, text, done) {
+    var k = blockKey(ev) + "|" + text;
+    localSteps[k] = done;
+    apiPost({ action: "step", block: { cal: ev.src, id: ev.id, start: ev.start }, text: text, done: done }).then(function () {
+      // The next calendar sync carries the change; drop the local copy after that.
+      setTimeout(function () { if (localSteps[k] === done) delete localSteps[k]; }, 5 * 60000);
+    }).catch(function () {
+      delete localSteps[k];
+      lastStepsKey = null; renderAll(false);
+    });
+  }
+  $("#now-steps").addEventListener("click", function (e) {
+    var li = e.target.closest ? e.target.closest("li.tap") : null;
+    if (!li || !stepBlock) return;
+    var v = stepView[Number(li.dataset.i)], ev = stepBlock;
+    if (!v) return;
+    if (v.kind === "step") {
+      saveStep(ev, v.text, !v.done);
+      if (!v.done) {
+        // Show it struck through for a moment, then let it drop off the list.
+        stepFlash = v.text; lastStepsKey = null; renderAll(false);
+        setTimeout(function () { if (stepFlash === v.text) { stepFlash = null; lastStepsKey = null; renderAll(false); } }, 900);
+        return;
+      }
+    } else {
+      var last = ev.steps.filter(function (s) { return stepState(ev, s); }).pop();
+      if (last) saveStep(ev, last.text, false);
+    }
+    lastStepsKey = null; renderAll(false);
+  });
 
   /* ---------- Rest of today (one line) and status lights ---------- */
   function clockShort(ms) { return fmtTime(ms).replace(/\s?([AP])M$/i, function (m, p) { return p.toLowerCase(); }); }
@@ -683,7 +919,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     else later.textContent = "";
 
     var sync = $("#sync");
-    sync.textContent = conn.stale ? "Offline" : (conn.at ? "Synced " + clockShort(conn.at) : "");
+    sync.textContent = conn.stale ? "Offline" + (conn.at ? " · " + clockShort(conn.at) : "") : (conn.at ? "Synced " + clockShort(conn.at) : "");
     $("#led-sync").className = "led" + (ready() && !conn.stale ? " on" : (conn.status === "loading" ? "" : " warn"));
     $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
     var dueToday = ready() && buildDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
@@ -763,15 +999,22 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     $("#timer-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
     $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
     var n = Number(log[dayKey(now)]) || 0, wk = weekCount(now);
-    var tally = (n ? "■".repeat(Math.min(n, 6)) + " " + n + " today" : "None yet today") + (wk ? " · " + wk + " wk" : "");
+    var tally = (n ? "■".repeat(Math.min(n, 6)) + " " + n + " today" : "0 today") + (wk ? " · " + wk + " this wk" : "");
+    // Break after a focus round in a learning block: digest first (a few minutes), then rest.
+    var blkNow = pomo.phase === "rest" && ready() ? studyBlockAt(now.getTime()) : null;
+    if (blkNow && blkNow.modes && blkNow.modes.length) {
+      $("#timer-phase").textContent = "Digest, then break";
+      tally = "First: " + blkNow.modes.slice(0, 2).map(function (k) { return PACER[k].verb; }).join(" · ");
+    }
     if ($("#tally").textContent !== tally) $("#tally").textContent = tally;
   }
   function tickTimer(now) {
     var nowMs = now.getTime();
     if (pomo.endAt && nowMs >= pomo.endAt) {
       var ended = pomo.endAt, wasFocus = pomo.phase === "focus";
-      var blk = wasFocus ? blockAt(ended - 1000) : null;
-      pomo = { phase: wasFocus ? "rest" : "focus", endAt: null, left: wasFocus ? LEN.rest : LEN.focus };
+      var blk = wasFocus ? studyBlockAt(ended - 1000) : null;
+      // The break starts on its own (a skipped break costs the next round); the next focus round waits for Start.
+      pomo = wasFocus ? { phase: "rest", endAt: ended + LEN.rest, left: LEN.rest } : { phase: "focus", endAt: null, left: LEN.focus };
       if (lastLocalDone !== ended) {
         lastLocalDone = ended;
         if (wasFocus) {
@@ -846,7 +1089,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       wk.total++; wk.score += r === "done" ? 1 : r === "partly" ? 0.5 : 0;
     });
     if (!wk.total) { el.textContent = ""; return; }
-    el.textContent = (td.total ? td.done + "/" + td.total + " blocks done" : "No blocks rated") +
+    el.textContent = "Follow-through: " + (td.total ? td.done + "/" + td.total + " today" : "none rated today") +
       " · " + Math.round((wk.score / wk.total) * 100) + "% this wk";
   }
   $("#checkin").addEventListener("click", function (e) {
@@ -925,6 +1168,50 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   ["touchstart", "mousedown"].forEach(function (n) { $("#date").addEventListener(n, startHold, { passive: true }); });
   ["touchend", "touchcancel", "mouseup", "mouseleave"].forEach(function (n) { $("#date").addEventListener(n, endHold); });
 
+  /* ---------- Info sheet ---------- */
+  function infoNowText(now) {
+    if (!cfg) return "Not connected yet. Hold the date to set up.";
+    if (!ready()) return conn.status === "error" ? conn.message : "Loading your calendar…";
+    var t = now.getTime(), today = buildDayFor(now);
+    var cur = today.timed.filter(function (i) { return i.start <= t && i.end > t; }).sort(function (a, b) { return b.start - a.start; })[0];
+    var next = today.timed.filter(function (i) { return i.start > t; })[0];
+    var parts = [];
+    if (cur) parts.push("Now: " + shortText(cur.title, 28) + " until " + clockShort(cur.end));
+    else if (next) parts.push("Next: " + shortText(next.title, 28) + " at " + clockShort(next.start));
+    else parts.push("Nothing else on today");
+    var dueSoon = buildDeadlines(now).filter(function (d) { return d.day <= dayKey(t + DAY) && !(d.dueAt && d.dueAt < t); }).length;
+    parts.push(dueSoon ? dueSoon + " due by tomorrow" : "nothing due by tomorrow");
+    parts.push(pomo.endAt ? (pomo.phase === "focus" ? "focus round running" : "on a break") : "timer stopped");
+    return parts.join(" · ");
+  }
+  function infoLights(now) {
+    var t = now.getTime();
+    var dueToday = ready() && buildDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
+    var rows = [
+      { cls: ready() && !conn.stale ? "on" : (conn.status === "loading" ? "" : "warn"), name: "Sync",
+        text: ready() && !conn.stale ? "green: calendar is up to date (" + clockShort(conn.at) + ")" : conn.stale ? "orange: offline, showing the copy from " + clockShort(conn.at) : "orange: can't reach the calendar" },
+      { cls: pomo.endAt ? "on" : "", name: "Timer", text: pomo.endAt ? "green: a round is running" : "off: timer stopped" },
+      { cls: dueToday ? "warn" : "", name: "Due", text: dueToday ? "orange: something is due today" : "off: nothing left due today" }
+    ];
+    var ul = $("#info-lights"); ul.replaceChildren();
+    rows.forEach(function (r) {
+      var li = document.createElement("li");
+      var dot = document.createElement("span"); dot.className = "ik led " + r.cls;
+      var b = document.createElement("b"); b.textContent = r.name + " ";
+      li.append(dot, b, document.createTextNode(r.text));
+      ul.append(li);
+    });
+  }
+  function openInfo() {
+    var now = new Date();
+    $("#info-now").textContent = infoNowText(now);
+    infoLights(now);
+    $("#info").hidden = false;
+  }
+  $("#info-btn").addEventListener("click", openInfo);
+  $("#info-close").addEventListener("click", function () { $("#info").hidden = true; });
+  $("#info").addEventListener("click", function (e) { if (e.target === $("#info")) $("#info").hidden = true; });
+
   /* ---------- Keep the screen on ---------- */
   function keepAwake() {
     try {
@@ -944,11 +1231,11 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var now = new Date();
     renderClock(now);
     tickTimer(now);
-    var today = buildDayFor(now);
-    renderNow(now, today);
     if (now.getMinutes() !== lastMinute) {
       lastMinute = now.getMinutes();
-      renderToday(now, today, false);
+      var today = buildDayFor(now);
+      renderNow(now, today);
+      renderToday(now, today);
       renderDue(now);
       renderCheckin(now);
       renderFollow(now);
