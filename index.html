@@ -94,6 +94,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .clock-row { display: flex; align-items: flex-end; gap: 8px; }
 .clock { font-size: clamp(64px, 25vh, 104px); }
 .ampm { font: 400 13px/1 var(--f-label); padding-bottom: 4px; }
+.ampm:empty { display: none; }
 .focus { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .timer { font-size: clamp(48px, 18vh, 76px); }
 .focus.is-rest .timer, .focus.is-rest .label:first-child { color: var(--ink-soft); }
@@ -376,7 +377,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
     <section class="info-sec">
       <h3>Check-ins</h3>
-      <p>After a Study block ends, the dark strip asks how it went. <b>Done</b>, <b>Partly</b> or <b>Missed</b> is written on the block and colors it green, yellow or red. After Partly or Missed it offers to move what's left to the next free slot (never into sleep, 12–8 AM). "Follow-through" is today's done blocks and this week's average.</p>
+      <p>After a Study block ends, the dark strip asks how it went. <b>Done</b>, <b>Partly</b> or <b>Missed</b> is written on the block and colors it green, yellow or red. After Partly or Missed it offers to move what's left to the next free slot (never into your Sleep calendar's hours). "Follow-through" is today's done blocks and this week's average.</p>
     </section>
 
     <section class="info-sec">
@@ -392,7 +393,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
     <section class="info-sec">
       <h3>Where it comes from</h3>
-      <p>Your Columbia calendar, your Gmail calendar, Study Calendar, Classes and the Canvas feed. Changes show up within about two minutes. Without Wi-Fi the board keeps the last copy and says "Offline".</p>
+      <p>Your Columbia calendar, your Gmail calendar, Study Calendar, Classes, Sleep and the Canvas feed. Changes show up within about two minutes. Without Wi-Fi the board keeps the last copy and says "Offline".</p>
       <p>Hold the date for one second to open setup.</p>
     </section>
   </div>
@@ -442,10 +443,10 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   var startOfDay = function (d) { d = new Date(d); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
   // Calendar-day arithmetic that stays right on the 23- and 25-hour days when clocks change.
   var addDays = function (d, n, hour) { d = new Date(d); return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, hour || 0).getTime(); };
-  var fmtTime = function (d) { return new Date(d).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
+  // 24-hour time everywhere ("09:05", "21:30").
+  var fmtTime = function (d) { d = new Date(d); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
   function fmtRange(s, e) {
     var a = fmtTime(s), b = fmtTime(e);
-    if (/[AP]M$/i.test(a) && a.slice(-2) === b.slice(-2)) return a.slice(0, -3) + "–" + b;
     return a + "–" + b;
   }
   function fmtDur(ms) {
@@ -501,16 +502,11 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
 
   /* ---------- Clock ---------- */
-  var clockFmt = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" });
+  var clockFmt = null;   // the clock is drawn from the date directly (24-hour)
   var dateFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", month: "short" });
   function renderClock(now) {
-    var hm = "", ap = "";
-    clockFmt.formatToParts(now).forEach(function (p) {
-      if (p.type === "dayPeriod") ap = p.value;
-      else if (p.type === "hour" || p.type === "minute" || (p.type === "literal" && p.value.trim() === ":")) hm += p.value;
-    });
-    segText($("#clock-hm"), /^\d:/.test(hm) ? "0" + hm : hm);   // "05:36" so digits sit on the LCD's 88:88
-    $("#clock-ampm").textContent = ap;
+    segText($("#clock-hm"), fmtTime(now));   // "09:05" sits on the LCD's 88:88
+    $("#clock-ampm").textContent = "";
     $("#date").textContent = dateFmt.format(now);
   }
 
@@ -953,7 +949,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   });
 
   /* ---------- Rest of today (one line) and status lights ---------- */
-  function clockShort(ms) { return fmtTime(ms).replace(/\s?([AP])M$/i, function (m, p) { return p.toLowerCase(); }); }
+  function clockShort(ms) { return fmtTime(ms); }
   function renderToday(now, today) {
     var t = now.getTime(), later = $("#later");
     var cur = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
@@ -1156,7 +1152,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     el.textContent = "Follow-through: " + (td.total ? td.done + "/" + td.total + " today" : "none rated today") +
       " · " + Math.round((wk.score / wk.total) * 100) + "% this wk";
   }
-  function whenText(ms) { return new Date(ms).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }); }
+  function whenText(ms) { return new Date(ms).toLocaleDateString("en-US", { weekday: "short" }) + " " + fmtTime(ms); }
   $("#checkin").addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest("button") : null;
     if (!btn) return;
