@@ -128,9 +128,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .later { font-size: 19px; line-height: 1.25; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
 
 .due-head { display: flex; justify-content: space-between; gap: 8px; }
-.due-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.due-more-row { font-size: 18px; line-height: 1.2; color: var(--ink-soft); padding: 2px 4px 0; }
-.due-row { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
+/* One shared grid for all rows: the day column is as wide as its widest label ("Today", "11/14")
+   in whatever font is showing, so names never run into the day. */
+.due-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); row-gap: 2px; }
+.due-row > span:first-child { white-space: nowrap; }
+.due-row .rest { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.due-row .rest .t { flex: 1 1 auto; }
+.due-row .rest .meta { flex: none; }
+@supports not (grid-template-columns: subgrid) { .due-row { grid-template-columns: minmax(2.8em, max-content) minmax(0, 1fr); } }
+.due-more-row { grid-column: 1 / -1; font-size: 18px; line-height: 1.2; color: var(--ink-soft); padding: 2px 4px 0; }
+.due-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; column-gap: 10px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
 .due-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .due-row .meta { white-space: nowrap; color: var(--ink-soft); }
 .due-row.soon-0 { background: var(--ink); color: var(--lcd-hi); }
@@ -744,7 +751,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       if (d.dueAt && lab.soon <= 1) bits.push(clockShort(d.dueAt));
       if (plan.show) bits.push(plan.min ? fmtHours(plan.min) : "0h");
       var meta = document.createElement("span"); meta.className = "meta"; meta.textContent = bits.join(" · ");
-      li.append(day, tt, meta);
+      var rest = document.createElement("span"); rest.className = "rest";
+      rest.append(tt, meta);
+      li.append(day, rest);
       list.append(li);
       Shorten.fit(tt, Shorten.shorten(d.raw || d.title));
     });
