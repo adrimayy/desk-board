@@ -224,6 +224,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .ik.led::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #cfc8b6; }
 .ik.led.on::before { background: #8fd18a; box-shadow: 0 0 6px rgba(143, 209, 138, 0.9); }
 .ik.led.warn::before { background: #e08a5f; box-shadow: 0 0 6px rgba(224, 138, 95, 0.9); }
+.chip.wide { width: 40px; }
 .chip { flex: none; width: 22px; text-align: center; font: 400 11px/1 var(--f-label) !important; background: var(--ink); color: var(--lcd-hi); padding: 4px 0 3px; }
 
 /* Portrait: keycaps go underneath and the LCD columns stack. */
@@ -290,6 +291,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
       <button class="chip-btn primary" data-r="done" type="button">Done</button>
       <button class="chip-btn" data-r="partly" type="button">Partly</button>
       <button class="chip-btn" data-r="missed" type="button">Missed</button>
+      <button class="chip-btn primary" data-move="yes" type="button" hidden>Next free slot</button>
+      <button class="chip-btn" data-move="no" type="button" hidden>Not now</button>
     </section>
   </section>
 
@@ -373,7 +376,13 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
     <section class="info-sec">
       <h3>Check-ins</h3>
-      <p>After a Study block ends, the dark strip asks how it went. <b>Done</b>, <b>Partly</b> or <b>Missed</b> is written on the block and colors it green, yellow or red. "Follow-through" is today's done blocks and this week's average.</p>
+      <p>After a Study block ends, the dark strip asks how it went. <b>Done</b>, <b>Partly</b> or <b>Missed</b> is written on the block and colors it green, yellow or red. After Partly or Missed it offers to move what's left to the next free slot (never into sleep, 12–8 AM). "Follow-through" is today's done blocks and this week's average.</p>
+    </section>
+
+    <section class="info-sec">
+      <h3>How long things take</h3>
+      <p>From your check-ins over the last three weeks. "×1.6" means blocks like these need about 1.6 times the time you give them. The same numbers are written into your next Weekly review, so planning can use them.</p>
+      <ul class="info-key-list" id="info-stats"></ul>
     </section>
 
     <section class="info-sec">
@@ -506,7 +515,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
 
   /* ---------- Calendar data ---------- */
-  var events = [];
+  var events = [], stats = [];
   var conn = { status: cfg ? "loading" : "error", message: cfg ? "" : "Hold the date to connect your calendar.", at: 0, stale: false };
 
   function plainText(html) {
@@ -567,8 +576,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     loading = true;
     apiGet("data").then(function (d) {
       if (!d.ok) throw d;
-      store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state });
+      store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state, stats: d.stats });
       events = parseEvents(d.events);
+      stats = Array.isArray(d.stats) ? d.stats : stats;
       conn = { status: "ok", message: "", at: Date.now(), stale: false };
       applyState(d.state);
       renderAll(true);
@@ -585,6 +595,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var c = cfg && store("deskboard-cache");
     if (!c || !c.events || Date.now() - c.at > 36 * 3600000) return;
     events = parseEvents(c.events);
+    if (Array.isArray(c.stats)) stats = c.stats;
     conn = { status: "ok", message: "", at: c.at, stale: true };
     // Only the pomodoro log: a cached timer could be hours old.
     setTimeout(function () { if (c.state && c.state.log) applyState({ log: c.state.log }); }, 0);
@@ -776,6 +787,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       var key = ev.title.toLowerCase() + "|" + ev.start;
       if (seen[key]) return; seen[key] = 1;
       if (ev.allDay) { if (!isDeadline(ev)) chips.push(ev); return; }
+      // A long event on another calendar ("Early Voting 9–5", a 3-day trip) is background, not a block.
+      if (ev.src !== "study" && ev.end - ev.start >= 6 * 3600000 && !/^sleep\b/i.test(ev.title)) { chips.push(ev); return; }
       if (isDeadline(ev) && ev.end - ev.start <= 30 * 60000) return;
       timed.push(ev);
     });
@@ -837,7 +850,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     } else {
       // Day is done: show tomorrow's first move.
       var tmr = new Date(addDays(now, 1, 1));
-      var first = buildDayFor(tmr).timed[0];
+      var first = buildDayFor(tmr).timed.filter(function (i) { return !/^sleep\b/i.test(i.title); })[0];
       var dueTmr = buildDeadlines(now).filter(function (d) { return d.day === dayKey(tmr); }).map(function (d) { return shortText(d.raw || d.title, 18); });
       label.textContent = "Tomorrow";
       bar.hidden = true;
@@ -1098,11 +1111,26 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
         ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title) && !ratingOf(ev);
     }).sort(function (a, b) { return b.end - a.end; })[0] || null;
   }
+  // After Missed or Partly the strip offers to move what's left to the next free slot.
+  var moveOffer = null;
+  function showButtons(kind) {
+    var btns = $("#checkin").querySelectorAll("button");
+    for (var i = 0; i < btns.length; i++) {
+      var isMove = btns[i].hasAttribute("data-move");
+      btns[i].hidden = kind === "none" || (kind === "move") !== isMove;
+    }
+  }
   function renderCheckin(now) {
-    var box = $("#checkin"), q = $("#checkin-q"), btns = box.querySelectorAll("button"), i;
+    var box = $("#checkin"), q = $("#checkin-q");
+    if (moveOffer && moveOffer.until > now.getTime()) {
+      box.hidden = false; showButtons("move"); shownCheck = null;
+      var b0 = document.createElement("b"); b0.textContent = shortText(moveOffer.ev.title, 22);
+      q.replaceChildren(document.createTextNode("Reschedule "), b0, document.createTextNode("?"));
+      return;
+    }
+    moveOffer = null;
     if (checkNote && checkNote.until > now.getTime()) {
-      box.hidden = false; q.textContent = checkNote.text; shownCheck = null;
-      for (i = 0; i < btns.length; i++) btns[i].hidden = true;
+      box.hidden = false; q.textContent = checkNote.text; shownCheck = null; showButtons("none");
       return;
     }
     checkNote = null;
@@ -1110,7 +1138,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (ev && shownCheck && blockKey(ev) === blockKey(shownCheck) && !box.hidden) return;
     shownCheck = ev;
     if (!ev) { box.hidden = true; return; }
-    for (i = 0; i < btns.length; i++) btns[i].hidden = false;
+    showButtons("rate");
     var b = document.createElement("b"); b.textContent = shortText(ev.title, 30);
     q.replaceChildren(document.createTextNode("How did "), b, document.createTextNode(" go?"));
     box.hidden = false;
@@ -1128,17 +1156,35 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     el.textContent = "Follow-through: " + (td.total ? td.done + "/" + td.total + " today" : "none rated today") +
       " · " + Math.round((wk.score / wk.total) * 100) + "% this wk";
   }
+  function whenText(ms) { return new Date(ms).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }); }
   $("#checkin").addEventListener("click", function (e) {
-    var btn = e.target.closest ? e.target.closest("button[data-r]") : null;
-    if (!btn || !shownCheck) return;
+    var btn = e.target.closest ? e.target.closest("button") : null;
+    if (!btn) return;
+    if (btn.hasAttribute("data-move")) {
+      var offer = moveOffer; moveOffer = null;
+      if (!offer) return;
+      if (btn.getAttribute("data-move") === "no") {
+        checkNote = { text: "OK. The weekly review will pick it up.", until: Date.now() + 6000 };
+      } else {
+        checkNote = { text: "Finding a slot…", until: Date.now() + 30000 };
+        apiPost({ action: "reschedule", r: offer.r, block: { cal: offer.ev.src, id: offer.ev.id, start: offer.ev.start } }).then(function (d) {
+          checkNote = { text: "Moved to " + whenText(d.start) + ".", until: Date.now() + 10000 };
+          renderCheckin(new Date()); load();
+        }).catch(function (err) {
+          checkNote = { text: err && err.error === "no free slot this week" ? "No free slot this week. Plan it in the weekly review." : "Couldn't move it. Try again from the weekly review.", until: Date.now() + 10000 };
+          renderCheckin(new Date());
+        });
+      }
+      renderCheckin(new Date());
+      return;
+    }
+    if (!btn.hasAttribute("data-r") || !shownCheck) return;
     var ev = shownCheck, r = btn.getAttribute("data-r"), key = blockKey(ev);
     localChecks[key] = r;
-    checkNote = {
-      text: r === "done" ? "Logged. Nice work." : r === "partly" ? "Logged. Schedule the rest." : "Logged. Find it a new slot.",
-      until: Date.now() + 8000
-    };
+    if (r === "done") checkNote = { text: "Logged. Nice work.", until: Date.now() + 8000 };
+    else moveOffer = { ev: ev, r: r, until: Date.now() + 5 * 60000 };
     apiPost({ action: "checkin", r: r, block: { cal: ev.src, id: ev.id, start: ev.start } }).catch(function () {
-      delete localChecks[key];
+      delete localChecks[key]; moveOffer = null;
       checkNote = { text: "That check-in didn't save. It will ask again.", until: Date.now() + 8000 };
     });
     var now = new Date();
@@ -1238,10 +1284,26 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       ul.append(li);
     });
   }
+  function infoStats() {
+    var ul = $("#info-stats"); ul.replaceChildren();
+    var rows = stats.filter(function (x) { return x.n; }).slice(0, 6);
+    if (!rows.length) {
+      var li0 = document.createElement("li"); li0.textContent = "Not enough check-ins yet. Rate a few blocks and this fills in.";
+      ul.append(li0); return;
+    }
+    rows.forEach(function (x) {
+      var li = document.createElement("li");
+      var b = document.createElement("b"); b.className = "chip wide"; b.textContent = x.factor ? "×" + x.factor : "–";
+      li.append(b, document.createTextNode(x.label + ": " + Math.round(x.finish * 100) + "% done across " + x.n + " block" + (x.n > 1 ? "s" : "") +
+        (x.factor ? "" : " (needs 3 to estimate)")));
+      ul.append(li);
+    });
+  }
   function openInfo() {
     var now = new Date();
     $("#info-now").textContent = infoNowText(now);
     infoLights(now);
+    infoStats();
     $("#info").hidden = false;
   }
   $("#info-btn").addEventListener("click", openInfo);
@@ -1275,7 +1337,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       renderDue(now);
       renderCheckin(now);
       renderFollow(now);
-    } else if (checkNote) {
+    } else if (checkNote || moveOffer) {
       renderCheckin(now);
     }
     if (dayKey(now) !== lastDay) { lastDay = dayKey(now); load(); }
