@@ -130,7 +130,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .due-head { display: flex; justify-content: space-between; gap: 8px; }
 .due-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .due-more-row { font-size: 18px; line-height: 1.2; color: var(--ink-soft); padding: 2px 4px 0; }
-.due-row { display: grid; grid-template-columns: 4.6ch minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
+.due-row { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) auto; column-gap: 8px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
 .due-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .due-row .meta { white-space: nowrap; color: var(--ink-soft); }
 .due-row.soon-0 { background: var(--ink); color: var(--lcd-hi); }
@@ -424,6 +424,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   var REFRESH_MS = 2 * 60 * 1000;
   var dayKey = function (d) { d = new Date(d); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
   var startOfDay = function (d) { d = new Date(d); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+  // Calendar-day arithmetic that stays right on the 23- and 25-hour days when clocks change.
+  var addDays = function (d, n, hour) { d = new Date(d); return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, hour || 0).getTime(); };
   var fmtTime = function (d) { return new Date(d).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); };
   function fmtRange(s, e) {
     var a = fmtTime(s), b = fmtTime(e);
@@ -587,11 +589,12 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   /* ---------- Deadlines ---------- */
   var DUE_RX = /\b(due|quiz|exam|test|midterm|final|drill)\b/i;
   var EXAM_RX = /\b(quiz|exam|test|midterm)\b/i;
-  var NOT_DUE_RX = /\b(prep|start|out)\b/i;
+  var NOT_DUE_RX = /\b(prep|start|out|review|study)\b/i;
   var STOP = { due: 1, the: 1, and: 1, of: 1, a: 1, to: 1, "for": 1, "in": 1, on: 1, by: 1, pm: 1, am: 1, "this": 1, week: 1, part: 1 };
 
   function isDeadline(e) {
     if (e.src === "canvas") return true;
+    if (e.src === "study") return false;          // Study blocks are work time, even "Quiz 3 review"
     if (NOT_DUE_RX.test(e.title)) return false;
     if (e.allDay) return DUE_RX.test(e.title);
     return (e.end - e.start <= 30 * 60000 && DUE_RX.test(e.title)) || EXAM_RX.test(e.title);
@@ -620,11 +623,18 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     return s || t;
   }
 
+  // "UW Essay 2 due 6 PM" on an all-day event: use 6 PM as the real due time.
+  function timeInTitle(title, dayStart) {
+    var m = /\bdue\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i.exec(title);
+    if (!m) return null;
+    var h = Number(m[1]) % 12 + (/pm/i.test(m[3]) ? 12 : 0), d = new Date(dayStart);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, Number(m[2] || 0)).getTime();
+  }
   function buildDeadlines(now) {
     var today = dayKey(now);
     var items = allEvents().filter(isDeadline).map(function (e) {
       var parts = e.src === "canvas" ? splitCanvas(e.title) : { title: e.title, course: "" };
-      var dueAt = e.allDay ? null : (e.src === "canvas" ? e.start : e.end);
+      var dueAt = e.allDay ? timeInTitle(e.title, e.start) : (e.src === "canvas" ? e.start : e.end);
       var day = e.allDay ? dayKey(e.start) : dayKey(dueAt);
       return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course) };
     }).filter(function (d) { return d.day >= today; });
@@ -669,6 +679,23 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     for (var k in tok) if (!GENERIC[k] && !/^\d+$/.test(k) && k.length > 1) o[k] = 1;
     return o;
   }
+  // Does a work block belong to this deadline? Same course words, no conflicting
+  // assignment number ("UW 3b" isn't "UW Essay 2"), and a compatible kind of work
+  // (an essay block doesn't count toward a reading; reading and review do count toward a quiz).
+  var KINDS = { essay: "essay", paper: "essay", draft: "essay", report: "report", lab: "lab", pset: "pset", psets: "pset",
+    problem: "pset", exercise: "exercise", reading: "reading", rdg: "reading", wr: "reading", quiz: "exam", exam: "exam",
+    test: "exam", midterm: "exam", review: "review", slides: "slides" };
+  var ACCEPTS = { exam: { exam: 1, review: 1, reading: 1 } };
+  function kindOf(title) { var k = null; String(title).toLowerCase().split(/[^a-z]+/).some(function (w) { k = KINDS[w] || null; return k; }); return k; }
+  function idsOf(title) { return (String(title).toLowerCase().match(/\b\d+[a-z]?\b|\bwr\d+\b/g) || []).map(function (x) { return x.replace(/^wr/, ""); }); }
+  function sameWork(d, key, blockTitle) {
+    if (shared(key, tokens(blockTitle)) < 1) return false;
+    var a = idsOf(d.title), b = idsOf(blockTitle);
+    if (a.length && b.length && !a.some(function (x) { return b.indexOf(x) >= 0; })) return false;
+    var kd = kindOf(d.raw || d.title), kb = kindOf(blockTitle);
+    if (kd && kb && kd !== kb && !(ACCEPTS[kd] && ACCEPTS[kd][kb])) return false;
+    return true;
+  }
   function plannedFor(d, now) {
     var t = now.getTime(), p = d.day.split("-").map(Number);
     var dueEnd = d.dueAt || new Date(p[0], p[1] - 1, p[2], 12).getTime();
@@ -677,10 +704,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     allEvents().forEach(function (ev) {
       if (ev.src !== "study" || ev.allDay) return;   // only work blocks count, not the class itself
       if (ev.end - ev.start < 30 * 60000 || ev.end <= t || ev.start >= dueEnd) return;
-      if (EXAM_RX.test(ev.title)) return;
       var sk = ev.title.toLowerCase() + "|" + ev.start;
       if (seen[sk]) return; seen[sk] = 1;
-      if (shared(key, tokens(ev.title)) >= 1) min += (Math.min(ev.end, dueEnd) - Math.max(ev.start, t)) / 60000;
+      if (sameWork(d, key, ev.title)) min += (Math.min(ev.end, dueEnd) - Math.max(ev.start, t)) / 60000;
     });
     return { show: min > 0 || dueEnd - t <= 7 * DAY, min: Math.round(min) };
   }
@@ -734,7 +760,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
 
   /* ---------- Days ---------- */
   function buildDayFor(date) {
-    var s = startOfDay(date).getTime(), e = s + DAY, seen = {}, timed = [], chips = [];
+    var s = startOfDay(date).getTime(), e = addDays(date, 1), seen = {}, timed = [], chips = [];
     allEvents().forEach(function (ev) {
       if (ev.src === "canvas") return;
       if (ev.end <= s || ev.start >= e) return;
@@ -801,7 +827,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       fillSteps(next.steps, true, next);
     } else {
       // Day is done: show tomorrow's first move.
-      var tmr = new Date(startOfDay(now).getTime() + DAY + 3600000);
+      var tmr = new Date(addDays(now, 1, 1));
       var first = buildDayFor(tmr).timed[0];
       var dueTmr = buildDeadlines(now).filter(function (d) { return d.day === dayKey(tmr); }).map(function (d) { return shortText(d.raw || d.title, 18); });
       label.textContent = "Tomorrow";
@@ -910,7 +936,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var t = now.getTime(), later = $("#later");
     var cur = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
     var upcoming = today.timed.filter(function (i) { return i.start > t; });
-    if (cur.length) upcoming = upcoming.slice(1);           // the next block is already on the main line
+    upcoming = upcoming.slice(1);   // the next block is already shown: as "Next", or as "then …" under Now
     var parts = upcoming.slice(0, 3).map(function (i) { return clockShort(i.start) + " " + shortText(i.title, 16); });
     var allDay = today.chips.map(function (e) { return shortText(e.title, 20); });
     if (!ready()) later.textContent = "";
@@ -986,7 +1012,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
   function weekCount(now) {
     var n = 0;
-    for (var i = 0; i < 7; i++) n += Number(log[dayKey(now.getTime() - i * DAY)]) || 0;
+    for (var i = 0; i < 7; i++) n += Number(log[dayKey(addDays(now, -i, 12))]) || 0;
     return n;
   }
   function renderTimer(now) {
@@ -1057,8 +1083,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function pendingCheckin(now) {
     if (!ready()) return null;
     var t = now.getTime();
-    return buildDayFor(now).timed.filter(function (ev) {
-      return ev.src === "study" && ev.end <= t && ev.end >= t - 6 * 3600000 &&
+    // Look at all events, not just today's, so an 11 PM block still gets asked about after midnight.
+    return allEvents().filter(function (ev) {
+      return ev.src === "study" && !ev.allDay && ev.end <= t && ev.end >= t - 6 * 3600000 &&
         ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title) && !ratingOf(ev);
     }).sort(function (a, b) { return b.end - a.end; })[0] || null;
   }
@@ -1080,7 +1107,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     box.hidden = false;
   }
   function renderFollow(now) {
-    var el = $("#follow"), t = now.getTime(), todayStart = startOfDay(now).getTime(), weekStart = todayStart - 6 * DAY;
+    var el = $("#follow"), t = now.getTime(), todayStart = startOfDay(now).getTime(), weekStart = addDays(now, -6);
     var td = { done: 0, total: 0 }, wk = { score: 0, total: 0 };
     allEvents().forEach(function (ev) {
       if (ev.src !== "study" || ev.allDay || ev.end > t || ev.start < weekStart) return;
@@ -1179,7 +1206,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (cur) parts.push("Now: " + shortText(cur.title, 28) + " until " + clockShort(cur.end));
     else if (next) parts.push("Next: " + shortText(next.title, 28) + " at " + clockShort(next.start));
     else parts.push("Nothing else on today");
-    var dueSoon = buildDeadlines(now).filter(function (d) { return d.day <= dayKey(t + DAY) && !(d.dueAt && d.dueAt < t); }).length;
+    var dueSoon = buildDeadlines(now).filter(function (d) { return d.day <= dayKey(addDays(now, 1, 12)) && !(d.dueAt && d.dueAt < t); }).length;
     parts.push(dueSoon ? dueSoon + " due by tomorrow" : "nothing due by tomorrow");
     parts.push(pomo.endAt ? (pomo.phase === "focus" ? "focus round running" : "on a break") : "timer stopped");
     return parts.join(" · ");
