@@ -3,6 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+/* One site, two layouts. Phones get the desk-display board (index.html); bigger screens
+   (laptops, desktops, iPads) get the desktop board (desk.html). Same data, same sign-in.
+   Add ?view=board or ?view=desk to the address to pin one on this device; ?view=auto undoes it. */
+(function () {
+  var pin = "";
+  try {
+    var q = new URLSearchParams(location.search).get("view");
+    if (q) localStorage.setItem("deskboard-layout", q === "auto" ? "" : q);
+    pin = localStorage.getItem("deskboard-layout") || "";
+  } catch (e) {}
+  var phone = Math.min(screen.width, screen.height) < 600;
+  var want = pin === "board" || pin === "desk" ? pin : (phone ? "board" : "desk");
+  var here = /desk\.html$/i.test(location.pathname) ? "desk" : "board";
+  if (want !== here) location.replace((want === "desk" ? "desk.html" : "index.html") + location.hash);
+})();
+</script>
 <title>Desk Board</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +131,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .steps li.ticked .txt { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-soft); }
 .steps li.done-row .txt { text-decoration: none; }
 .steps li.digest::before { transform: rotate(45deg) scale(0.8); }
+.steps li.hint::before { border: 0; width: 0.5em; height: 2px; margin-top: 0.55em; background: var(--ink); }   /* a suggestion, not a checkbox */
 .now-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .modes { display: flex; gap: 8px; }
 .mode { font: 400 10px/1 var(--f-label); letter-spacing: 0.04em; color: var(--ink-soft); white-space: nowrap; }
@@ -145,7 +163,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .due-row.soon-0 .meta { color: var(--lcd); }
 .due-row.none .meta { color: var(--alert); }
 .due-row.soon-0.none .meta { color: #f2c9a8; }
+.due-row.tap { cursor: pointer; }
 .due-row.past { opacity: 0.45; }
+.due-alert { grid-column: 1 / -1; font-size: 17px; line-height: 1.2; color: var(--alert); padding: 0 4px 2px; }
+.due-row.arm { outline: 2px dashed currentColor; outline-offset: 1px; }
+.due-row.arm .meta { color: inherit; }
+.lcd .due-head, .lcd .due-list, .lcd #due-note, .lcd .later, .lcd .focus, .lcd #now-steps { transition: opacity 0.6s; }
+.lcd.calm .due-head, .lcd.calm .due-list, .lcd.calm #due-note, .lcd.calm .later, .lcd.calm .focus { opacity: 0.22; }
+.lcd.calm #now-steps { opacity: 0.5; }
 .note { margin: 0; font-size: 19px; line-height: 1.1; color: var(--ink-soft); }
 
 /* Check-in strip on the LCD */
@@ -283,17 +308,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
         <ol class="due-list" id="due-list"></ol>
         <p class="note" id="due-note">Looking for deadlines</p>
         <span style="flex: 1"></span>
-        <span class="tally" id="follow"></span>
       </div>
     </div>
 
     <section class="checkin" id="checkin" aria-live="polite" hidden>
       <p class="checkin-q" id="checkin-q"></p>
-      <button class="chip-btn primary" data-r="done" type="button">Done</button>
-      <button class="chip-btn" data-r="partly" type="button">Partly</button>
-      <button class="chip-btn" data-r="missed" type="button">Missed</button>
-      <button class="chip-btn primary" data-move="yes" type="button" hidden>Next free slot</button>
-      <button class="chip-btn" data-move="no" type="button" hidden>Not now</button>
     </section>
   </section>
 
@@ -371,18 +390,22 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
     <section class="info-sec">
       <h3>Due</h3>
-      <p>Everything due in the next two weeks, from Canvas and from calendar events with "due", "quiz", "exam", "test" or "midterm" in the title. When Canvas and your calendar disagree, Canvas wins.</p>
-      <p>The right column is <b>time planned</b>: hours already blocked on your Study Calendar before it's due. A red <b class="red">0h</b> means nothing is blocked yet. The dark row is due today; a faded row's time has passed.</p>
+      <p>Everything due in the next six weeks: all of Canvas, plus calendar events with "due", "deadline" or "submit" in the title, exams and quizzes (not "review" or "prep" sessions), and all-day events like "Pset 6" or "Essay 3". When two entries are the same assignment, the earlier date and time win.</p>
+      <p>Anything due in the next 36 hours and the next exam or quiz always get a row, even if that means more rows. The last line says how many more there are and what's next. A red line at the top means a calendar didn't load or the board is offline, so something could be missing.</p>
+      <p>The right column is <b>time planned</b>: hours already blocked on your Study Calendar before it's due. Only the most urgent thing with nothing blocked gets a red <b class="red">0h</b>. The dark row is due today. Once a due time passes the row fades and says "passed" until the day ends.</p>
+      <p><b>Finished early?</b> Tap the row, then tap it again: it's marked done here, on the desktop board and on the widget.</p>
     </section>
 
     <section class="info-sec">
       <h3>Check-ins</h3>
-      <p>After a Study block ends, the dark strip asks how it went. <b>Done</b>, <b>Partly</b> or <b>Missed</b> is written on the block and colors it green, yellow or red. After Partly or Missed it offers to move what's left to the next free slot (never into your Sleep calendar's hours). "Follow-through" is today's done blocks and this week's average.</p>
+      <p>Once a day, after 21:00 and your last block, the dark strip asks about the day: <b>All done</b> logs every block as done. <b>Not all</b> goes through them one at a time (Done, Partly or Missed), then offers to move what's left to free slots. If you never answer, the blocks count as done.</p>
+      <p>Sunday evening and Monday it offers to move last week's unfinished blocks into the new week, or let them go. After four days without a tap anywhere it asks if you want a fresh start.</p>
+      <p>When nothing needs you (no block on or coming up, nothing due today) the board dims and only the clock and the next block stay bright.</p>
     </section>
 
     <section class="info-sec">
       <h3>How long things take</h3>
-      <p>From your check-ins over the last three weeks. "×1.6" means blocks like these need about 1.6 times the time you give them. The same numbers are written into your next Weekly review, so planning can use them.</p>
+      <p>From your night check-ins over the last three weeks (blocks you didn't mark count as done). "×1.6" means blocks like these need about 1.6 times the time you give them. The same numbers are written into your next Weekly review, so planning can use them.</p>
       <ul class="info-key-list" id="info-stats"></ul>
     </section>
 
@@ -394,11 +417,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
     <section class="info-sec">
       <h3>Where it comes from</h3>
       <p>Your Columbia calendar, your Gmail calendar, Study Calendar, Classes, Sleep and the Canvas feed. Changes show up within about two minutes. Without Wi-Fi the board keeps the last copy and says "Offline".</p>
-      <p>Hold the date for one second to open setup.</p>
+      <p>Hold the date for one second to open setup. The same address opens the big desktop board on a computer or iPad, where you can star, reorder and plan assignments.</p>
     </section>
   </div>
 </div>
 
+<script src="rules.js"></script>
 <script src="shorten.js"></script>
 <script>
 /* Writes clock/timer text one character per fixed-width cell. */
@@ -560,21 +584,24 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
         allDay: allDay, start: start, end: end,
         steps: e.cal === "canvas" ? [] : stepsFrom(text),
         checkin: ci ? ci[1].toLowerCase() : null,
+        moved: /^\s*Moved to:/im.test(text),
         modes: e.cal === "canvas" ? [] : modesFrom(text),
         pomos: pc ? Number(pc[1]) : 0
       };
     }).filter(function (e) { return !isNaN(e.start) && !isNaN(e.end); });
   }
 
+  var sources = {};   // which calendars loaded, from the script
   var loading = false;
   function load() {
     if (!cfg || loading) return;
     loading = true;
     apiGet("data").then(function (d) {
       if (!d.ok) throw d;
-      store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state, stats: d.stats });
+      store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state, stats: d.stats, sources: d.sources });
       events = parseEvents(d.events);
       stats = Array.isArray(d.stats) ? d.stats : stats;
+      sources = d.sources || {};
       conn = { status: "ok", message: "", at: Date.now(), stale: false };
       applyState(d.state);
       renderAll(true);
@@ -592,148 +619,23 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (!c || !c.events || Date.now() - c.at > 36 * 3600000) return;
     events = parseEvents(c.events);
     if (Array.isArray(c.stats)) stats = c.stats;
+    if (c.sources) sources = c.sources;
     conn = { status: "ok", message: "", at: c.at, stale: true };
     // Only the pomodoro log: a cached timer could be hours old.
-    setTimeout(function () { if (c.state && c.state.log) applyState({ log: c.state.log }); }, 0);
+    setTimeout(function () { if (c.state && c.state.log) applyState({ log: c.state.log, doneDue: c.state.doneDue }); }, 0);
   })();
 
   function allEvents() { return conn.status === "ok" ? events : []; }
   function ready() { return conn.status === "ok"; }
 
-  /* ---------- Deadlines ---------- */
-  var DUE_RX = /\b(due|quiz|exam|test|midterm|final|drill)\b/i;
-  var EXAM_RX = /\b(quiz|exam|test|midterm)\b/i;
-  var NOT_DUE_RX = /\b(prep|start|out|review|study)\b/i;
-  var STOP = { due: 1, the: 1, and: 1, of: 1, a: 1, to: 1, "for": 1, "in": 1, on: 1, by: 1, pm: 1, am: 1, "this": 1, week: 1, part: 1 };
-
-  function isDeadline(e) {
-    if (e.src === "canvas") return true;
-    if (e.src === "study") return false;          // Study blocks are work time, even "Quiz 3 review"
-    if (NOT_DUE_RX.test(e.title)) return false;
-    if (e.allDay) return DUE_RX.test(e.title);
-    return (e.end - e.start <= 30 * 60000 && DUE_RX.test(e.title)) || EXAM_RX.test(e.title);
-  }
-  function splitCanvas(title) {
-    var m = /^(.*?)\s*\[([^\]]+)\]\s*$/.exec(title);
-    if (!m) return { title: title, course: "" };
-    var course = m[2].split(" - ").slice(1).join(" - ") || m[2];
-    course = course.toLowerCase().replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); })
-      .replace(/\b(Of|And|To|In|For|The)\b/g, function (w, x, i) { return i ? w.toLowerCase() : w; });
-    return { title: m[1], course: course };
-  }
-  function tokens(s) {
-    var set = {};
-    String(s).toLowerCase().split(/[^a-z0-9]+/).forEach(function (w) { if (w && !STOP[w]) set[w] = 1; });
-    return set;
-  }
-  function shared(a, b) { var n = 0; for (var k in a) if (b[k]) n++; return n; }
-  function sharesNumber(a, b) { for (var k in a) if (/^\d+$/.test(k) && b[k]) return true; return false; }
-  function dayGap(a, b) {
-    var p = a.split("-").map(Number), q = b.split("-").map(Number);
-    return Math.round((new Date(p[0], p[1] - 1, p[2]) - new Date(q[0], q[1] - 1, q[2])) / DAY);
-  }
-  function dueTitle(t) {
-    var s = String(t).replace(/\s*\bdue\b(\s+\d{1,2}(:\d{2})?\s*(am|pm))?/i, "").replace(/\s{2,}/g, " ").trim();
-    return s || t;
-  }
-
-  // "UW Essay 2 due 6 PM" on an all-day event: use 6 PM as the real due time.
-  function timeInTitle(title, dayStart) {
-    var m = /\bdue\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i.exec(title);
-    if (!m) return null;
-    var h = Number(m[1]) % 12 + (/pm/i.test(m[3]) ? 12 : 0), d = new Date(dayStart);
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, Number(m[2] || 0)).getTime();
-  }
-  function buildDeadlines(now) {
-    var today = dayKey(now);
-    var items = allEvents().filter(isDeadline).map(function (e) {
-      var parts = e.src === "canvas" ? splitCanvas(e.title) : { title: e.title, course: "" };
-      var dueAt = e.allDay ? timeInTitle(e.title, e.start) : (e.src === "canvas" ? e.start : e.end);
-      var day = e.allDay ? dayKey(e.start) : dayKey(dueAt);
-      return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course) };
-    }).filter(function (d) { return d.day >= today; });
-
-    // One row per assignment. Canvas wins on date and time; your shorter name wins on display.
-    var merged = [];
-    items.sort(function (a, b) { return (b.src === "canvas") - (a.src === "canvas"); });
-    items.forEach(function (d) {
-      var twin = merged.filter(function (m) {
-        var n = shared(m.tok, d.tok);
-        if (m.day === d.day) {
-          if (n >= 2) return true;
-          return n >= 1 && m.dueAt && d.dueAt && Math.abs(m.dueAt - d.dueAt) <= 30 * 60000;
-        }
-        if (m.src === "canvas" && d.src !== "canvas") {
-          return Math.abs(dayGap(m.day, d.day)) <= 10 && n >= 2 && sharesNumber(m.tok, d.tok);
-        }
-        return false;
-      })[0];
-      if (!twin) { merged.push(d); return; }
-      if (twin.src === "canvas" && d.src !== "canvas") {
-        if (d.title.length < twin.title.length) { twin.title = d.title; twin.raw = d.raw; }
-      } else if (!twin.dueAt && d.dueAt) {
-        twin.dueAt = d.dueAt;
-      }
-      if (!twin.course && d.course) twin.course = d.course;
-      for (var k in d.tok) twin.tok[k] = 1;
-    });
-    merged.sort(function (a, b) {
-      if (a.day !== b.day) return a.day < b.day ? -1 : 1;
-      return (a.dueAt || 0) - (b.dueAt || 0);
-    });
-    return merged;
-  }
-
-  // Work time already on the calendar before each deadline; nothing blocked gets flagged.
-  var GENERIC = { lab: 1, reading: 1, essay: 1, report: 1, quiz: 1, exam: 1, test: 1, review: 1, work: 1, practice: 1,
-    finish: 1, start: 1, prep: 1, submit: 1, weekly: 1, "final": 1, draft: 1, exercise: 1, intro: 1, introductory: 1,
-    experimental: 1, university: 1, writing: 1, lesson: 1, week: 1, "short": 1, part: 1, mon: 1, tue: 1, wed: 1, thu: 1, fri: 1, sat: 1, sun: 1 };
-  function distinct(tok) {
-    var o = {};
-    for (var k in tok) if (!GENERIC[k] && !/^\d+$/.test(k) && k.length > 1) o[k] = 1;
-    return o;
-  }
-  // Does a work block belong to this deadline? Same course words, no conflicting
-  // assignment number ("UW 3b" isn't "UW Essay 2"), and a compatible kind of work
-  // (an essay block doesn't count toward a reading; reading and review do count toward a quiz).
-  var KINDS = { essay: "essay", paper: "essay", draft: "essay", report: "report", lab: "lab", pset: "pset", psets: "pset",
-    problem: "pset", exercise: "exercise", reading: "reading", rdg: "reading", wr: "reading", quiz: "exam", exam: "exam",
-    test: "exam", midterm: "exam", review: "review", slides: "slides" };
-  var ACCEPTS = { exam: { exam: 1, review: 1, reading: 1 } };
-  function kindOf(title) { var k = null; String(title).toLowerCase().split(/[^a-z]+/).some(function (w) { k = KINDS[w] || null; return k; }); return k; }
-  function idsOf(title) { return (String(title).toLowerCase().match(/\b\d+[a-z]?\b|\bwr\d+\b/g) || []).map(function (x) { return x.replace(/^wr/, ""); }); }
-  function sameWork(d, key, blockTitle) {
-    if (shared(key, tokens(blockTitle)) < 1) return false;
-    var a = idsOf(d.title), b = idsOf(blockTitle);
-    if (a.length && b.length && !a.some(function (x) { return b.indexOf(x) >= 0; })) return false;
-    var kd = kindOf(d.raw || d.title), kb = kindOf(blockTitle);
-    if (kd && kb && kd !== kb && !(ACCEPTS[kd] && ACCEPTS[kd][kb])) return false;
-    return true;
-  }
-  function plannedFor(d, now) {
-    var t = now.getTime(), p = d.day.split("-").map(Number);
-    var dueEnd = d.dueAt || new Date(p[0], p[1] - 1, p[2], 12).getTime();
-    if (dueEnd <= t) return { show: false, min: 0 };
-    var key = distinct(d.tok), min = 0, seen = {};
-    allEvents().forEach(function (ev) {
-      if (ev.src !== "study" || ev.allDay) return;   // only work blocks count, not the class itself
-      if (ev.end - ev.start < 30 * 60000 || ev.end <= t || ev.start >= dueEnd) return;
-      var sk = ev.title.toLowerCase() + "|" + ev.start;
-      if (seen[sk]) return; seen[sk] = 1;
-      if (sameWork(d, key, ev.title)) min += (Math.min(ev.end, dueEnd) - Math.max(ev.start, t)) / 60000;
-    });
-    return { show: min > 0 || dueEnd - t <= 7 * DAY, min: Math.round(min) };
-  }
-  function fmtHours(m) { return m < 60 ? m + "m" : (Math.round(m / 30) / 2) + "h"; }
-
-  function dueDayLabel(day, now) {
-    var p = day.split("-").map(Number), d = new Date(p[0], p[1] - 1, p[2]);
-    var diff = Math.round((d.getTime() - startOfDay(now).getTime()) / DAY);
-    if (diff === 0) return { text: "Today", soon: 0 };
-    if (diff === 1) return { text: "Tmr", soon: 1 };
-    if (diff < 7) return { text: d.toLocaleDateString("en-US", { weekday: "short" }), soon: 2 };
-    return { text: (d.getMonth() + 1) + "/" + d.getDate(), soon: 3 };
-  }
+  /* ---------- Deadlines ----------
+     The rules (what counts as a deadline, when it's due, what's the same assignment, work
+     planned) live in rules.js, shared with the desktop board, the widget and the script. */
+  var doneDue = {}, srv = {};   // srv: reviewed day, last tap anywhere, last fresh start
+  // Everything from today on that isn't marked done. Passed ones stay, faded, until the day ends.
+  function openDeadlines(now) { return buildDeadlines(allEvents(), now).filter(function (d) { return !doneDue[dueKey(d)]; }); }
+  function liveDeadlines(now) { var t = now.getTime(); return openDeadlines(now).filter(function (d) { return dueEndOf(d) >= t; }); }
+  function plannedForD(d, now) { return plannedFor(allEvents(), d, now); }
 
   function renderDue(now) {
     var list = $("#due-list"), note = $("#due-note"), more = $("#due-more");
@@ -745,18 +647,31 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       return;
     }
     var portrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
-    var all = buildDeadlines(now), MAX = portrait ? 4 : 5, t = now.getTime();
-    all.slice(0, MAX).forEach(function (d) {
+    var all = openDeadlines(now), MAX = portrait ? 3 : 4, t = now.getTime();
+    var pick = pickDue(all, now, MAX);
+    // Only the most urgent deadline with nothing planned gets the red 0h.
+    var warnD = all.filter(function (d) { if (dueEndOf(d) < t) return false; var p = plannedForD(d, now); return p.show && !p.min; })[0];
+    var alert = dueAlert(now);
+    if (alert) {
+      var al = document.createElement("li"); al.className = "due-alert"; al.textContent = alert; list.append(al);
+    }
+    pick.rows.forEach(function (d) {
       var lab = dueDayLabel(d.day, now);
-      var plan = plannedFor(d, now);
+      var plan = plannedForD(d, now), past = dueEndOf(d) < t;
+      var key = dueKey(d), armed = armedDue === key, warn = d === warnD;
       var li = document.createElement("li");
-      li.className = "due-row soon-" + lab.soon + (d.dueAt && d.dueAt < t ? " past" : "") + (plan.show && !plan.min ? " none" : "");
+      li.className = "due-row tap soon-" + (past ? 9 : lab.soon) + (warn ? " none" : "") + (armed ? " arm" : "") + (past ? " past" : "");
+      li.dataset.key = key; li.dataset.title = d.title;
       var day = document.createElement("span"); day.textContent = lab.text;
       var tt = document.createElement("span"); tt.className = "t";
-      // Right column: due time if it has one, then planned hours (or a warning when none are blocked).
+      // Right column: due time, then planned hours (or the one warning); "passed" once its time is gone.
       var bits = [];
-      if (d.dueAt && lab.soon <= 1) bits.push(clockShort(d.dueAt));
-      if (plan.show) bits.push(plan.min ? fmtHours(plan.min) : "0h");
+      if (armed) bits.push("tap: done");
+      else if (past) bits.push("passed");
+      else {
+        if (d.dueAt && lab.soon <= 1) bits.push(clockShort(d.dueAt));
+        if (plan.min) bits.push(fmtHours(plan.min)); else if (warn) bits.push("0h");
+      }
       var meta = document.createElement("span"); meta.className = "meta"; meta.textContent = bits.join(" · ");
       var rest = document.createElement("span"); rest.className = "rest";
       rest.append(tt, meta);
@@ -765,14 +680,42 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       Shorten.fit(tt, Shorten.shorten(d.raw || d.title));
     });
     more.textContent = all.length ? "time planned" : "";
-    if (all.length > MAX) {
+    if (pick.hidden.length) {
       var extra = document.createElement("li"); extra.className = "due-more-row";
-      extra.textContent = "+" + (all.length - MAX) + " more in the next two weeks";
+      extra.textContent = "+" + pick.hidden.length + " more · next " + dueDayLabel(pick.next.day, now).text + " " + shortText(pick.next.raw || pick.next.title, 18);
       list.append(extra);
     }
     note.hidden = all.length > 0;
-    note.textContent = "Nothing due in the next two weeks.";
+    note.textContent = "Nothing due in the next 6 weeks.";
   }
+  // When what's on screen might be missing something, the Due column says so.
+  function dueAlert(now) {
+    if (conn.stale && conn.at && now.getTime() - conn.at > 3 * 3600000) return "Offline since " + clockShort(conn.at) + ": deadlines may be missing";
+    var bad = Object.keys(sources).filter(function (k) { return sources[k] && sources[k].ok === false && k !== "sleep"; });
+    if (bad.length) return (bad.indexOf("canvas") >= 0 ? "Canvas" : "Your " + bad[0] + " calendar") + " didn't load: deadlines may be missing";
+    return "";
+  }
+
+  // Tap a due row, then tap it again within 4 seconds: it's marked done everywhere.
+  var armedDue = null, armTimer = null, undoDue = null;
+  $("#due-list").addEventListener("click", function (e) {
+    var li = e.target.closest ? e.target.closest("li.due-row") : null;
+    if (!li || !cfg) return;
+    var key = li.dataset.key;
+    clearTimeout(armTimer);
+    if (armedDue !== key) {
+      armedDue = key;
+      armTimer = setTimeout(function () { armedDue = null; renderDue(new Date()); }, 4000);
+    } else {
+      armedDue = null;
+      doneDue[key] = Date.now();
+      undoDue = { key: key, title: li.dataset.title, until: Date.now() + 12000 };
+      apiPost({ action: "dueDone", due: key, done: true }).then(function (d) { applyState(d.state); }).catch(function () {
+        delete doneDue[key]; undoDue = null; note("That didn't save. It's still on the list.");
+      });
+    }
+    renderAll(false);
+  });
 
   /* ---------- Days ---------- */
   function buildDayFor(date) {
@@ -804,6 +747,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
 
   /* ---------- Now card ---------- */
+  // A Study block with no steps written still gets a first move: steps are optional.
+  var DEFAULT_STEP = "Open it and do one 25-min round";
+  function isWork(ev) { return ev.src === "study" && !/\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(ev.title); }
   function renderNow(now, today) {
     var card = $("#now-card"), label = $("#now-label"), title = $("#now-title"), meta = $("#now-meta"), bar = $("#now-bar");
     card.classList.remove("is-live", "is-error");
@@ -835,6 +781,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       bar.hidden = false;
       renderModes(cur);
       if (cur.steps.length) fillSteps(cur.steps, true, cur);
+      else if (isWork(cur)) fillSteps([DEFAULT_STEP], true, null);
       else fillSteps(cur.where ? [cur.where] : [], false);
     } else if (next) {
       label.textContent = "Next";
@@ -842,12 +789,13 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       meta.textContent = fmtTime(next.start) + " · in " + fmtDur(next.start - t) + (next.where ? " · " + next.where : "");
       bar.hidden = true;
       renderModes(next);
-      fillSteps(next.steps, true, next);
+      if (!next.steps.length && isWork(next)) fillSteps([DEFAULT_STEP], true, null);
+      else fillSteps(next.steps, true, next);
     } else {
       // Day is done: show tomorrow's first move.
       var tmr = new Date(addDays(now, 1, 1));
       var first = buildDayFor(tmr).timed.filter(function (i) { return !/^sleep\b/i.test(i.title); })[0];
-      var dueTmr = buildDeadlines(now).filter(function (d) { return d.day === dayKey(tmr); }).map(function (d) { return shortText(d.raw || d.title, 18); });
+      var dueTmr = liveDeadlines(now).filter(function (d) { return d.day === dayKey(tmr); }).map(function (d) { return shortText(d.raw || d.title, 18); });
       label.textContent = "Tomorrow";
       bar.hidden = true;
       if (first) {
@@ -900,7 +848,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var room = done.length ? 3 : 4;
     open.slice(0, room).forEach(function (s, i) {
       var li = document.createElement("li");
-      li.className = (i === 0 && lead && !s.done ? "first" : "") + (ev ? " tap" : "") + (s.done ? " ticked" : "") + (s.digest ? " digest" : "");
+      li.className = (i === 0 && lead && !s.done ? "first" : "") + (ev ? " tap" : " hint") + (s.done ? " ticked" : "") + (s.digest ? " digest" : "");
       li.dataset.i = stepView.length; stepView.push({ kind: "step", text: s.text, done: s.done });
       if (i === 0 && lead) { var b = document.createElement("span"); b.className = "lead"; b.textContent = "Start with"; li.append(b); }
       var sp = document.createElement("span"); sp.className = "txt";
@@ -966,7 +914,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     sync.textContent = conn.stale ? "Offline" + (conn.at ? " · " + clockShort(conn.at) : "") : (conn.at ? "Synced " + clockShort(conn.at) : "");
     $("#led-sync").className = "led" + (ready() && !conn.stale ? " on" : (conn.status === "loading" ? "" : " warn"));
     $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
-    var dueToday = ready() && buildDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
+    var dueToday = ready() && liveDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
     $("#led-due").className = "led" + (dueToday ? " warn" : "");
   }
 
@@ -976,8 +924,18 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     renderToday(now, today);
     renderDue(now);
     renderCheckin(now);
-    renderFollow(now);
+    renderCalm(now, today);
     renderTimer(now);
+  }
+  // Quiet when nothing needs you: no block on, none in the next 45 minutes, nothing due today,
+  // no question in the strip and no timer running. Only the clock and the next block stay bright.
+  function renderCalm(now, today) {
+    var t = now.getTime();
+    var live = today.timed.some(function (i) { return i.start <= t && i.end > t && !/^sleep\b/i.test(i.title); });
+    var soon = today.timed.some(function (i) { return i.start > t && i.start - t < 45 * 60000; });
+    var dueSoon = liveDeadlines(now).some(function (d) { return dueEndOf(d) - t < 48 * 3600000; });
+    var calm = ready() && !live && !soon && !dueSoon && !dueAlert(now) && $("#checkin").hidden && !pomo.endAt;
+    document.querySelector(".lcd").classList.toggle("calm", calm);
   }
 
   /* ---------- Focus timer (synced through the script) ---------- */
@@ -996,6 +954,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function applyState(s) {
     if (!s) return;
     if (s.log && typeof s.log === "object") log = s.log;
+    if (s.doneDue && typeof s.doneDue === "object") doneDue = s.doneDue;
+    ["reviewed", "lastActive", "resetAt"].forEach(function (k) { if (k in s) srv[k] = s[k]; });
     if (Date.now() > holdServerTimerUntil && s.timer) pomo = cleanTimer(s.timer);
     if (typeof s.lastDoneEnd === "number" && s.lastDoneEnd === pomo.endAt) lastLocalDone = s.lastDoneEnd;
   }
@@ -1092,100 +1052,165 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     renderTimer(new Date());
   });
 
-  /* ---------- Check-ins (written onto the calendar block) ---------- */
-  var localChecks = {}, checkNote = null, shownCheck = null;
-  var SKIP_CHECK_RX = /\b(eat|break|lunch|dinner|breakfast|commute|sleep|head to)\b/i;
+  /* ---------- The dark strip: one question at a time ---------- */
+  // No question after every block. Instead: one check-in at night (anything you don't
+  // mark counts as done), a fresh start at the turn of the week, and a gentle restart
+  // after a few days away.
+  var localChecks = {}, checkNote = null, moveOffer = null, nightPick = false;
+  var SKIP_CHECK_RX = /\b(eat|break|lunch|dinner|breakfast|commute|sleep|head to|weekly review)\b/i;
+  var NIGHT_HOUR = 21, WAKE = 9;
   function blockKey(ev) { return ev.id + "@" + ev.start; }
   function ratingOf(ev) { return localChecks[blockKey(ev)] || ev.checkin; }
+  function checkable(ev) { return ev.src === "study" && !ev.allDay && ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title); }
 
-  function pendingCheckin(now) {
+  // Before 9 AM the night check-in is still about yesterday.
+  function reviewDay(now) { return now.getHours() < WAKE ? dayKey(addDays(now, -1, 12)) : dayKey(now); }
+  function nightBlocks(now) {
     if (!ready()) return null;
+    var h = now.getHours(), t = now.getTime();
+    if (h >= WAKE && h < NIGHT_HOUR) return null;
+    var day = reviewDay(now);
+    if (srv.reviewed === day) return null;
+    var list = allEvents().filter(function (ev) { return checkable(ev) && dayKey(ev.start) === day; })
+      .sort(function (a, b) { return a.start - b.start; });
+    if (!list.length || list.some(function (ev) { return ev.end > t; })) return null;   // wait for the last block
+    var open = list.filter(function (ev) { return !ratingOf(ev); });
+    return open.length ? { day: day, all: list, open: open } : null;
+  }
+  function unfinished(now, days) {
     var t = now.getTime();
-    // Look at all events, not just today's, so an 11 PM block still gets asked about after midnight.
     return allEvents().filter(function (ev) {
-      return ev.src === "study" && !ev.allDay && ev.end <= t && ev.end >= t - 6 * 3600000 &&
-        ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title) && !ratingOf(ev);
-    }).sort(function (a, b) { return b.end - a.end; })[0] || null;
-  }
-  // After Missed or Partly the strip offers to move what's left to the next free slot.
-  var moveOffer = null;
-  function showButtons(kind) {
-    var btns = $("#checkin").querySelectorAll("button");
-    for (var i = 0; i < btns.length; i++) {
-      var isMove = btns[i].hasAttribute("data-move");
-      btns[i].hidden = kind === "none" || (kind === "move") !== isMove;
-    }
-  }
-  function renderCheckin(now) {
-    var box = $("#checkin"), q = $("#checkin-q");
-    if (moveOffer && moveOffer.until > now.getTime()) {
-      box.hidden = false; showButtons("move"); shownCheck = null;
-      var b0 = document.createElement("b"); b0.textContent = shortText(moveOffer.ev.title, 22);
-      q.replaceChildren(document.createTextNode("Reschedule "), b0, document.createTextNode("?"));
-      return;
-    }
-    moveOffer = null;
-    if (checkNote && checkNote.until > now.getTime()) {
-      box.hidden = false; q.textContent = checkNote.text; shownCheck = null; showButtons("none");
-      return;
-    }
-    checkNote = null;
-    var ev = pendingCheckin(now);
-    if (ev && shownCheck && blockKey(ev) === blockKey(shownCheck) && !box.hidden) return;
-    shownCheck = ev;
-    if (!ev) { box.hidden = true; return; }
-    showButtons("rate");
-    var b = document.createElement("b"); b.textContent = shortText(ev.title, 30);
-    q.replaceChildren(document.createTextNode("How did "), b, document.createTextNode(" go?"));
-    box.hidden = false;
-  }
-  function renderFollow(now) {
-    var el = $("#follow"), t = now.getTime(), todayStart = startOfDay(now).getTime(), weekStart = addDays(now, -6);
-    var td = { done: 0, total: 0 }, wk = { score: 0, total: 0 };
-    allEvents().forEach(function (ev) {
-      if (ev.src !== "study" || ev.allDay || ev.end > t || ev.start < weekStart) return;
-      var r = ratingOf(ev); if (!r) return;
-      if (ev.start >= todayStart) { td.total++; if (r === "done") td.done++; }
-      wk.total++; wk.score += r === "done" ? 1 : r === "partly" ? 0.5 : 0;
+      var r = ratingOf(ev);
+      return checkable(ev) && ev.end <= t && ev.start >= t - days * DAY && (r === "missed" || r === "partly") && !ev.moved;
     });
-    if (!wk.total) { el.textContent = ""; return; }
-    el.textContent = "Follow-through: " + (td.total ? td.done + "/" + td.total + " today" : "none rated today") +
-      " · " + Math.round((wk.score / wk.total) * 100) + "% this wk";
   }
-  function whenText(ms) { return new Date(ms).toLocaleDateString("en-US", { weekday: "short" }) + " " + fmtTime(ms); }
+  // Sunday 17:00 to the end of Monday.
+  function freshWeek(now) {
+    var ws = addDays(now, -now.getDay(), 17), t = now.getTime();
+    if (t < ws || t - ws > 31 * 3600000) return null;
+    if (srv.resetAt && srv.resetAt >= ws) return null;
+    var u = unfinished(now, 7);
+    return u.length ? u : null;
+  }
+  function drifting(now) { return ready() && srv.lastActive && now.getTime() - srv.lastActive > 4 * DAY; }
+
+  function post(body, ok, fail) {
+    return apiPost(body).then(function (d) { applyState(d.state); if (ok) ok(d); }).catch(function (err) { if (fail) fail(err); });
+  }
+  function note(text, ms) { checkNote = { text: text, until: Date.now() + (ms || 8000) }; renderCheckin(new Date()); }
+  function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+  function strip(parts, buttons) {
+    var box = $("#checkin"), q = $("#checkin-q");
+    var sig = JSON.stringify([parts, buttons.map(function (b) { return b.label; })]);
+    box.hidden = false;
+    if (box.dataset.sig === sig) { stripActs = buttons; return; }
+    box.dataset.sig = sig;
+    q.replaceChildren.apply(q, parts.map(function (x) {
+      if (typeof x === "string") return document.createTextNode(x);
+      var b = document.createElement("b"); b.textContent = x.b; return b;
+    }));
+    box.querySelectorAll("button").forEach(function (n) { n.remove(); });
+    buttons.forEach(function (bt, i) {
+      var el = document.createElement("button");
+      el.type = "button"; el.className = "chip-btn" + (bt.primary ? " primary" : ""); el.textContent = bt.label; el.dataset.i = i;
+      box.append(el);
+    });
+    stripActs = buttons;
+  }
+  var stripActs = [];
   $("#checkin").addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest("button") : null;
     if (!btn) return;
-    if (btn.hasAttribute("data-move")) {
-      var offer = moveOffer; moveOffer = null;
-      if (!offer) return;
-      if (btn.getAttribute("data-move") === "no") {
-        checkNote = { text: "OK. The weekly review will pick it up.", until: Date.now() + 6000 };
-      } else {
-        checkNote = { text: "Finding a slot…", until: Date.now() + 30000 };
-        apiPost({ action: "reschedule", r: offer.r, block: { cal: offer.ev.src, id: offer.ev.id, start: offer.ev.start } }).then(function (d) {
-          checkNote = { text: "Moved to " + whenText(d.start) + ".", until: Date.now() + 10000 };
-          renderCheckin(new Date()); load();
-        }).catch(function (err) {
-          checkNote = { text: err && err.error === "no free slot this week" ? "No free slot this week. Plan it in the weekly review." : "Couldn't move it. Try again from the weekly review.", until: Date.now() + 10000 };
-          renderCheckin(new Date());
-        });
-      }
-      renderCheckin(new Date());
-      return;
-    }
-    if (!btn.hasAttribute("data-r") || !shownCheck) return;
-    var ev = shownCheck, r = btn.getAttribute("data-r"), key = blockKey(ev);
-    localChecks[key] = r;
-    if (r === "done") checkNote = { text: "Logged. Nice work.", until: Date.now() + 8000 };
-    else moveOffer = { ev: ev, r: r, until: Date.now() + 5 * 60000 };
-    apiPost({ action: "checkin", r: r, block: { cal: ev.src, id: ev.id, start: ev.start } }).catch(function () {
-      delete localChecks[key]; moveOffer = null;
-      checkNote = { text: "That check-in didn't save. It will ask again.", until: Date.now() + 8000 };
-    });
-    var now = new Date();
-    renderCheckin(now); renderFollow(now);
+    var act = stripActs[Number(btn.dataset.i)];
+    if (act) act.run();
   });
+  function hideStrip() { var box = $("#checkin"); box.hidden = true; box.dataset.sig = ""; }
+
+  function rate(ev, r) {
+    var key = blockKey(ev);
+    localChecks[key] = r;
+    post({ action: "checkin", r: r, block: { cal: ev.src, id: ev.id, start: ev.start } }, null, function () {
+      delete localChecks[key]; note("That didn't save. It will ask again.");
+    });
+  }
+  function closeNight(nb) {
+    srv.reviewed = nb.day; nightPick = false;
+    post({ action: "reviewed", day: nb.day });
+    var left = nb.all.filter(function (ev) { var r = ratingOf(ev); return (r === "missed" || r === "partly") && !ev.moved; });
+    if (left.length) {
+      moveOffer = { parts: ["Move what's left of ", { b: plural(left.length, "block") }, " to free slots?"], run: function () {
+        note("Finding slots…", 30000);
+        post({ action: "reset", days: 1 }, function (d) {
+          note(d.moved.length ? "Moved to " + d.moved.map(function (m) { return whenText(m.start); }).join(", ") + "." : "No free slot this week. The weekly review will pick it up.", 10000);
+          load();
+        }, function () { note("Couldn't move them. The weekly review will pick them up."); });
+      } };
+      renderCheckin(new Date());
+    } else note("Logged. Good night.");
+  }
+
+  function renderCheckin(now) {
+    var t = now.getTime();
+    if (undoDue && undoDue.until > t) {
+      var u = undoDue;
+      return strip(["Marked ", { b: shortText(u.title, 24) }, " done."], [
+        { label: "Undo", primary: true, run: function () {
+          undoDue = null; delete doneDue[u.key];
+          post({ action: "dueDone", due: u.key, done: false }, null, function () { doneDue[u.key] = Date.now(); note("Undo didn't save. Try again."); });
+          renderAll(false);
+        } }]);
+    }
+    undoDue = null;
+    if (moveOffer) {
+      var mo = moveOffer;
+      return strip(mo.parts, [
+        { label: "Move", primary: true, run: function () { moveOffer = null; mo.run(); } },
+        { label: "Not now", run: function () { moveOffer = null; note("OK. Sunday's fresh start will offer again.", 6000); } }]);
+    }
+    if (checkNote && checkNote.until > t) return strip([checkNote.text], []);
+    checkNote = null;
+    if (drifting(now)) {
+      return strip(["It's been a few days. ", { b: "Fresh start?" }], [
+        { label: "Fresh start", primary: true, run: function () {
+          srv.lastActive = Date.now(); srv.resetAt = Date.now();
+          post({ action: "reset", keep: false });
+          note("Clean slate. Pick one thing from Due and start there.", 10000);
+        } },
+        { label: "I'm on track", run: function () { srv.lastActive = Date.now(); post({ action: "active" }); hideStrip(); renderAll(false); } }]);
+    }
+    var fw = freshWeek(now);
+    if (fw) {
+      return strip(["New week: ", { b: plural(fw.length, "unfinished block") }, ". Move into this week?"], [
+        { label: "Move them", primary: true, run: function () {
+          srv.resetAt = Date.now(); note("Finding slots…", 30000);
+          post({ action: "reset", days: 7 }, function (d) {
+            note("Moved " + plural(d.moved.length, "block") + (d.failed ? ". " + d.failed + " didn't fit; plan those in the weekly review." : "."), 10000); load();
+          }, function () { note("Couldn't move them. Try again later."); });
+        } },
+        { label: "Let them go", run: function () { srv.resetAt = Date.now(); post({ action: "reset", keep: false }); note("Clean week.", 5000); } }]);
+    }
+    var nb = nightBlocks(now);
+    if (nb) {
+      if (!nightPick) {
+        var n = nb.open.length;
+        return strip([n === nb.all.length ? "Today's " : "", { b: plural(n, "block") }, n === nb.all.length ? ": all done?" : " left to log: done?"], [
+          { label: "All done", primary: true, run: function () { closeNight(nb); } },
+          { label: "Not all", run: function () { nightPick = true; renderCheckin(new Date()); } }]);
+      }
+      var ev = nb.open[0];
+      var pick = function (r) { return function () {
+        rate(ev, r);
+        var again = nightBlocks(new Date());
+        if (!again) closeNight(nb); else renderCheckin(new Date());
+      }; };
+      return strip([{ b: shortText(ev.title, 26) }, "?"], [
+        { label: "Done", primary: true, run: pick("done") }, { label: "Partly", run: pick("partly") }, { label: "Missed", run: pick("missed") }]);
+    }
+    nightPick = false;
+    hideStrip();
+  }
+  function whenText(ms) { return new Date(ms).toLocaleDateString("en-US", { weekday: "short" }) + " " + fmtTime(ms); }
 
   /* ---------- Setup sheet ---------- */
   function openSetup() {
@@ -1257,14 +1282,14 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (cur) parts.push("Now: " + shortText(cur.title, 28) + " until " + clockShort(cur.end));
     else if (next) parts.push("Next: " + shortText(next.title, 28) + " at " + clockShort(next.start));
     else parts.push("Nothing else on today");
-    var dueSoon = buildDeadlines(now).filter(function (d) { return d.day <= dayKey(addDays(now, 1, 12)) && !(d.dueAt && d.dueAt < t); }).length;
+    var dueSoon = liveDeadlines(now).filter(function (d) { return d.day <= dayKey(addDays(now, 1, 12)) && !(d.dueAt && d.dueAt < t); }).length;
     parts.push(dueSoon ? dueSoon + " due by tomorrow" : "nothing due by tomorrow");
     parts.push(pomo.endAt ? (pomo.phase === "focus" ? "focus round running" : "on a break") : "timer stopped");
     return parts.join(" · ");
   }
   function infoLights(now) {
     var t = now.getTime();
-    var dueToday = ready() && buildDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
+    var dueToday = ready() && liveDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
     var rows = [
       { cls: ready() && !conn.stale ? "on" : (conn.status === "loading" ? "" : "warn"), name: "Sync",
         text: ready() && !conn.stale ? "green: calendar is up to date (" + clockShort(conn.at) + ")" : conn.stale ? "orange: offline, showing the copy from " + clockShort(conn.at) : "orange: can't reach the calendar" },
@@ -1332,8 +1357,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       renderToday(now, today);
       renderDue(now);
       renderCheckin(now);
-      renderFollow(now);
-    } else if (checkNote || moveOffer) {
+      renderCalm(now, today);
+    } else if (checkNote || undoDue) {
       renderCheckin(now);
     }
     if (dayKey(now) !== lastDay) { lastDay = dayKey(now); load(); }

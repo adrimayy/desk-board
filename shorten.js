@@ -50,7 +50,7 @@
   var COURSES = [
     [/chinese/i, "Chn"], [/writing/i, "UW"], [/phys/i, "Phys"], [/econ/i, "Econ"],
     [/literature|lit\s*hum/i, "Lit Hum"], [/programming|computer|\bcs\b/i, "CS"],
-    [/math|calc/i, "Math"], [/chem/i, "Chem"], [/bio/i, "Bio"], [/spanish/i, "Span"], [/history/i, "Hist"]
+    [/intro(duction)? to comp|computing|engi\s*\d/i, "Comp"], [/discrete/i, "Discrete"], [/math|calc|algebra/i, "Math"], [/chem/i, "Chem"], [/bio/i, "Bio"], [/spanish/i, "Span"], [/history/i, "Hist"]
   ];
 
   function squash(s) { return String(s).replace(/\s+/g, " ").replace(/\s+([,.;:])/g, "$1").trim(); }

@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* One site, two layouts. Phones get the desk-display board (index.html); bigger screens
+   (laptops, desktops, iPads) get the desktop board (desk.html). Same data, same sign-in.
+   Add ?view=board or ?view=desk to the address to pin one on this device; ?view=auto undoes it. */
+(function () {
+  var pin = "";
+  try {
+    var q = new URLSearchParams(location.search).get("view");
+    if (q) localStorage.setItem("deskboard-layout", q === "auto" ? "" : q);
+    pin = localStorage.getItem("deskboard-layout") || "";
+  } catch (e) {}
+  var phone = Math.min(screen.width, screen.height) < 600;
+  var want = pin === "board" || pin === "desk" ? pin : (phone ? "board" : "desk");
+  var here = /desk\.html$/i.test(location.pathname) ? "desk" : "board";
+  if (want !== here) location.replace((want === "desk" ? "desk.html" : "index.html") + location.hash);
+})();
+</script>
+<title>Desk Board · Desktop</title>
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Silkscreen&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: #efebe1;
+  --page-2: #e6e1d4;
+  --card: #fbf9f4;
+  --card-2: #f4f1e8;
+  --line: #ddd7c8;
+  --ink: #15301b;
+  --ink-2: #4a5d4c;
+  --ink-3: #7d8a7c;
+  --sage: #86a98c;
+  --sage-deep: #5f8a67;
+  --mint: #cfe6c8;
+  --lcd: #bfdcb8;
+  --alert: #b4532a;
+  --alert-bg: #f6e1d6;
+  --warn: #a8761c;
+  --warn-bg: #f4ead2;
+  --ok: #3f7d4c;
+  --shadow: 0 1px 0 rgba(21, 48, 27, 0.04), 0 6px 18px rgba(21, 48, 27, 0.06);
+  --shadow-lift: 0 2px 0 rgba(21, 48, 27, 0.05), 0 18px 40px rgba(21, 48, 27, 0.16);
+  --f-ui: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-num: "Jersey 10", ui-monospace, monospace;
+  --f-label: "Silkscreen", ui-monospace, monospace;
+  --radius: 14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #111713; --page-2: #161e18; --card: #1a231c; --card-2: #212b23; --line: #2e3a30;
+    --ink: #e4eedf; --ink-2: #b4c4b0; --ink-3: #85947f; --sage: #86a98c; --sage-deep: #9cc4a3; --mint: #23352a; --lcd: #2c4433;
+    --alert: #f08d62; --alert-bg: #3a2219; --warn: #e2b55a; --warn-bg: #352b16; --ok: #8fd18a;
+    --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25); --shadow-lift: 0 18px 40px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #111713; --page-2: #161e18; --card: #1a231c; --card-2: #212b23; --line: #2e3a30;
+  --ink: #e4eedf; --ink-2: #b4c4b0; --ink-3: #85947f; --sage: #86a98c; --sage-deep: #9cc4a3; --mint: #23352a; --lcd: #2c4433;
+  --alert: #f08d62; --alert-bg: #3a2219; --warn: #e2b55a; --warn-bg: #352b16; --ok: #8fd18a;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25); --shadow-lift: 0 18px 40px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--page); color: var(--ink); font: 400 15px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
+.label { font: 400 10px/1.2 var(--f-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+
+/* ---------- Top bar ---------- */
+.top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 20px; padding: 10px 24px; height: 60px; background: color-mix(in srgb, var(--page) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.brand { width: 232px; flex: none; font: 400 12px/1 var(--f-label); letter-spacing: 0.12em; color: var(--ink-2); white-space: nowrap; display: flex; align-items: center; gap: 10px; }
+.brand i { width: 22px; height: 22px; border-radius: 6px; background: var(--lcd); box-shadow: inset 0 0 0 2px var(--sage-deep); }
+.today { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.today .date { font-weight: 600; font-size: 1rem; white-space: nowrap; color: var(--ink-2); }
+.today .clock { font: 400 28px/1 var(--f-num); letter-spacing: 0.02em; }
+.spacer { flex: 1; }
+.timer { display: flex; align-items: center; gap: 10px; padding: 4px 4px 4px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; }
+.timer .t { font: 400 24px/1 var(--f-num); min-width: 3.1ch; text-align: right; }
+.timer .phase { font: 400 9px/1.2 var(--f-label); letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+.timer .pomos { display: flex; gap: 3px; min-height: 7px; }
+.timer .pomos i { width: 7px; height: 7px; background: var(--ink); border-radius: 1px; }
+.pill-btn { border: 0; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 0.85rem; background: var(--card-2); color: var(--ink); }
+.pill-btn.primary { background: var(--ink); color: var(--card); }
+.pill-btn.sage { background: var(--sage); color: #10261a; }
+.pill-btn.ghost { background: transparent; border: 1px solid var(--line); }
+.pill-btn:hover { filter: brightness(0.96); }
+.sync { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--ink-3); white-space: nowrap; }
+.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.sync.ok i { background: #7cc47a; box-shadow: 0 0 6px rgba(124, 196, 122, 0.8); }
+.sync.bad i { background: var(--alert); }
+
+/* ---------- Page: sidebar · list · today ---------- */
+.shell { display: grid; grid-template-columns: 256px minmax(0, 1fr) 340px; grid-template-areas: "side main rail"; gap: 28px; max-width: 1640px; margin: 0 auto; padding: 22px 24px 60px; align-items: start; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.ico { width: 18px; height: 18px; flex: none; display: inline-block; }
+.ico svg { width: 100%; height: 100%; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Sidebar */
+.side { grid-area: side; position: sticky; top: 82px; display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 100px); overflow-y: auto; }
+.nav-item, .course-item { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: transparent; text-align: left; padding: 9px 14px; border-radius: 0 999px 999px 0; margin-left: -24px; padding-left: 38px; width: calc(100% + 24px); color: var(--ink-2); font-weight: 600; font-size: 0.93rem; }
+.nav-item:hover, .course-item:hover { background: var(--page-2); }
+.nav-item[aria-current="true"], .course-item[aria-current="true"] { background: var(--mint); color: var(--ink); }
+.nav-item .n, .course-item .n { margin-left: auto; font: 400 17px/1 var(--f-num); color: var(--ink-3); }
+.nav-item[aria-current="true"] .n { color: var(--ink); }
+.side-label { margin: 18px 0 6px 14px; }
+.course-item { font-weight: 500; padding-top: 7px; padding-bottom: 7px; }
+.course-item .dot { width: 12px; height: 12px; border-radius: 4px; background: var(--course); flex: none; }
+.course-item .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-foot { margin: 22px 0 0 14px; font-size: 0.78rem; color: var(--ink-3); line-height: 1.9; }
+.kbd { font: 600 0.72rem/1 var(--f-ui); padding: 2px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--card); color: var(--ink-2); }
+
+/* List header */
+.list-wrap { grid-area: main; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.list-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 4px 4px 0; }
+.list-head h1 { margin: 0; font-size: 1.7rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
+.list-head p { margin: 4px 0 0; color: var(--ink-3); font-size: 0.9rem; }
+.list-head .grow { flex: 1; min-width: 200px; }
+.list-head.course { padding: 22px 24px 18px; border-radius: var(--radius); background: var(--course); color: #fff; position: relative; overflow: hidden; }
+.list-head.course::after { content: ""; position: absolute; right: -40px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); box-shadow: -70px 80px 0 rgba(255, 255, 255, 0.06); }
+.list-head.course p { color: rgba(255, 255, 255, 0.88); }
+.list-head.course .pill-btn { position: relative; z-index: 1; background: rgba(255, 255, 255, 0.2); color: #fff; }
+
+/* Task list (Google Tasks style) */
+.list { padding: 6px 0; }
+.group + .group { border-top: 1px solid var(--line); }
+.group-head { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: transparent; padding: 14px 20px 6px; text-align: left; }
+.group-head h2 { margin: 0; font-size: 0.95rem; font-weight: 700; }
+.group-head .n { font: 400 17px/1 var(--f-num); color: var(--ink-3); }
+.group-head .chev { margin-left: auto; color: var(--ink-3); transition: transform 0.15s; }
+.group.closed .chev { transform: rotate(-90deg); }
+.group.closed .tasks { display: none; }
+.group.over { background: color-mix(in srgb, var(--mint) 55%, transparent); }
+.tasks { list-style: none; margin: 0; padding: 0 0 8px; }
+.tasks .none { padding: 6px 20px 10px 62px; font-size: 0.86rem; color: var(--ink-3); }
+.drop-hint { height: 3px; margin: 0 20px 0 58px; border-radius: 3px; background: var(--sage-deep); }
+
+.task { position: relative; }
+.task-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto 32px; align-items: center; gap: 4px 14px; padding: 9px 12px 9px 20px; cursor: pointer; border-radius: 0; }
+.task-row:hover { background: var(--card-2); }
+.task.dragging { opacity: 0.35; }
+.task:focus-visible { outline: none; }
+.task:focus-visible .task-row { box-shadow: inset 3px 0 0 var(--sage-deep); background: var(--card-2); }
+.check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-3); background: transparent; padding: 0; display: grid; place-items: center; }
+.check:hover { border-color: var(--sage-deep); }
+.check:hover::after, .task.is-done .check::after { content: ""; width: 9px; height: 5px; border-left: 2px solid var(--sage-deep); border-bottom: 2px solid var(--sage-deep); transform: rotate(-45deg) translate(1px, -1px); }
+.task.is-done .check { background: var(--sage-deep); border-color: var(--sage-deep); }
+.task.is-done .check::after { border-color: var(--card); }
+.task-main { min-width: 0; }
+.task-title { font-size: 1rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.task.is-done .task-title { text-decoration: line-through; color: var(--ink-3); font-weight: 500; }
+.task-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 12px; margin-top: 3px; font-size: 0.8rem; color: var(--ink-3); }
+.task-sub .crs { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink-2); }
+.task-sub .crs::before { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--course); }
+.task-sub .warn { color: var(--alert); font-weight: 600; }
+.task-sub .ok { color: var(--ok); font-weight: 600; }
+.due-pill { justify-self: end; font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+.due-pill.alert { background: var(--alert-bg); border-color: transparent; color: var(--alert); }
+.due-pill.passed { border-style: dashed; color: var(--ink-3); }
+.task.is-passed .task-title { color: var(--ink-2); }
+.warn-line { padding: 10px 14px; border-radius: 12px; background: var(--alert-bg); color: var(--alert); font-size: 0.9rem; font-weight: 600; }
+.group-head .peek { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.82rem; color: var(--ink-3); font-weight: 500; }
+.due-pill.warn { background: var(--warn-bg); border-color: transparent; color: var(--warn); }
+.task.is-done .due-pill { opacity: 0.6; }
+.star { width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); display: grid; place-items: center; padding: 0; opacity: 0; }
+.task-row:hover .star, .task:focus-within .star, .star.on { opacity: 1; }
+.star:hover { background: var(--page-2); color: var(--ink); }
+.star.on { color: var(--warn); }
+.star.on svg { fill: currentColor; }
+
+.task-detail { margin: 0 20px 10px 60px; padding: 14px 16px; border-radius: 12px; background: var(--card-2); display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--course); }
+.task-detail .line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; font-size: 0.88rem; color: var(--ink-2); }
+.task-detail .line b { color: var(--ink); font-weight: 600; }
+.task-detail .find { display: inline-flex; gap: 6px; }
+.task-detail .find button, .task-detail .act { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; font-weight: 600; }
+.task-detail .find button:hover, .task-detail .act:hover { border-color: var(--sage-deep); }
+.task-detail .note { font-size: 0.82rem; color: var(--ok); font-weight: 600; }
+.task-detail .note.err { color: var(--alert); }
+.mini-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mini-steps .step { padding: 6px 10px; font-size: 0.88rem; background: var(--card); }
+.mini-steps .step .box { width: 16px; height: 16px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; background: var(--card-2); color: var(--ink-2); white-space: nowrap; }
+.chip.course { color: #fff; background: var(--course, var(--sage-deep)); }
+.chip.alert { background: var(--alert-bg); color: var(--alert); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.ok { background: var(--mint); color: var(--ok); }
+.mode-k { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; background: var(--ink); color: var(--card); font: 400 10px/1 var(--f-label); }
+
+/* Steps (shared) */
+.step { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--card-2); border: 1px solid transparent; cursor: pointer; text-align: left; width: 100%; font-size: 0.92rem; line-height: 1.35; }
+.step:hover { border-color: var(--line); }
+.step .box { flex: none; width: 18px; height: 18px; margin-top: 1px; border: 2px solid var(--ink-2); border-radius: 5px; display: grid; place-items: center; }
+.step.digest .box { border-radius: 50%; border-style: dashed; }
+.step.done { color: var(--ink-3); }
+.step.done .t { text-decoration: line-through; }
+.step.done .box { background: var(--sage-deep); border-color: var(--sage-deep); }
+.step.done .box::after { content: ""; width: 8px; height: 4px; border-left: 2px solid var(--card); border-bottom: 2px solid var(--card); transform: rotate(-45deg) translate(1px, -1px); }
+.step.first:not(.done) { background: var(--mint); }
+.step .tag { margin-left: auto; flex: none; font: 400 9px/1.6 var(--f-label); letter-spacing: 0.06em; color: var(--ink-3); text-transform: uppercase; }
+
+/* Right rail: check-in, now, today */
+.rail { grid-area: rail; position: sticky; top: 82px; display: flex; flex-direction: column; gap: 14px; max-height: calc(100vh - 100px); overflow-y: auto; padding-bottom: 4px; }
+.checkin { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--radius); background: var(--ink); color: var(--card); }
+.checkin p { margin: 0 0 4px; flex: 1 1 100%; font-weight: 600; font-size: 0.92rem; }
+.checkin .pill-btn { background: var(--card); color: var(--ink); }
+.checkin .pill-btn.sage { background: var(--sage); color: #10261a; }
+.night-list { list-style: none; margin: 0 0 4px; padding: 0; flex: 1 1 100%; display: flex; flex-direction: column; gap: 6px; }
+.night-list li { display: flex; align-items: center; gap: 8px; }
+.night-list .nm { flex: 1; min-width: 0; font-size: 0.84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.night-list .seg { display: inline-flex; border-radius: 999px; background: rgba(255, 255, 255, 0.12); padding: 2px; }
+.night-list .seg button { border: 0; background: transparent; color: inherit; font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; opacity: 0.7; }
+.night-list .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); opacity: 1; }
+.night-list .seg button.implied[aria-pressed="true"] { background: rgba(255, 255, 255, 0.28); color: inherit; }
+.first-move { margin: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--mint); font-size: 0.92rem; }
+.now { padding: 16px 18px 16px 22px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+.now::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--course, var(--sage)); }
+.now .head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.now h1 { margin: 0; font-size: 1.25rem; line-height: 1.25; font-weight: 700; }
+.now .meta { color: var(--ink-2); font-size: 0.86rem; display: flex; flex-direction: column; gap: 2px; }
+.now .meta b { color: var(--ink); font-weight: 600; }
+.now .side-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.now .big-time { font: 400 40px/0.9 var(--f-num); color: var(--ink); }
+.now .big-time small { display: block; font: 400 9px/1.6 var(--f-label); letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+.progress { height: 6px; border-radius: 99px; background: var(--card-2); overflow: hidden; }
+.progress span { display: block; height: 100%; background: var(--sage-deep); border-radius: 99px; }
+.steps-big { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.empty-now { color: var(--ink-2); font-size: 0.9rem; margin: 0; }
+.today-card { padding: 16px 16px 12px; }
+.today-card h2 { margin: 0; font-size: 0.95rem; font-weight: 700; }
+.agenda { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
+.agenda li { display: grid; grid-template-columns: 46px 4px minmax(0, 1fr); gap: 10px; padding: 6px 0; align-items: start; }
+.agenda .when { font: 400 17px/1.1 var(--f-num); color: var(--ink-2); }
+.agenda .bar { align-self: stretch; border-radius: 3px; background: var(--course, var(--line)); }
+.agenda .what { min-width: 0; }
+.agenda .what b { display: block; font-weight: 600; font-size: 0.88rem; line-height: 1.3; }
+.agenda .what span { font-size: 0.76rem; color: var(--ink-3); }
+.agenda li.past { opacity: 0.45; }
+.agenda li.live .what b::after { content: " · now"; color: var(--ok); font-weight: 700; }
+.agenda li.rated-done .what b::before { content: "✓ "; color: var(--ok); }
+.agenda li.rated-missed .what b { text-decoration: line-through; }
+.today-card .foot { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.78rem; color: var(--ink-3); }
+
+/* ---------- Classes (Google Classroom style) ---------- */
+.courses { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+.course-card { overflow: hidden; display: flex; flex-direction: column; min-height: 280px; }
+.course-card .banner { padding: 16px 18px 14px; background: var(--course); color: #fff; position: relative; min-height: 104px; display: flex; flex-direction: column; justify-content: flex-end; border: 0; text-align: left; width: 100%; }
+.course-card .banner::after { content: ""; position: absolute; right: -30px; top: -30px; width: 130px; height: 130px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); box-shadow: -40px 50px 0 rgba(255, 255, 255, 0.06); }
+.course-card .banner b { font-size: 1.3rem; line-height: 1.2; position: relative; }
+.course-card .banner b:hover { text-decoration: underline; }
+.course-card .banner span { font-size: 0.82rem; opacity: 0.9; position: relative; }
+.course-card .badge { position: absolute; right: 16px; bottom: -22px; z-index: 1; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--card); border: 3px solid var(--card); box-shadow: var(--shadow); font: 400 22px/1 var(--f-num); color: var(--course); }
+.course-card .body { position: relative; }
+.course-card .lbl { padding: 14px 18px 2px; }
+.course-card ul { list-style: none; margin: 0; padding: 4px 10px 8px; display: flex; flex-direction: column; }
+.course-card li { display: flex; align-items: baseline; gap: 10px; padding: 8px 8px; border-radius: 8px; }
+.course-card li + li { border-top: 1px solid var(--line); }
+.course-card li .when { flex: none; width: 74px; font-size: 0.78rem; font-weight: 700; color: var(--ink-2); }
+.course-card li .when.soon { color: var(--alert); }
+.course-card li .what { flex: 1; min-width: 0; font-weight: 600; font-size: 0.9rem; }
+.course-card li .h { flex: none; font-size: 0.76rem; color: var(--ink-3); }
+.course-card li .h.zero { color: var(--alert); font-weight: 700; }
+.course-card .nothing { padding: 14px 18px; color: var(--ink-3); font-size: 0.88rem; }
+.course-card .foot { margin-top: auto; padding: 10px 12px 10px 18px; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--ink-2); display: flex; align-items: center; gap: 10px; }
+.course-card .foot span { flex: 1; min-width: 0; }
+.linkish { border: 0; background: none; padding: 0; color: var(--sage-deep); font-weight: 700; font-size: 0.82rem; }
+.linkish:hover { text-decoration: underline; }
+
+/* ---------- Setup ---------- */
+.setup { max-width: 480px; margin: 12vh auto; padding: 28px; }
+.setup h1 { margin: 0 0 6px; font-size: 1.5rem; }
+.setup p { color: var(--ink-2); margin: 0 0 16px; }
+.setup label { display: block; font-weight: 600; font-size: 0.85rem; margin: 12px 0 4px; }
+.setup input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card-2); color: var(--ink); font: inherit; }
+.setup .msg { min-height: 1.4em; margin-top: 10px; color: var(--alert); font-size: 0.88rem; }
+
+@media (max-width: 1240px) {
+  .shell { grid-template-columns: 210px minmax(0, 1fr); grid-template-areas: "side main" "side rail"; }
+  .rail { position: static; max-height: none; overflow: visible; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+  .brand { width: auto; }
+}
+@media (max-width: 820px) {
+  .top { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 10px 14px; }
+  .shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: "side" "main" "rail"; padding: 14px 16px 40px; gap: 16px; }
+  .side { position: static; flex-direction: row; overflow-x: auto; max-height: none; gap: 6px; padding-bottom: 4px; }
+  .nav-item, .course-item { margin-left: 0; width: auto; padding: 8px 14px; border-radius: 999px; white-space: nowrap; flex: none; }
+  .side-label, .side-foot { display: none; }
+  .task-row { grid-template-columns: 26px minmax(0, 1fr) 32px; padding-left: 14px; }
+  .task-row .star { grid-column: 3; grid-row: 1; opacity: 1; }
+  .due-pill { grid-column: 2; grid-row: 2; justify-self: start; }
+  .task-detail { margin-left: 14px; margin-right: 14px; }
+  .group-head { padding-left: 14px; }
+  .tasks .none { padding-left: 54px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="rules.js"></script>
+<script src="shorten.js"></script>
+<script>
+
+/* ================= Desktop board ================= */
+
+// Steps with their state, for ticking: { text (as written), show, digest, done }.
+function stepsFrom(text) {
+  const out = [];
+  text.split(/\n/).forEach((line) => {
+    const m = /^\s*(?:[-•*·]|\d+[.)])\s+(?:\[([ xX]?)\]\s*)?(.+)/.exec(line) || /^\s*()\[([ xX]?)\]\s+(.+)/.exec(line);
+    if (!m) return;
+    const box = m.length > 3 ? m[2] : m[1], txt = (m.length > 3 ? m[3] : m[2]).trim();
+    if (!txt) return;
+    const dg = /^digest\s*:\s*/i.exec(txt);
+    out.push({ text: txt, show: dg ? txt.slice(dg[0].length) : txt, digest: !!dg, done: /x/i.test(box || "") });
+  });
+  return out.slice(0, 12);
+}
+function parseEvents(list) {
+  return (Array.isArray(list) ? list : []).map((e) => {
+    const allDay = !!e.allDay;
+    let start, end;
+    if (allDay) { start = localDate(e.startDate); end = e.endDate ? localDate(e.endDate) : start + DAY; }
+    else { start = Number(e.start); end = Number(e.end); }
+    const text = plainText(e.desc);
+    const ci = /^\s*Check-in:\s*(Done|Partly|Missed)/im.exec(text);
+    return {
+      id: String(e.id || ""), src: String(e.cal || "primary"), title: String(e.title || "Busy"), where: String(e.where || ""),
+      allDay, start, end, checkin: ci ? ci[1].toLowerCase() : null, moved: /^\s*Moved to:/im.test(text),
+      steps: e.cal === "canvas" ? [] : stepsFrom(text), modes: e.cal === "canvas" ? [] : modesFrom(text)
+    };
+  }).filter((e) => !isNaN(e.start) && !isNaN(e.end));
+}
+
+const $ = (sel, root) => (root || document).querySelector(sel);
+const h = (tag, attrs, ...kids) => {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "text") el.textContent = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  kids.flat().forEach((c) => { if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c))); });
+  return el;
+};
+function store(key, val) {
+  try { if (val === undefined) return JSON.parse(localStorage.getItem(key) || "null"); localStorage.setItem(key, JSON.stringify(val)); }
+  catch (e) { return null; }
+}
+
+/* ---------- Courses: names and colors ---------- */
+// Every course in the four-year plan, most specific first. Which ones are "current" comes
+// from the Classes calendar, so the board switches over by itself each semester.
+const COURSE_LIST = [
+  ["AP", "Advanced Programming", "#4f739c", /advanced programming|coms\s*w?3157|\bap\b/i],
+  ["Lit Hum", "Literature Humanities", "#a5643b", /lit\s*hum|literature hum|huma\s*(cc)?\s*100[12]|odyssey|iliad|aeneid|symposium/i],
+  ["UW", "University Writing", "#7d5fa0", /\buw\b|university writing|engl\s*(cc)?\s*1010/i],
+  ["Econ", "Economics", "#3f8461", /\becon|economics|\bwr\s*\d/i],
+  ["Chinese", "Chinese", "#b0444a", /chinese|\bchn\b|chns|pinyin|小班|中文/i],
+  ["Phys Lab", "Physics Lab", "#b88a2e", /phys(ics)?\s*lab|experimental phys|1494|ac circuits|polarization|interference/i],
+  ["Physics II", "Physics II: E&M", "#c27a2c", /physics\s*(ii|2)\b|phys\w*\s*140[25]|e\s*&\s*m\b|magnetism/i],
+  ["Gen Chem", "General Chemistry", "#2f7f86", /gen(eral)?\.?\s*chem|chemistry|\bchem\b|chem\w*\s*140[35]/i],
+  ["Computing", "Intro to Computing (Python)", "#5a6fb0", /intro(duction)?\s*to\s*comp|computing|engi\s*e?1006|python/i],
+  ["Discrete", "Discrete Math", "#6b5ea8", /discrete/i],
+  ["Lin Alg", "Linear Algebra", "#3d7d9a", /linear algebra|lin\.?\s*alg|apma\s*e?3101/i],
+  ["Comp Systems", "Fundamentals of Computer Systems", "#557a8f", /fundamentals of computer|computer systems|csee\s*w?3827/i],
+  ["EMP", "Earth, Moon & Planets", "#4c8a7a", /earth,?\s*moon/i],
+  ["Music Hum", "Music Humanities", "#a0586e", /music hum/i],
+  ["PE", "Physical Education", "#7a8a3a", /\bpe\b|physical education|phed/i],
+  ["Probability", "Probability", "#6a7f3c", /probability|ieor/i],
+  ["3D UI", "3D UI & AR", "#8a5a9a", /3d\s*ui|augmented reality|4172/i],
+  ["UI Design", "User Interface Design", "#c06a4a", /ui design|user interface|4170/i],
+  ["Databases", "Databases", "#4a7aa0", /databases?|coms\s*w?4111/i],
+  ["Startups", "Innovation & Entrepreneurship", "#b5713a", /entrepreneur|innovation/i],
+  ["Theory", "CS Theory", "#5f5a9a", /cs theory|computer science theory|3261/i],
+  ["Neuro", "Neurobiology Seminar", "#8a5a7a", /neurobiology|\bhart\b/i],
+  ["ASE", "Advanced Software Engineering", "#3f6f8f", /software engineering|\base\b|4156/i],
+  ["AI", "Artificial Intelligence", "#2f6f6f", /\bai\b|artificial intelligence|4701/i],
+  ["Graphics", "Computer Graphics", "#7a5aa0", /graphics|4160/i],
+  ["Psych", "Science of Psychology", "#9a5a5a", /psychology|psyc\w*\s*1001/i],
+  ["Stars", "Stars and Atoms", "#6a6aa0", /stars and atoms|1836/i],
+  ["NLP", "Natural Language Processing", "#3a7a5a", /\bnlp\b|natural language/i],
+  ["Exoplanets", "Exoplanets & Astrobiology", "#4a6a9a", /exoplanet|astrobio/i],
+  ["Stress", "Stress and the Brain", "#9a6a4a", /stress and the brain|4493/i]
+];
+const COURSES = {};
+COURSE_LIST.forEach(([k, name, color, rx]) => { COURSES[k] = { name, color, rx }; });
+// Words that could mean more than one course ("Phys report") go to whichever one you're taking now.
+const AMBIGUOUS = [[/\bphys(ics)?\b/i, ["Phys Lab", "Physics II"]], [/\bchem\b/i, ["Gen Chem"]], [/\bcs\b|\bcoms\b/i, ["AP", "Discrete", "Theory", "Databases"]]];
+const OTHER = { name: "Other", color: "#77806f" };
+let activeCourses = [];
+function refreshActiveCourses() {
+  const seen = {};
+  events.forEach((e) => { if (e.src === "classes" && !e.allDay) { const k = matchCourse(e.title); if (k) seen[k] = 1; } });
+  activeCourses = COURSE_LIST.map((c) => c[0]).filter((k) => seen[k]);
+}
+function matchCourse(t) {
+  for (const [k, , , rx] of COURSE_LIST) if (rx.test(t)) return k;
+  return null;
+}
+function courseOf(text) {
+  const t = String(text || "");
+  const direct = matchCourse(t);
+  if (direct) return direct;
+  for (const [rx, keys] of AMBIGUOUS) if (rx.test(t)) return keys.find((k) => activeCourses.includes(k)) || keys[0];
+  return null;
+}
+const colorOf = (k) => (k && COURSES[k] ? COURSES[k].color : OTHER.color);
+const nameOf = (k) => (k && COURSES[k] ? COURSES[k].name : OTHER.name);
+
+/* ---------- Connection ---------- */
+function readConfig() {
+  let c = null;
+  try {
+    const hp = new URLSearchParams(location.hash.slice(1));
+    if (hp.get("u") && hp.get("k")) { c = { url: hp.get("u"), key: hp.get("k") }; store("deskboard", c); history.replaceState(null, "", location.pathname); }
+  } catch (e) {}
+  if (!c) c = store("deskboard");
+  return c && c.url && c.key ? c : null;
+}
+let cfg = readConfig();
+function timedFetch(url, opts) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 25000);
+  return fetch(url, Object.assign({ signal: ctrl.signal, redirect: "follow" }, opts)).finally(() => clearTimeout(timer));
+}
+function readJson(r) {
+  return r.text().then((t) => {
+    try { return JSON.parse(t); } catch (e) { throw { error: "not_json" }; }
+  });
+}
+function apiGet(action, c) {
+  c = c || cfg;
+  const sep = c.url.indexOf("?") < 0 ? "?" : "&";
+  return timedFetch(c.url + sep + "action=" + action + "&key=" + encodeURIComponent(c.key), { cache: "no-store" }).then(readJson);
+}
+function apiPost(body) {
+  body.key = cfg.key;
+  return timedFetch(cfg.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+    .then(readJson).then((d) => { if (!d || !d.ok) throw d || {}; return d; });
+}
+
+/* ---------- State ---------- */
+let events = [], stats = [], conn = { ok: false, at: 0, error: "" }, sources = {};
+let doneDue = {}, layout = {}, holdLayoutUntil = 0, srv = {};   // srv: reviewed day, last tap anywhere, last fresh start
+const localChecks = {}, localSteps = {};
+let view = store("deskboard-view") || "todo";
+let moveOffer = null, checkNote = null, cardNotes = {}, nightNote = null;
+let dragging = null;
+
+const cache = store("deskboard-cache");
+if (cache && cache.events && Date.now() - cache.at < 36 * 3600000) {
+  events = parseEvents(cache.events);
+  stats = cache.stats || [];
+  sources = cache.sources || {};
+  conn = { ok: true, at: cache.at, stale: true };
+  if (cache.state) { doneDue = cache.state.doneDue || {}; layout = cache.state.layout || {}; ["reviewed", "lastActive", "resetAt"].forEach((k) => { if (k in cache.state) srv[k] = cache.state[k]; }); }
+}
+
+function applyState(s) {
+  if (!s) return;
+  if (s.doneDue) doneDue = s.doneDue;
+  ["reviewed", "lastActive", "resetAt"].forEach((k) => { if (k in s) srv[k] = s[k]; });
+  if (s.layout && Date.now() > holdLayoutUntil) layout = s.layout;
+  if (s.log) log = s.log;
+  if (s.timer && Date.now() > holdTimerUntil) pomo = cleanTimer(s.timer);
+}
+
+let loading = false;
+function load() {
+  if (!cfg || loading) return;
+  loading = true;
+  apiGet("data").then((d) => {
+    if (!d || !d.ok) throw d || {};
+    events = parseEvents(d.events);
+    stats = Array.isArray(d.stats) ? d.stats : stats;
+    applyState(d.state);
+    conn = { ok: true, at: Date.now(), stale: false };
+    sources = d.sources || {};
+    store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state, stats: d.stats, sources: d.sources });
+  }).catch((err) => {
+    conn = Object.assign({}, conn, { stale: conn.ok, error: err && err.error === "unauthorized" ? "Wrong board key" : "Can't reach your calendar script" });
+    if (!conn.ok) conn.ok = false;
+  }).finally(() => { loading = false; render(); });
+}
+
+/* ---------- Deadlines with everything a card needs ---------- */
+const stepKey = (ev, s) => ev.src + "|" + ev.id + "|" + ev.start + "|" + s.text;
+const stepDone = (ev, s) => { const k = stepKey(ev, s); return k in localSteps ? localSteps[k] : s.done; };
+const rating = (ev) => localChecks[ev.src + "|" + ev.id + "|" + ev.start] || ev.checkin;
+
+function deadlines(now) {
+  const t = now.getTime();
+  return buildDeadlines(events, now).map((d) => {
+    const key = dueKey(d);
+    const dueEnd = dueEndOf(d);
+    const course = courseOf(d.course + " " + d.raw + " " + d.title);
+    const tokensKey = {};
+    for (const k in d.tok) if (!GENERIC[k] && !/^\d+$/.test(k) && k.length > 1) tokensKey[k] = 1;
+    const blocks = events.filter((ev) => ev.src === "study" && !ev.allDay && ev.end - ev.start >= 20 * 60000 &&
+      ev.start < dueEnd && sameWork(d, tokensKey, ev.title)).sort((a, b) => a.start - b.start);
+    const upcoming = blocks.filter((b) => b.end > t);
+    const planned = plannedFor(events, d, now);
+    return {
+      key, d, course, dueEnd, title: deskTitle(d.title),
+      // A deadline whose time passed today stays in Today (faded) until you tick it or the day ends.
+      done: !!doneDue[key], auto: false, past: dueEnd < t, planned, upcoming, nextBlock: upcoming[0] || null
+    };
+  });
+}
+// "Phys report due: Interference" -> "Phys report: Interference"; "UW Essay 3 due 6 PM" -> "UW Essay 3".
+function deskTitle(t) {
+  const s = String(t || "")
+    .replace(/\s*\(due[^)]*\)/i, "")
+    .replace(/\s+due\s*:\s*/i, ": ")
+    .replace(/\s+due\b(\s+\d{1,2}(:\d{2})?\s*(am|pm))?\s*$/i, "")
+    .replace(/\s+/g, " ").trim();
+  return s || String(t || "");
+}
+function withoutCourse(title, course) {
+  if (!course) return title;
+  const rest = title.replace(new RegExp("^(" + course + "|" + nameOf(course) + "|chinese|chn)\\b[\\s:·-]*", "i"), "");
+  return rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : title;
+}
+function posOf(x) { const o = layout[x.key]; return o && typeof o.pos === "number" ? o.pos : null; }
+
+/* ---------- Timer (shared with the phone board) ---------- */
+const LEN = { focus: 25 * 60000, rest: 5 * 60000 };
+let pomo = { phase: "focus", endAt: null, left: LEN.focus }, log = {}, holdTimerUntil = 0, lastDone = null, audio = null;
+function cleanTimer(x) {
+  x = x || {};
+  return { phase: x.phase === "rest" ? "rest" : "focus", endAt: typeof x.endAt === "number" ? x.endAt : null,
+    left: typeof x.left === "number" ? x.left : (x.phase === "rest" ? LEN.rest : LEN.focus) };
+}
+function pushTimer() {
+  holdTimerUntil = Date.now() + 20000;
+  apiPost({ action: "timer", timer: pomo }).then((d) => { holdTimerUntil = 0; if (d.state && d.state.log) log = d.state.log; }, () => { holdTimerUntil = 0; });
+}
+function chime() {
+  if (!audio) return;
+  try {
+    const t0 = audio.currentTime;
+    [0, 0.22, 0.44].forEach((dl, i) => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = "sine"; o.frequency.value = i === 2 ? 988 : 784;
+      g.gain.setValueAtTime(0.0001, t0 + dl); g.gain.exponentialRampToValueAtTime(0.2, t0 + dl + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dl + 0.38);
+      o.connect(g); g.connect(audio.destination); o.start(t0 + dl); o.stop(t0 + dl + 0.42);
+    });
+  } catch (e) {}
+}
+function studyBlockAt(ms) {
+  return events.filter((b) => b.src === "study" && !b.allDay && b.start <= ms && b.end > ms).sort((a, b) => b.start - a.start)[0] || null;
+}
+function toggleTimer() {
+  if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (pomo.endAt) pomo = { phase: pomo.phase, endAt: null, left: Math.max(0, pomo.endAt - Date.now()) };
+  else pomo = { phase: pomo.phase, endAt: Date.now() + pomo.left, left: pomo.left };
+  pushTimer(); renderTop();
+}
+function resetTimer() { pomo = { phase: "focus", endAt: null, left: LEN.focus }; pushTimer(); renderTop(); }
+function tickTimer(nowMs) {
+  if (!pomo.endAt || nowMs < pomo.endAt) return;
+  const ended = pomo.endAt, wasFocus = pomo.phase === "focus";
+  pomo = wasFocus ? { phase: "rest", endAt: ended + LEN.rest, left: LEN.rest } : { phase: "focus", endAt: null, left: LEN.focus };
+  if (lastDone === ended) return;
+  lastDone = ended;
+  if (nowMs - ended < 60000) chime();
+  const blk = wasFocus ? studyBlockAt(ended - 1000) : null;
+  if (wasFocus) { const k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1; }
+  apiPost({ action: "pomoDone", ended, focus: wasFocus, timer: pomo, block: blk ? { cal: blk.src, id: blk.id, start: blk.start } : null })
+    .then((d) => { if (d.state && d.state.log) log = d.state.log; }).catch(() => {});
+}
+
+/* ---------- Actions ---------- */
+function toggleStep(ev, s) {
+  const k = stepKey(ev, s), next = !stepDone(ev, s);
+  localSteps[k] = next;
+  render();
+  apiPost({ action: "step", block: { cal: ev.src, id: ev.id, start: ev.start }, text: s.text, done: next })
+    .catch(() => { delete localSteps[k]; render(); });
+}
+function toggleDone(x) {
+  const was = !!doneDue[x.key];
+  if (was) delete doneDue[x.key]; else doneDue[x.key] = Date.now();
+  render();
+  apiPost({ action: "dueDone", due: x.key, done: !was }).then((d) => { if (d.state && d.state.doneDue) doneDue = d.state.doneDue; })
+    .catch(() => { if (was) doneDue[x.key] = 1; else delete doneDue[x.key]; render(); });
+}
+let layoutTimer = null;
+function saveLayout() {
+  holdLayoutUntil = Date.now() + 30000;
+  clearTimeout(layoutTimer);
+  layoutTimer = setTimeout(() => {
+    apiPost({ action: "layout", layout }).then(() => { holdLayoutUntil = Date.now() + 3000; }).catch(() => {});
+  }, 600);
+}
+function findTime(x, minutes) {
+  cardNotes[x.key] = { text: "Finding " + (minutes / 60) + "h…" };
+  render();
+  const where = /\b(oral|speak|aloud|flashcard|vocab)\b/i.test(x.title) ? "Dorm desk" : "Library";
+  const label = (x.course ? x.course + " · " : "") + x.title.replace(new RegExp("^" + (x.course || "") + "\\s+", "i"), "");
+  apiPost({ action: "plan", title: label.slice(0, 70), minutes, before: x.dueEnd, where }).then((d) => {
+    cardNotes[x.key] = { text: "Added " + whenText(d.start) + "–" + fmtTime(d.end) + " · " + where };
+    load();
+  }).catch((err) => {
+    cardNotes[x.key] = { text: err && err.error ? "No free " + (minutes / 60) + "h before it's due." : "Couldn't add it. Try again.", err: true };
+    render();
+  });
+}
+function whenText(ms) {
+  const d = new Date(ms), today = startOfDay(new Date()).getTime();
+  const diff = Math.round((startOfDay(d).getTime() - today) / DAY);
+  const day = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  return day + " " + fmtTime(ms);
+}
+function post(body, ok, fail) {
+  return apiPost(body).then((d) => { applyState(d.state); if (ok) ok(d); }).catch((err) => { if (fail) fail(err); });
+}
+function say(text, ms) { checkNote = { text, until: Date.now() + (ms || 8000) }; render(); }
+function rateBlock(ev, r) {
+  const k = ev.src + "|" + ev.id + "|" + ev.start;
+  localChecks[k] = r;
+  render();
+  post({ action: "checkin", r, block: { cal: ev.src, id: ev.id, start: ev.start } }, null, () => { delete localChecks[k]; say("That check-in didn't save."); });
+}
+function moveLeft(days) {
+  say("Finding slots…", 30000);
+  post({ action: "reset", days }, (d) => {
+    say(d.moved.length ? "Moved to " + d.moved.map((m) => whenText(m.start)).join(", ") + "." + (d.failed ? " " + d.failed + " didn't fit." : "")
+      : "No free slot this week. Plan it in the weekly review.", 10000);
+    load();
+  }, () => say("Couldn't move them. Try again later."));
+}
+
+/* ---------- Rendering ---------- */
+let currentItems = [];
+let expanded = null;
+let warnKey = null;   // the one deadline that gets "No time planned": the most urgent one in the next week
+let courseFilter = store("deskboard-course") || "";   // "" = all, a course key, or "~" for work with no course
+// Show less by default: This week, Later and Completed start folded.
+// Later and Completed start folded (Later still says what's next); This week is always in view.
+let collapsed = store("deskboard-collapsed3") || { later: true, done: true };
+if (view !== "todo" && view !== "classes") view = "todo";
+
+const ICONS = {
+  check: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/>',
+  classes: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 14h5"/>',
+  star: '<path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
+  chev: '<path d="m7 10 5 5 5-5"/>'
+};
+function ico(name) { const s = h("span", { class: "ico", "aria-hidden": "true" }); s.innerHTML = '<svg viewBox="0 0 24 24">' + ICONS[name] + "</svg>"; return s; }
+
+const isStarred = (x) => { const o = layout[x.key]; return !!(o && o.lane === "now"); };
+function dayDiff(ms, now) { return Math.round((startOfDay(new Date(ms)).getTime() - startOfDay(now).getTime()) / DAY); }
+// Where a task sits by date alone, ignoring stars and done.
+function dateGroup(x, now) {
+  if (x.past) return "today";
+  const diff = dayDiff(x.dueEnd, now);
+  return diff <= 0 ? "today" : diff === 1 ? "tomorrow" : diff < 7 ? "week" : "later";
+}
+function groupOf(x, now) { return x.done ? "done" : isStarred(x) ? "star" : dateGroup(x, now); }   // passed due times are done
+const GROUPS = [
+  { id: "star", name: "Starred", empty: "Star anything you want to keep in sight. Drag a task here or press S." },
+  { id: "today", name: "Today" },
+  { id: "tomorrow", name: "Tomorrow" },
+  { id: "week", name: "This week" },
+  { id: "later", name: "Later" },
+  { id: "done", name: "Completed", empty: "Tick the circle when something's handed in. Anything whose due time passes lands here too." }
+];
+
+function sortGroup(items, id) {
+  if (id === "done") return items.slice().sort((a, b) => (doneDue[b.key] || 0) - (doneDue[a.key] || 0));
+  return items.slice().sort((a, b) => {
+    if (a.past !== b.past) return a.past ? 1 : -1;
+    const pa = posOf(a), pb = posOf(b);
+    if (pa != null && pb != null && pa !== pb) return pa - pb;
+    if (pa != null && pb == null) return -1;
+    if (pb != null && pa == null) return 1;
+    return a.dueEnd - b.dueEnd;
+  });
+}
+function filtered(items) {
+  if (!courseFilter) return items;
+  return items.filter((x) => (courseFilter === "~" ? !x.course : x.course === courseFilter));
+}
+function trimLayout() {
+  const keys = Object.keys(layout);
+  if (keys.length > 60) keys.slice(0, keys.length - 60).forEach((k) => delete layout[k]);
+}
+function setStar(x, on, now) {
+  if (on) {
+    const starred = sortGroup(currentItems.filter((y) => !y.done && isStarred(y)), "star");
+    const last = starred.length ? (posOf(starred[starred.length - 1]) ?? starred.length * 10) : 0;
+    layout[x.key] = { lane: "now", pos: last + 10 };
+  } else delete layout[x.key];
+  trimLayout(); saveLayout(); render();
+}
+// Drag and drop: reorder inside a group, star by dropping on Starred, finish by dropping on Completed.
+// Dates can't be changed by dragging, so dropping into another date group only un-stars or re-opens.
+function moveTask(x, group, beforeKey, now) {
+  if (group === "done") { if (!x.done) toggleDone(x); return; }
+  if (x.auto) return;
+  if (x.done) { toggleDone(x); if (group !== "star") return; }
+  if (group !== "star" && group !== dateGroup(x, now)) { if (isStarred(x)) setStar(x, false, now); return; }
+  const lane = group === "star" ? "now" : "next";
+  const ordered = sortGroup(currentItems.filter((y) => y.key !== x.key && !y.done && groupOf(y, now) === group), group);
+  let idx = beforeKey ? ordered.findIndex((y) => y.key === beforeKey) : ordered.length;
+  if (idx < 0) idx = ordered.length;
+  const p = (i) => (ordered[i] ? (posOf(ordered[i]) ?? i * 10) : null);
+  const before = idx > 0 ? p(idx - 1) : null, after = idx < ordered.length ? p(idx) : null;
+  const pos = before == null && after == null ? 0 : before == null ? after - 10 : after == null ? before + 10 : (before + after) / 2;
+  ordered.forEach((y, i) => { if (posOf(y) == null) layout[y.key] = { lane, pos: i * 10 }; });
+  layout[x.key] = { lane, pos };
+  trimLayout(); saveLayout(); render();
+}
+
+function countdown(ms, now) {
+  const m = Math.round((ms - now) / 60000);
+  if (m < 0) return "overdue";
+  if (m < 60) return "in " + m + " min";
+  const hrs = m / 60;
+  if (hrs < 24) return "in " + Math.round(hrs) + "h";
+  const days = Math.floor(hrs / 24), rh = Math.round(hrs - days * 24);
+  return "in " + days + "d" + (days < 3 && rh ? " " + rh + "h" : "");
+}
+function dueText(x, now) {
+  const diff = dayDiff(x.dueEnd, now), d = new Date(x.dueEnd);
+  const day = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : diff === -1 ? "Yesterday" : d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  return day + (x.d.dueAt ? " · " + fmtTime(x.dueEnd) : "");
+}
+function dueShort(x, now) {
+  const diff = dayDiff(x.dueEnd, now), d = new Date(x.dueEnd);
+  const day = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : diff === -1 ? "Yesterday" : diff > 1 && diff < 7
+    ? d.toLocaleDateString("en-US", { weekday: "short" }) : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return day + (x.d.dueAt ? " " + fmtTime(x.dueEnd) : "");
+}
+function hoursText(min) { return min < 60 ? min + " min" : (Math.round(min / 30) / 2) + "h"; }
+
+function stepButton(ev, s, opts) {
+  const done = stepDone(ev, s);
+  return h("li", null, h("button", {
+    class: "step" + (done ? " done" : "") + (s.digest ? " digest" : "") + (opts && opts.first ? " first" : ""),
+    type: "button", "aria-pressed": done ? "true" : "false",
+    onclick: (e) => { e.stopPropagation(); toggleStep(ev, s); }
+  }, h("span", { class: "box", "aria-hidden": "true" }), h("span", { class: "t", text: s.show }), s.digest ? h("span", { class: "tag", text: "digest" }) : null));
+}
+
+/* ----- To do ----- */
+function renderTask(x, now) {
+  const t = now.getTime(), open = expanded === x.key, star = isStarred(x);
+  const hrsLeft = (x.dueEnd - t) / 3600000;
+  const pill = x.done ? "" : x.past ? " passed" : hrsLeft < 24 ? " alert" : "";
+  const li = h("li", {
+    class: "task" + (x.done ? " is-done" : "") + (x.past && !x.done ? " is-passed" : "") + (open ? " open" : ""), tabindex: "0", draggable: "true", "data-key": x.key,
+    style: "--course:" + colorOf(x.course), "aria-label": x.title + ", due " + dueText(x, now) + (x.done ? ", completed" : ""), "aria-expanded": open ? "true" : "false"
+  });
+  const sub = h("div", { class: "task-sub" });
+  if (x.course && courseFilter !== x.course) sub.append(h("span", { class: "crs", text: x.course }));
+  if (!x.done) {
+    if (x.planned.min) sub.append(h("span", { class: "ok", text: hoursText(x.planned.min) + " planned" }));
+    else if (x.key === warnKey) sub.append(h("span", { class: "warn", text: "No time planned · open it to Find time" }));
+    const nb = x.nextBlock;
+    if (nb) sub.append(h("span", { text: nb.start <= t ? "Working on it now" : "Next block " + whenText(nb.start) }));
+  }
+  li.append(h("div", { class: "task-row", onclick: () => { expanded = open ? null : x.key; render(); } },
+    x.auto ? h("span", { class: "check", title: "Due time passed: counted as handed in", "aria-label": "Due time passed" })
+      : h("button", { class: "check", type: "button", title: x.done ? "Mark not done" : "Mark done", "aria-label": x.done ? "Mark not done" : "Mark done",
+        onclick: (e) => { e.stopPropagation(); toggleDone(x); } }),
+    h("div", { class: "task-main" }, h("div", { class: "task-title", text: x.title }), sub.childNodes.length ? sub : null),
+    h("span", { class: "due-pill" + pill, text: (x.past && !x.done ? "Passed · " : "") + dueShort(x, now) }),
+    x.done ? h("span") : h("button", { class: "star" + (star ? " on" : ""), type: "button", title: star ? "Unstar" : "Star",
+      "aria-label": star ? "Unstar" : "Star", "aria-pressed": star ? "true" : "false",
+      onclick: (e) => { e.stopPropagation(); setStar(x, !star, now); } }, ico("star"))));
+  if (open) li.append(taskDetail(x, now));
+
+  li.addEventListener("dragstart", (e) => { if (e.target !== li) return; dragging = x; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", x.key); });
+  li.addEventListener("dragend", () => { dragging = null; li.classList.remove("dragging"); document.querySelectorAll(".drop-hint").forEach((n) => n.remove()); document.querySelectorAll(".group.over").forEach((n) => n.classList.remove("over")); });
+  li.addEventListener("keydown", (e) => {
+    if (e.target !== li) return;
+    const k = e.key.toLowerCase();
+    if (k === "enter" || k === " ") { e.preventDefault(); expanded = open ? null : x.key; render(); }
+    else if (k === "d" && !x.auto) { e.preventDefault(); toggleDone(x); }
+    else if (k === "s" && !x.done) { e.preventDefault(); setStar(x, !star, now); }
+    else if (k === "arrowdown" || k === "arrowup" || k === "j" || k === "k") {
+      e.preventDefault();
+      const all = [...document.querySelectorAll(".task")], i = all.indexOf(li);
+      const n = all[i + (k === "arrowdown" || k === "j" ? 1 : -1)];
+      if (n) n.focus();
+    }
+  });
+  return li;
+}
+
+function taskDetail(x, now) {
+  const t = now.getTime(), hrsLeft = (x.dueEnd - t) / 3600000;
+  const box = h("div", { class: "task-detail" });
+  box.append(h("div", { class: "line" },
+    x.course ? h("span", { class: "chip course", style: "--course:" + colorOf(x.course), text: nameOf(x.course) }) : null,
+    h("span", null, "Due ", h("b", { text: dueText(x, now) }), x.done ? "" : " · " + countdown(x.dueEnd, t))));
+  if (!x.done) {
+    const plan = h("div", { class: "line" });
+    if (x.planned.min) plan.append(h("span", { class: "chip ok", text: hoursText(x.planned.min) + " planned" }),
+      x.upcoming.length ? x.upcoming.length + " block" + (x.upcoming.length > 1 ? "s" : "") + " still to come" : "All planned blocks are done");
+    else if (!x.past) plan.append(h("span", { class: "chip", text: "No time planned yet" }));
+    if (!x.past) plan.append(h("span", { class: "find" }, "Find ",
+      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 60); }, text: "1h" }),
+      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 120); }, text: "2h" })));
+    if (plan.childNodes.length) box.append(plan);
+    const nb = x.nextBlock;
+    if (nb) {
+      const live = nb.start <= t;
+      box.append(h("div", { class: "line" }, live ? "Working on it now, until " : "Next block ", h("b", { text: live ? fmtTime(nb.end) : whenText(nb.start) + "–" + fmtTime(nb.end) }), nb.where ? " · " + nb.where : ""));
+      if (nb.steps.length) {
+        const firstOpen = nb.steps.find((s) => !stepDone(nb, s));
+        box.append(h("ul", { class: "mini-steps" }, nb.steps.map((s) => stepButton(nb, s, { first: s === firstOpen }))));
+      }
+      const later = x.upcoming.slice(1, 4);
+      if (later.length) box.append(h("div", { class: "line", text: "Then " + later.map((b) => whenText(b.start)).join(", ") }));
+    }
+    const note = cardNotes[x.key];
+    if (note) box.append(h("div", { class: "note" + (note.err ? " err" : ""), text: note.text }));
+  }
+  return box;
+}
+
+function renderGroup(G, items, now) {
+  const isClosed = !!collapsed[G.id];
+  const list = h("ul", { class: "tasks" });
+  items.forEach((x) => list.append(renderTask(x, now)));
+  if (!items.length) list.append(h("li", { class: "none", text: G.empty || "" }));
+  const sec = h("section", { class: "group group-" + G.id + (isClosed ? " closed" : ""), "data-group": G.id },
+    h("button", { class: "group-head", type: "button", "aria-expanded": isClosed ? "false" : "true",
+      onclick: () => { collapsed[G.id] = !isClosed; store("deskboard-collapsed3", collapsed); render(); } },
+      h("h2", { text: G.name }), h("span", { class: "n", text: String(items.length) }),
+      isClosed && G.id !== "done" && items.length ? h("span", { class: "peek", text: "Next: " + items[0].title + " · " + dueShort(items[0], now) }) : null,
+      h("span", { class: "chev" }, ico("chev"))),
+    list);
+  sec.addEventListener("dragover", (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    sec.classList.add("over");
+    if (collapsed[G.id]) return;
+    const after = [...list.querySelectorAll(".task:not(.dragging)")].find((c) => { const r = c.getBoundingClientRect(); return e.clientY < r.top + r.height / 2; });
+    let hint = list.querySelector(".drop-hint");
+    if (!hint) hint = h("li", { class: "drop-hint", "aria-hidden": "true" });
+    if (after) list.insertBefore(hint, after); else list.append(hint);
+  });
+  sec.addEventListener("dragleave", (e) => { if (!sec.contains(e.relatedTarget)) { sec.classList.remove("over"); const hn = list.querySelector(".drop-hint"); if (hn) hn.remove(); } });
+  sec.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const hint = list.querySelector(".drop-hint");
+    const nx = hint && hint.nextElementSibling && hint.nextElementSibling.classList.contains("task") ? hint.nextElementSibling.getAttribute("data-key") : null;
+    const x = dragging; dragging = null;
+    if (x) moveTask(x, G.id, nx, now);
+  });
+  return sec;
+}
+
+function renderTodo(now) {
+  const t = now.getTime();
+  const items = filtered(currentItems);
+  const open = items.filter((x) => !x.done && !x.past);
+  const wrap = h("div", { class: "list-wrap" });
+  const k = courseFilter && courseFilter !== "~" ? courseFilter : null;
+  if (courseFilter) {
+    const nextClass = k ? events.filter((e) => e.src === "classes" && !e.allDay && e.start > t && courseOf(e.title) === k).sort((a, b) => a.start - b.start)[0] : null;
+    wrap.append(h("header", { class: "list-head course", style: "--course:" + colorOf(k) },
+      h("div", { class: "grow" }, h("h1", { text: courseFilter === "~" ? "Other work" : nameOf(k) }),
+        h("p", { text: open.length + " to do" + (nextClass ? " · next class " + whenText(nextClass.start) + (nextClass.where ? " · " + nextClass.where : "") : "") })),
+      h("button", { class: "pill-btn", type: "button", onclick: () => setFilter(""), text: "Show all" })));
+  } else {
+    const today = open.filter((x) => dayDiff(x.dueEnd, now) <= 0).length;
+    const week = open.filter((x) => x.dueEnd - t < 7 * DAY).length;
+    wrap.append(h("header", { class: "list-head" },
+      h("div", { class: "grow" }, h("h1", { text: "To do" }),
+        h("p", { text: open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : "Nothing due in the next 6 weeks." }))));
+  }
+  const alert = dueAlert(now);
+  if (alert) wrap.append(h("div", { class: "warn-line", role: "alert", text: alert }));
+  const list = h("div", { class: "panel list", role: "list" });
+  GROUPS.forEach((G) => {
+    const g = sortGroup(items.filter((x) => groupOf(x, now) === G.id), G.id);
+    if (!g.length && !(G.id === "done" && items.length)) return;
+    list.append(renderGroup(G, g, now));
+  });
+  wrap.append(list);
+  return wrap;
+}
+
+// When what's on screen might be missing something, say so above the list.
+function dueAlert(now) {
+  if (conn.stale && conn.at && now.getTime() - conn.at > 3 * 3600000) return "Offline since " + whenText(conn.at) + ". Deadlines added since then aren't shown.";
+  const bad = Object.keys(sources).filter((k) => sources[k] && sources[k].ok === false && k !== "sleep");
+  if (bad.length) return bad.map((k) => (k === "canvas" ? "Canvas" : "Your " + k + " calendar") + " didn't load (" + (sources[k].error || "unknown error") + ")").join(". ") + ". Deadlines from it may be missing, so check it directly until this clears.";
+  return "";
+}
+
+/* ----- Classes ----- */
+function shownCourses() {
+  const keys = activeCourses.slice();
+  currentItems.forEach((x) => { if (x.course && !keys.includes(x.course)) keys.push(x.course); });
+  return keys;
+}
+function renderClasses(now) {
+  const t = now.getTime();
+  const keys = shownCourses();
+  if (currentItems.some((x) => !x.course)) keys.push(null);
+  const wrap = h("div", { class: "list-wrap" },
+    h("header", { class: "list-head" }, h("div", { class: "grow" }, h("h1", { text: "Classes" }),
+      h("p", { text: "This semester's classes from your Classes calendar. Click one to see just its work." }))));
+  if (!keys.length) { wrap.append(h("div", { class: "panel", style: "padding:22px" }, h("p", { class: "empty-now", text: "No classes on the calendar in the next two weeks." }))); return wrap; }
+  const grid = h("section", { class: "courses", "aria-label": "Classes" });
+  keys.forEach((k) => {
+    const items = currentItems.filter((x) => x.course === k && !x.done).sort((a, b) => a.dueEnd - b.dueEnd);
+    const nextClass = k ? events.filter((e) => e.src === "classes" && !e.allDay && e.start > t && courseOf(e.title) === k).sort((a, b) => a.start - b.start)[0] : null;
+    const nextBlock = events.filter((e) => e.src === "study" && !e.allDay && e.end > t && courseOf(e.title) === k).sort((a, b) => a.start - b.start)[0];
+    const open = () => { setFilter(k || "~"); };
+    const card = h("article", { class: "panel course-card", style: "--course:" + colorOf(k) },
+      h("button", { class: "banner", type: "button", onclick: open },
+        h("b", { text: k ? nameOf(k) : "Other work" }),
+        h("span", { text: nextClass ? "Next class " + whenText(nextClass.start) + (nextClass.where ? " · " + nextClass.where : "") : (k ? "No class in the next two weeks" : "Not linked to a class") })),
+      h("div", { class: "body" }, h("span", { class: "badge", title: items.length + " to do", text: String(items.length) })));
+    card.append(h("div", { class: "label lbl", text: "Due soon" }));
+    if (items.length) {
+      card.append(h("ul", null, items.slice(0, 4).map((x) => {
+        const soon = (x.dueEnd - t) / 3600000 < 48;
+        return h("li", null,
+          h("span", { class: "when" + (soon ? " soon" : ""), text: dueShort(x, now).replace(/ \d\d:\d\d$/, "") }),
+          h("span", { class: "what", text: withoutCourse(x.title, k) }),
+          h("span", { class: "h" + (x.key === warnKey ? " zero" : ""), text: x.planned.min ? hoursText(x.planned.min) : x.key === warnKey ? "0h" : "" }));
+      })));
+    } else card.append(h("div", { class: "nothing", text: "Nothing due soon." }));
+    card.append(h("div", { class: "foot" },
+      h("span", { text: nextBlock ? "Next work block " + whenText(nextBlock.start) : "No work blocks planned" }),
+      h("button", { class: "linkish", type: "button", onclick: open, text: items.length > 4 ? "All " + items.length + " →" : "Open →" })));
+    grid.append(card);
+  });
+  wrap.append(grid);
+  return wrap;
+}
+
+/* ----- Sidebar ----- */
+function setFilter(k) { courseFilter = k; store("deskboard-course", k); view = "todo"; store("deskboard-view", view); expanded = null; render(); window.scrollTo(0, 0); }
+function renderSide(now) {
+  const openAll = currentItems.filter((x) => !x.done);
+  const side = h("nav", { class: "side", "aria-label": "Views" },
+    h("button", { class: "nav-item", type: "button", "aria-current": view === "todo" && !courseFilter ? "true" : "false", onclick: () => setFilter("") },
+      ico("check"), "To do", h("span", { class: "n", text: String(openAll.length) })),
+    h("button", { class: "nav-item", type: "button", "aria-current": view === "classes" ? "true" : "false", onclick: () => setView("classes") },
+      ico("classes"), "Classes"),
+    h("div", { class: "label side-label", text: "This semester" }));
+  const keys = shownCourses();
+  if (currentItems.some((x) => !x.course)) keys.push("~");
+  keys.forEach((k) => {
+    const n = openAll.filter((x) => (k === "~" ? !x.course : x.course === k)).length;
+    side.append(h("button", { class: "course-item", type: "button", title: k === "~" ? "Other work" : nameOf(k), style: "--course:" + colorOf(k === "~" ? null : k),
+      "aria-current": view === "todo" && courseFilter === k ? "true" : "false", onclick: () => setFilter(k) },
+      h("span", { class: "dot" }), h("span", { class: "nm", text: k === "~" ? "Other" : nameOf(k) }), h("span", { class: "n", text: n ? String(n) : "" })));
+  });
+  side.append(h("div", { class: "side-foot" },
+    h("div", null, h("span", { class: "kbd", text: "↑" }), " ", h("span", { class: "kbd", text: "↓" }), " move"),
+    h("div", null, h("span", { class: "kbd", text: "Enter" }), " open · ", h("span", { class: "kbd", text: "D" }), " done · ", h("span", { class: "kbd", text: "S" }), " star"),
+    h("div", { text: "Drag to reorder or star." })));
+  return side;
+}
+
+/* ----- Right rail ----- */
+// No question after every block. One check-in at night (unmarked blocks count as done),
+// a fresh start at the turn of the week, and a gentle restart after a few days away.
+const SKIP_CHECK_RX = /\b(eat|break|lunch|dinner|breakfast|commute|sleep|head to|weekly review)\b/i;
+const NIGHT_HOUR = 21, WAKE = 9;
+const checkable = (ev) => ev.src === "study" && !ev.allDay && ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title);
+function reviewDay(now) { return now.getHours() < WAKE ? dayKey(addDays(now, -1, 12)) : dayKey(now); }
+function nightBlocks(now) {
+  const h = now.getHours(), t = now.getTime();
+  if (h >= WAKE && h < NIGHT_HOUR) return null;
+  const day = reviewDay(now);
+  if (srv.reviewed === day) return null;
+  const list = events.filter((ev) => checkable(ev) && dayKey(ev.start) === day).sort((a, b) => a.start - b.start);
+  if (!list.length || list.some((ev) => ev.end > t)) return null;
+  return list.some((ev) => !rating(ev)) ? { day, all: list } : null;
+}
+function unfinished(now, days) {
+  const t = now.getTime();
+  return events.filter((ev) => { const r = rating(ev); return checkable(ev) && ev.end <= t && ev.start >= t - days * DAY && (r === "missed" || r === "partly") && !ev.moved; });
+}
+function freshWeek(now) {
+  const ws = addDays(now, -now.getDay(), 17), t = now.getTime();
+  if (t < ws || t - ws > 31 * 3600000 || (srv.resetAt && srv.resetAt >= ws)) return null;
+  const u = unfinished(now, 7);
+  return u.length ? u : null;
+}
+const drifting = (now) => conn.ok && srv.lastActive && now.getTime() - srv.lastActive > 4 * DAY;
+function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+function renderCheck(now) {
+  const t = now.getTime();
+  const card = (text, ...btns) => h("div", { class: "checkin" }, h("p", { text }), btns);
+  const btn = (label, fn, cls) => h("button", { class: "pill-btn" + (cls ? " " + cls : ""), type: "button", onclick: fn, text: label });
+  if (moveOffer) {
+    const mo = moveOffer;
+    return card("Move what's left of " + plural(mo.n, "block") + " to free slots?",
+      btn("Move", () => { moveOffer = null; moveLeft(mo.days); }, "sage"),
+      btn("Not now", () => { moveOffer = null; say("OK. Sunday's fresh start will offer again.", 6000); }));
+  }
+  if (checkNote && checkNote.until > t) return card(checkNote.text);
+  if (drifting(now)) {
+    return card("It's been a few days. Fresh start?",
+      btn("Fresh start", () => { srv.lastActive = srv.resetAt = Date.now(); post({ action: "reset", keep: false }); say("Clean slate. Star one thing and start there.", 10000); }, "sage"),
+      btn("I'm on track", () => { srv.lastActive = Date.now(); post({ action: "active" }); render(); }));
+  }
+  const fw = freshWeek(now);
+  if (fw) {
+    return card("New week: " + plural(fw.length, "unfinished block") + " from last week. Move them into this week?",
+      btn("Move them", () => { srv.resetAt = Date.now(); moveLeft(7); }, "sage"),
+      btn("Let them go", () => { srv.resetAt = Date.now(); post({ action: "reset", keep: false }); say("Clean week.", 5000); }));
+  }
+  const nb = nightBlocks(now);
+  if (!nb) return null;
+  const box = h("div", { class: "checkin night" }, h("p", { text: "How did today go? Mark anything that didn't go to plan. The rest counts as done." }));
+  box.append(h("ul", { class: "night-list" }, nb.all.map((ev) => {
+    const r = rating(ev);
+    return h("li", null, h("span", { class: "nm", text: fmtTime(ev.start) + " " + ev.title }),
+      h("span", { class: "seg" }, ["done", "partly", "missed"].map((k) => h("button", {
+        type: "button", "aria-pressed": (r || "done") === k ? "true" : "false", class: !r && k === "done" ? "implied" : "",
+        onclick: () => rateBlock(ev, k), text: k === "done" ? "Done" : k === "partly" ? "Partly" : "Missed" }))));
+  })));
+  box.append(btn("Looks right", () => {
+    srv.reviewed = nb.day;
+    post({ action: "reviewed", day: nb.day });
+    const left = nb.all.filter((ev) => { const r = rating(ev); return (r === "missed" || r === "partly") && !ev.moved; });
+    if (left.length) { moveOffer = { n: left.length, days: 1 }; render(); } else say("Logged. Good night.");
+  }, "sage"));
+  return box;
+}
+function renderNow(now) {
+  const t = now.getTime();
+  const today = timedFor(events, now);
+  const cur = today.filter((i) => i.src === "study" && i.start <= t && i.end > t).sort((a, b) => b.start - a.start)[0]
+    || today.filter((i) => i.start <= t && i.end > t).sort((a, b) => b.start - a.start)[0];
+  const next = today.filter((i) => i.start > t && !/^sleep\b/i.test(i.title))[0];
+  const ev = cur || next;
+  const course = ev ? courseOf(ev.title) : null;
+  const panel = h("section", { class: "panel now", style: "--course:" + (ev ? colorOf(course) : "var(--sage)"), "aria-label": "Do now" });
+  if (!ev) {
+    const urgent = sortGroup(currentItems.filter((x) => !x.done && !x.past && (isStarred(x) || x.dueEnd - t < 2 * DAY)), "star")[0];
+    panel.append(h("div", { class: "head" }, h("span", { class: "label", text: "Free right now" })));
+    panel.append(h("h1", { text: urgent ? urgent.title : "Nothing scheduled" }));
+    panel.append(h("p", { class: "empty-now", text: urgent ? "Due " + dueText(urgent, now) + ". " + (urgent.planned.min ? "You have time planned for it." : "Open it in To do and use Find.") : "Use the gap to get ahead on something, or rest." }));
+    return panel;
+  }
+  const isNow = ev.start <= t;
+  panel.append(h("div", { class: "head" },
+    h("span", { class: "label", text: isNow ? "Now" : "Up next" }),
+    course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null,
+    ev.modes && ev.modes.length ? ev.modes.map((k) => h("span", { class: "chip", title: PACER[k].verb }, h("span", { class: "mode-k", text: k }), PACER[k].short)) : null));
+  panel.append(h("h1", { text: ev.title }));
+  panel.append(h("div", { class: "meta" },
+    h("span", null, h("b", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) }), ev.where ? " · " + ev.where : ""),
+    isNow && next && next !== ev ? h("span", { text: "Then " + next.title + " at " + fmtTime(next.start) }) : null));
+  const remaining = isNow ? ev.end - t : ev.start - t;
+  panel.append(h("div", { class: "side-row" },
+    h("div", { class: "big-time" }, fmtDur(remaining).replace(" min", "m"), h("small", { text: isNow ? "left in block" : "until it starts" })),
+    ev.src === "study" ? h("button", { class: "pill-btn primary", type: "button", onclick: toggleTimer, text: pomo.endAt ? "Pause focus" : "Start focus" }) : null));
+  if (isNow) {
+    const frac = Math.min(1, (t - ev.start) / (ev.end - ev.start));
+    panel.append(h("div", { class: "progress", role: "img", "aria-label": Math.round(frac * 100) + "% of the block has passed" }, h("span", { style: "width:" + (frac * 100).toFixed(1) + "%" })));
+  }
+  if (ev.steps && ev.steps.length) {
+    const firstOpen = ev.steps.find((s) => !stepDone(ev, s));
+    panel.append(h("ul", { class: "steps-big" }, ev.steps.map((s) => stepButton(ev, s, { first: s === firstOpen }))));
+  } else if (ev.src === "study" && !/\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(ev.title)) {
+    // Steps are optional: a block without them still gets a first move.
+    panel.append(h("p", { class: "first-move" }, h("span", { class: "label", text: "Start with" }), "Open it and do one 25-min round."));
+  }
+  return panel;
+}
+function renderAgenda(now) {
+  const t = now.getTime();
+  const items = timedFor(events, now);
+  const card = h("section", { class: "panel today-card", "aria-label": "Today" }, h("h2", { text: "Today" }));
+  if (!items.length) card.append(h("p", { class: "empty-now", text: "Nothing on the calendar today." }));
+  card.append(h("ul", { class: "agenda" }, items.map((ev) => {
+    const r = ev.src === "study" ? rating(ev) : null;
+    const c = courseOf(ev.title);
+    return h("li", { class: (ev.end <= t ? "past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : ""), style: "--course:" + (ev.src === "study" || ev.src === "classes" ? colorOf(c) : "var(--line)") },
+      h("span", { class: "when", text: fmtTime(ev.start) }), h("span", { class: "bar" }),
+      h("span", { class: "what" }, h("b", { text: ev.title }), h("span", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") + (ev.src === "classes" ? " · class" : "") })));
+  })));
+  const done = Number(log[dayKey(now)]) || 0;
+  card.append(h("div", { class: "foot", text: done ? done + " focus round" + (done > 1 ? "s" : "") + " so far today." : "No focus rounds yet today." }));
+  return card;
+}
+function renderRail(now) {
+  return h("aside", { class: "rail", "aria-label": "Now and today" }, renderCheck(now), renderNow(now), renderAgenda(now));
+}
+
+/* ----- Top bar and page ----- */
+function renderTop(now) {
+  now = now || new Date();
+  const top = $("#top");
+  if (!top) return;
+  $(".clock", top).textContent = fmtTime(now);
+  $(".date", top).textContent = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const left = pomo.endAt ? Math.max(0, pomo.endAt - now.getTime()) : pomo.left;
+  const secs = Math.ceil(left / 1000);
+  $(".timer .t", top).textContent = pad(Math.floor(secs / 60)) + ":" + pad(secs % 60);
+  $(".timer .phase", top).textContent = pomo.phase === "rest" ? "Break" : (pomo.endAt ? "Focus" : "Focus · ready");
+  $("#t-toggle").textContent = pomo.endAt ? "Pause" : "Start";
+  const n = Number(log[dayKey(now)]) || 0;
+  $(".timer .pomos", top).replaceChildren(...Array.from({ length: Math.min(n, 8) }, () => h("i")));
+  $(".timer .pomos", top).title = n + " focus round" + (n === 1 ? "" : "s") + " today";
+  const s = $(".sync", top);
+  s.className = "sync " + (conn.ok && !conn.stale ? "ok" : conn.ok ? "" : "bad");
+  $("span", s).textContent = conn.ok ? (conn.stale ? "Offline · " : "Synced ") + fmtTime(conn.at) : (conn.error || "Connecting…");
+}
+function topBar() {
+  return h("header", { class: "top", id: "top" },
+    h("span", { class: "brand" }, h("i", { "aria-hidden": "true" }), "DESK·BOARD"),
+    h("div", { class: "today" }, h("span", { class: "clock" }), h("span", { class: "date" })),
+    h("span", { class: "spacer" }),
+    h("div", { class: "timer" },
+      h("div", null, h("div", { class: "phase" }), h("div", { class: "pomos" })),
+      h("span", { class: "t" }),
+      h("button", { class: "pill-btn primary", id: "t-toggle", type: "button", onclick: toggleTimer }),
+      h("button", { class: "pill-btn", type: "button", onclick: resetTimer, text: "Reset" })),
+    h("div", { class: "sync" }, h("i"), h("span")));
+}
+function setView(v) { view = v; store("deskboard-view", v); expanded = null; render(); window.scrollTo(0, 0); }
+
+function render() {
+  if (dragging) return;
+  const app = $("#app");
+  if (!cfg) { app.replaceChildren(setupForm()); return; }
+  const now = new Date();
+  refreshActiveCourses();
+  currentItems = deadlines(now);
+  const firstUnplanned = currentItems.filter((x) => !x.done && !x.past && !x.planned.min && x.dueEnd - now.getTime() < 7 * DAY).sort((a, b) => a.dueEnd - b.dueEnd)[0];
+  warnKey = firstUnplanned ? firstUnplanned.key : null;
+  if (courseFilter && courseFilter !== "~" && !COURSES[courseFilter]) courseFilter = "";
+  const scroll = window.scrollY;
+  const focusKey = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute("data-key") : null;
+  const shell = h("div", { class: "shell" }, renderSide(now), view === "classes" ? renderClasses(now) : renderTodo(now), renderRail(now));
+  app.replaceChildren(topBar(), shell);
+  renderTop(now);
+  window.scrollTo(0, scroll);
+  if (focusKey) { const n = document.querySelector('[data-key="' + CSS.escape(focusKey) + '"]'); if (n) n.focus({ preventScroll: true }); }
+}
+
+function setupForm() {
+  const url = h("input", { id: "su", placeholder: "https://script.google.com/macros/s/…/exec", autocomplete: "off" });
+  const key = h("input", { id: "sk", placeholder: "Board key", autocomplete: "off" });
+  const msg = h("div", { class: "msg" });
+  const btn = h("button", { class: "pill-btn primary", type: "submit", text: "Connect" });
+  const form = h("form", { class: "panel setup" },
+    h("h1", { text: "Connect Desk Board" }),
+    h("p", { text: "Use the same script URL and key as the phone board. Or open the phone link here and it connects by itself." }),
+    h("label", { for: "su", text: "Script URL" }), url, h("label", { for: "sk", text: "Board key" }), key, h("div", { style: "margin-top:16px" }, btn), msg);
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const c = { url: url.value.trim(), key: key.value.trim() };
+    if (!c.url || !c.key) { msg.textContent = "Fill in both."; return; }
+    btn.disabled = true; msg.textContent = "Checking…";
+    apiGet("ping", c).then((d) => {
+      if (!d || !d.ok) throw d;
+      store("deskboard", c); cfg = c; load(); render();
+    }).catch((err) => { btn.disabled = false; msg.textContent = err && err.error === "unauthorized" ? "That key doesn't match." : "Couldn't reach the script."; });
+  });
+  return form;
+}
+
+/* ---------- Clock ---------- */
+let lastMinute = -1;
+setInterval(() => {
+  const now = new Date();
+  tickTimer(now.getTime());
+  renderTop(now);
+  if (now.getMinutes() !== lastMinute) {
+    lastMinute = now.getMinutes();
+    if (checkNote && checkNote.until < now.getTime()) checkNote = null;
+    if (!dragging && !document.querySelector("#app input:focus")) render();
+  }
+}, 1000);
+setInterval(load, 2 * 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+render();
+load();
+</script>
+</body>
+</html>
