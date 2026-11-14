@@ -102,6 +102,7 @@ function route_(body) {
     if (body.action === 'layout') return layout_(body);
     if (body.action === 'plan') return plan_(body);
     if (body.action === 'reviewed') return reviewed_(body);
+    if (body.action === 'worked') return worked_(body);
     if (body.action === 'saveBlock') return saveBlock_(body);
     if (body.action === 'deleteBlock') return deleteBlock_(body);
     if (body.action === 'saveDue') return saveDue_(body);
@@ -798,15 +799,19 @@ function stats_() {
     if (ev.isAllDayEvent() || ev.getEndTime() > now) return;
     var mins = (ev.getEndTime() - ev.getStartTime()) / 60000;
     if (mins < 30) return;
-    var m = /^\s*Check-in:\s*(Done|Partly|Missed)/im.exec(String(ev.getDescription() || ''));
+    var desc = String(ev.getDescription() || '');
+    var m = /^\s*Check-in:\s*(Done|Partly|Missed)/im.exec(desc);
+    var w = /^\s*Worked:\s*(?:(\d+)h)?\s*(?:(\d+)m)?/im.exec(desc);
     var rating = m ? m[1].toLowerCase() : null;
     // No rating on a day you used the board: nothing went wrong, so it counts as done.
     if (!rating && st.active[Utilities.formatDate(ev.getStartTime(), tz, 'yyyy-MM-dd')] && !SKIP_CHECK.test(ev.getTitle())) rating = 'done';
     if (!rating) return;
     var g = groupOf_(ev.getTitle());
     if (!g) return;
-    var x = groups[g] || (groups[g] = { label: g, n: 0, done: 0, partly: 0, missed: 0, minutes: 0 });
+    var x = groups[g] || (groups[g] = { label: g, n: 0, done: 0, partly: 0, missed: 0, minutes: 0, tracked: 0, trackedPlan: 0, trackedWork: 0 });
     x.n++; x.minutes += mins; x[rating]++;
+    // Time actually worked, when the timer tracked it.
+    if (w) { x.tracked++; x.trackedPlan += mins; x.trackedWork += Number(w[1] || 0) * 60 + Number(w[2] || 0); }
   });
   var out = Object.keys(groups).map(function (k) {
     var x = groups[k];
@@ -827,7 +832,8 @@ function writeEstimates_(stats) {
   var study = calendarFor_('study');
   if (!study) return;
   var lines = stats.filter(function (x) { return x.factor; }).map(function (x) {
-    return 'Estimate: ' + x.label + ' ×' + x.factor + ' (' + x.n + ' rated, ' + Math.round(x.finish * 100) + '% done)';
+    return 'Estimate: ' + x.label + ' ×' + x.factor + ' (' + x.n + ' rated, ' + Math.round(x.finish * 100) + '% done' +
+      (x.tracked >= 3 ? ', ' + Math.round(x.trackedWork / x.tracked) + 'm worked per ' + Math.round(x.trackedPlan / x.tracked) + 'm block' : '') + ')';
   });
   if (!lines.length) return;
   var now = new Date();
@@ -843,12 +849,24 @@ function writeEstimates_(stats) {
 
 var FOCUS_MS = 25 * 60000;
 
+// Two ways to time work, shared by every screen:
+//   flow: counts up from Start, any length (a 15-minute Anki session counts as much as a long block);
+//         `since` is when it started running, `acc` the time already banked before a pause.
+//   pomo: 25-minute rounds with 5-minute breaks.
+// Either way, every minute worked is logged (see worked_).
 function cleanTimer_(t) {
   t = t || {};
+  var num = function (x) { return typeof x === 'number' && isFinite(x) ? x : null; };
+  var blk = t.blk && typeof t.blk === 'object' && t.blk.id ? { cal: String(t.blk.cal || 'study'), id: String(t.blk.id), start: Number(t.blk.start) } : null;
   return {
+    mode: t.mode === 'pomo' ? 'pomo' : 'flow',
     phase: t.phase === 'rest' ? 'rest' : 'focus',
-    endAt: typeof t.endAt === 'number' ? t.endAt : null,
-    left: typeof t.left === 'number' ? Math.max(0, Math.min(t.left, FOCUS_MS)) : FOCUS_MS
+    endAt: num(t.endAt),
+    left: typeof t.left === 'number' ? Math.max(0, Math.min(t.left, FOCUS_MS)) : FOCUS_MS,
+    since: num(t.since),
+    acc: Math.max(0, Math.min(num(t.acc) || 0, 6 * 3600000)),
+    cap: num(t.cap),
+    blk: blk
   };
 }
 
@@ -858,7 +876,9 @@ function state_() {
   var obj = function (x) { return x && typeof x === 'object' && !Array.isArray(x) ? x : {}; };
   return {
     timer: cleanTimer_(s.timer),
-    log: obj(s.log),
+    log: obj(s.log),             // focus rounds finished per day
+    worked: obj(s.worked),       // minutes worked per day, from either timer mode
+    lastWorked: typeof s.lastWorked === 'number' ? s.lastWorked : null,
     lastDoneEnd: typeof s.lastDoneEnd === 'number' ? s.lastDoneEnd : null,
     doneDue: obj(s.doneDue),     // deadlines you've marked finished: key -> when
     layout: obj(s.layout),       // desktop board: key -> { lane, pos }
@@ -872,7 +892,7 @@ function state_() {
 function saveState_(s) {
   var tz = Session.getScriptTimeZone();
   var cutoff = Utilities.formatDate(new Date(Date.now() - 45 * 86400000), tz, 'yyyy-MM-dd');
-  [s.log, s.active].forEach(function (m) { Object.keys(m || {}).forEach(function (k) { if (k < cutoff) delete m[k]; }); });
+  [s.log, s.active, s.worked].forEach(function (m) { Object.keys(m || {}).forEach(function (k) { if (k < cutoff) delete m[k]; }); });
   // Deadline keys start with their due date ("2026-11-05|…"), so old ones can be dropped.
   [s.doneDue, s.layout].forEach(function (m) { Object.keys(m || {}).forEach(function (k) { if (k.slice(0, 10) < cutoff) delete m[k]; }); });
   PropertiesService.getScriptProperties().setProperty('STATE', JSON.stringify(s));
@@ -888,16 +908,46 @@ function pomoDone_(body) {
   if (body.focus) {
     var day = Utilities.formatDate(new Date(ended), Session.getScriptTimeZone(), 'yyyy-MM-dd');
     s.log[day] = (Number(s.log[day]) || 0) + 1;
+    s.worked[day] = (Number(s.worked[day]) || 0) + 25;
     var ev = body.block ? findEvent_(body.block) : null;
     if (ev) {
       var desc = String(ev.getDescription() || '');
       var m = /^\s*Pomodoros:\s*(\d+)/im.exec(desc);
-      ev.setDescription(setLine_(desc, 'Pomodoros', (m ? Number(m[1]) : 0) + 1));
+      desc = setLine_(desc, 'Pomodoros', (m ? Number(m[1]) : 0) + 1);
+      ev.setDescription(addWorked_(desc, 25));
       CacheService.getScriptCache().remove('events');
     }
   }
   saveState_(s);
   return { ok: true, state: s };
+}
+
+/** "Worked: 1h 05m" on a block, added to whatever is there. */
+function addWorked_(desc, minutes) {
+  var m = /^\s*Worked:\s*(?:(\d+)h)?\s*(?:(\d+)m)?/im.exec(desc);
+  var before = m ? (Number(m[1] || 0) * 60 + Number(m[2] || 0)) : 0;
+  var total = before + minutes;
+  var text = (total >= 60 ? Math.floor(total / 60) + 'h ' : '') + (total % 60 < 10 && total >= 60 ? '0' : '') + (total % 60) + 'm';
+  return setLine_(desc, 'Worked', text);
+}
+
+// A tracked stretch of work (flow mode) ended: add its minutes to the day and to the Study block
+// it was for. `ended` makes it count once even if two screens send it.
+function worked_(body) {
+  var s = state_();
+  var ended = Number(body.ended), minutes = Math.round(Number(body.minutes));
+  if (body.timer) s.timer = cleanTimer_(body.timer);
+  if (!ended || !(minutes >= 1) || minutes > 360 || s.lastWorked === ended) { saveState_(s); return { ok: true, state: s, duplicate: true }; }
+  s.lastWorked = ended;
+  var day = Utilities.formatDate(new Date(ended), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  s.worked[day] = (Number(s.worked[day]) || 0) + minutes;
+  var ev = body.block && body.block.cal === 'study' ? findEvent_(body.block) : null;
+  if (ev) {
+    ev.setDescription(addWorked_(String(ev.getDescription() || ''), minutes));
+    CacheService.getScriptCache().remove('events');
+  }
+  saveState_(s);
+  return { ok: true, state: s, minutes: minutes };
 }
 
 /* ---------- Helpers ---------- */

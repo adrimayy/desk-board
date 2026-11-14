@@ -88,7 +88,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep);
 .timer .t { font: 400 24px/1 var(--f-num); min-width: 3.1ch; text-align: right; }
 .timer .phase { font: 400 9px/1.2 var(--f-label); letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
 .timer .pomos { display: flex; gap: 3px; min-height: 7px; }
-.timer .pomos i { width: 7px; height: 7px; background: var(--ink); border-radius: 1px; }
+.timer .pomos { font-size: 0.72rem; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+.timer .mode-btn { border: 0; background: transparent; color: var(--ink-3); font-size: 0.72rem; font-weight: 600; padding: 4px 6px; border-radius: 8px; white-space: nowrap; }
+.timer .mode-btn:hover:not(:disabled) { background: var(--page-2); color: var(--ink); }
+.timer .mode-btn:disabled { opacity: 0.5; }
 .pill-btn { border: 0; border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: 0.85rem; background: var(--card-2); color: var(--ink); }
 .pill-btn.primary { background: var(--ink); color: var(--card); }
 .pill-btn.sage { background: var(--sage); color: #10261a; }
@@ -386,8 +389,10 @@ a.gcal:hover { text-decoration: underline; }
   <div class="fs-what"><div class="fs-title" id="fs-title"></div><div class="fs-step" id="fs-step"></div></div>
   <div class="fs-bar">
     <button class="pill-btn primary fs-big" id="fs-toggle" type="button">Start</button>
-    <button class="pill-btn fs-big" id="fs-reset" type="button">Reset</button>
+    <button class="pill-btn fs-big" id="fs-reset" type="button">Done</button>
+    <button class="pill-btn ghost fs-big" id="fs-discard" type="button" hidden>Discard</button>
     <span class="fs-tally" id="fs-tally"></span>
+    <button class="pill-btn ghost fs-big" id="fs-mode" type="button">25-min rounds</button>
     <button class="pill-btn ghost fs-big" id="fs-exit" type="button">Exit <span class="kbd">Esc</span></button>
   </div>
 </div>
@@ -423,6 +428,7 @@ function parseEvents(list) {
       id: String(e.id || ""), src: String(e.cal || "primary"), title: String(e.title || "Busy"), where: String(e.where || ""),
       allDay, start, end, checkin: ci ? ci[1].toLowerCase() : null, moved: /^\s*Moved to:/im.test(text),
       rec: !!e.rec, url: String(e.url || ""),
+      worked: ((w) => w ? Number(w[1] || 0) * 60 + Number(w[2] || 0) : 0)(/^\s*Worked:\s*(?:(\d+)h)?\s*(?:(\d+)m)?/im.exec(text)),
       steps: e.cal === "canvas" ? [] : stepsFrom(text), modes: e.cal === "canvas" ? [] : modesFrom(text)
     };
   }).filter((e) => !isNaN(e.start) && !isNaN(e.end));
@@ -564,7 +570,8 @@ function applyState(s) {
   ["reviewed", "lastActive", "resetAt"].forEach((k) => { if (k in s) srv[k] = s[k]; });
   if (s.layout && Date.now() > holdLayoutUntil) layout = s.layout;
   if (s.log) log = s.log;
-  if (s.timer && Date.now() > holdTimerUntil) pomo = cleanTimer(s.timer);
+  if (s.worked) worked = s.worked;
+  if (s.timer && Date.now() > holdTimerUntil) pomo = timerClean(s.timer);
 }
 
 let loading = false;
@@ -626,19 +633,18 @@ function withoutCourse(title, course) {
 }
 function posOf(x) { const o = layout[x.key]; return o && typeof o.pos === "number" ? o.pos : null; }
 
-/* ---------- Timer (shared with the phone board) ---------- */
-const LEN = { focus: 25 * 60000, rest: 5 * 60000 };
-let pomo = { phase: "focus", endAt: null, left: LEN.focus }, log = {}, holdTimerUntil = 0, lastDone = null, audio = null;
-function cleanTimer(x) {
-  x = x || {};
-  return { phase: x.phase === "rest" ? "rest" : "focus", endAt: typeof x.endAt === "number" ? x.endAt : null,
-    left: typeof x.left === "number" ? x.left : (x.phase === "rest" ? LEN.rest : LEN.focus) };
-}
+/* ---------- Timer (shared with the phone board; the logic is in rules.js) ----------
+   Count up (default): Start, work as long as it takes, Done logs the minutes to the block.
+   25-minute rounds: the switch next to the timer. */
+const LEN = TIMER_LEN;
+let pomo = timerFresh("flow"), log = {}, worked = {}, holdTimerUntil = 0, lastDone = null, audio = null;
+if (cache && cache.state && Date.now() - cache.at < 36 * 3600000) { log = cache.state.log || {}; worked = cache.state.worked || {}; }
+function afterPost(d) { if (d && d.state) { if (d.state.log) log = d.state.log; if (d.state.worked) worked = d.state.worked; } }
 // After a tap, the server's copy of the timer is ignored for 30 seconds, so a refresh already
 // on its way (carrying the old timer) can't undo the tap.
 function pushTimer() {
   holdTimerUntil = Date.now() + 30000;
-  apiPost({ action: "timer", timer: pomo }).then((d) => { if (d.state && d.state.log) log = d.state.log; }, () => { holdTimerUntil = 0; });
+  apiPost({ action: "timer", timer: pomo }).then(afterPost, () => { holdTimerUntil = 0; });
 }
 function chime() {
   if (!audio) return;
@@ -655,25 +661,49 @@ function chime() {
 function studyBlockAt(ms) {
   return events.filter((b) => b.src === "study" && !b.allDay && b.start <= ms && b.end > ms).sort((a, b) => b.start - a.start)[0] || null;
 }
+function workedToday(now) { return (Number(worked[dayKey(now)]) || 0) + (pomo.mode === "flow" ? Math.floor(flowElapsed(pomo, now.getTime()) / 60000) : 0); }
+function workedWeek(now) { let n = workedToday(now); for (let i = 1; i < 7; i++) n += Number(worked[dayKey(addDays(now, -i, 12))]) || 0; return n; }
 function toggleTimer() {
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
-  if (pomo.endAt) pomo = { phase: pomo.phase, endAt: null, left: Math.max(0, pomo.endAt - Date.now()) };
-  else pomo = { phase: pomo.phase, endAt: Date.now() + pomo.left, left: pomo.left };
-  pushTimer(); renderTop();
+  const t = Date.now();
+  pomo = timerToggle(pomo, t, studyBlockAt(t));
+  pushTimer(); renderTop(); renderFs(new Date()); render();
 }
-function resetTimer() { pomo = { phase: "focus", endAt: null, left: LEN.focus }; pushTimer(); renderTop(); }
+// Count-up: Done logs the minutes to the block it started in. 25-min mode: Reset the round.
+function resetTimer() {
+  const t = Date.now();
+  if (pomo.mode === "flow") {
+    const f = timerFinish(pomo, t);
+    pomo = f.timer;
+    if (f.minutes >= 1) {
+      const k = dayKey(t); worked[k] = (Number(worked[k]) || 0) + f.minutes;
+      holdTimerUntil = Date.now() + 30000;
+      apiPost({ action: "worked", minutes: f.minutes, ended: t, block: f.block, timer: pomo }).then((d) => { afterPost(d); load(); },
+        () => { holdTimerUntil = 0; worked[k] -= f.minutes; say("That time didn't save. Check your connection.", 8000); });
+      say("Logged " + fmtMins(f.minutes) + (f.block ? " to that block." : "."), 4000);
+    } else pushTimer();
+  } else { pomo = timerFresh("pomo"); pushTimer(); }
+  renderTop(); renderFs(new Date()); render();
+}
+function discardTimer() { pomo = timerFresh(pomo.mode); pushTimer(); renderTop(); renderFs(new Date()); render(); }
+function switchMode() {
+  if (timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc)) { say("Finish (Done) or discard the running timer first.", 4000); return; }
+  pomo = timerFresh(pomo.mode === "flow" ? "pomo" : "flow"); pushTimer(); renderTop(); renderFs(new Date()); render();
+}
 function tickTimer(nowMs) {
-  if (!pomo.endAt || nowMs < pomo.endAt) return;
-  const ended = pomo.endAt, wasFocus = pomo.phase === "focus";
-  pomo = wasFocus ? { phase: "rest", endAt: ended + LEN.rest, left: LEN.rest } : { phase: "focus", endAt: null, left: LEN.focus };
+  const r = timerTick(pomo, nowMs);
+  if (!r) return;
+  if (r.autoPaused) { pomo = r.timer; pushTimer(); say("The timer paused itself (the block ended a while ago). Done logs it; Start keeps going.", 15000); return; }
+  const ended = r.ended, wasFocus = r.wasFocus;
+  pomo = r.timer;
   if (lastDone === ended) return;
   lastDone = ended;
   if (nowMs - ended < 60000) chime();
   const blk = wasFocus ? studyBlockAt(ended - 1000) : null;
-  if (wasFocus) { const k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1; }
+  if (wasFocus) { const k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1; worked[k] = (Number(worked[k]) || 0) + 25; }
   holdTimerUntil = Date.now() + 30000;
   apiPost({ action: "pomoDone", ended, focus: wasFocus, timer: pomo, block: blk ? { cal: blk.src, id: blk.id, start: blk.start } : null })
-    .then((d) => { if (d.state && d.state.log) log = d.state.log; }).catch(() => {});
+    .then(afterPost).catch(() => {});
 }
 
 /* ---------- Actions ---------- */
@@ -1210,7 +1240,7 @@ function renderNow(now) {
   const remaining = isNow ? ev.end - t : ev.start - t;
   panel.append(h("div", { class: "side-row" },
     h("div", { class: "big-time" }, fmtDur(remaining).replace(" min", "m"), h("small", { text: isNow ? "left in block" : "until it starts" })),
-    ev.src === "study" ? h("button", { class: "pill-btn primary", type: "button", onclick: toggleTimer, text: pomo.endAt ? "Pause focus" : "Start focus" }) : null));
+    ev.src === "study" ? h("button", { class: "pill-btn primary", type: "button", onclick: toggleTimer, text: timerRunning(pomo) ? "Pause timer" : "Start timer" }) : null));
   if (isNow) {
     const frac = Math.min(1, (t - ev.start) / (ev.end - ev.start));
     panel.append(h("div", { class: "progress", role: "img", "aria-label": Math.round(frac * 100) + "% of the block has passed" }, h("span", { style: "width:" + (frac * 100).toFixed(1) + "%" })));
@@ -1245,7 +1275,7 @@ function renderAgenda(now) {
       tabindex: "0", role: "button", title: ev.src === "study" ? "Edit this block" : "Details", onclick: () => openEvent(ev),
       onkeydown: (e) => { if (e.key === "Enter") openEvent(ev); } },
       h("span", { class: "when", text: fmtTime(ev.start) }), h("span", { class: "bar" }),
-      h("span", { class: "what" }, h("b", { text: ev.title }), h("span", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") + (ev.src === "classes" ? " · class" : "") })));
+      h("span", { class: "what" }, h("b", { text: ev.title }), h("span", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") + (ev.src === "classes" ? " · class" : "") + (ev.worked ? " · " + fmtMins(ev.worked) + " worked" : "") })));
   })));
   const done = Number(log[dayKey(now)]) || 0;
   card.append(h("div", { class: "foot", text: (agendaOffset === 0 && done ? done + " focus round" + (done > 1 ? "s" : "") + " so far. " : "") + "Click a block to edit it." }));
@@ -1262,14 +1292,17 @@ function renderTop(now) {
   if (!top) return;
   $(".clock", top).textContent = fmtTime(now);
   $(".date", top).textContent = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  const left = pomo.endAt ? Math.max(0, pomo.endAt - now.getTime()) : pomo.left;
-  const secs = Math.ceil(left / 1000);
-  $(".timer .t", top).textContent = pad(Math.floor(secs / 60)) + ":" + pad(secs % 60);
-  $(".timer .phase", top).textContent = pomo.phase === "rest" ? "Break" : (pomo.endAt ? "Focus" : "Focus · ready");
-  $("#t-toggle").textContent = pomo.endAt ? "Pause" : "Start";
-  const n = Number(log[dayKey(now)]) || 0;
-  $(".timer .pomos", top).replaceChildren(...Array.from({ length: Math.min(n, 8) }, () => h("i")));
-  $(".timer .pomos", top).title = n + " focus round" + (n === 1 ? "" : "s") + " today";
+  const t = now.getTime();
+  $(".timer .t", top).textContent = timerText(pomo, t);
+  $(".timer .phase", top).textContent = timerLabel(pomo, t);
+  $("#t-toggle").textContent = timerButton(pomo);
+  $("#t-reset").textContent = pomo.mode === "flow" ? "Done" : "Reset";
+  $("#t-reset").title = pomo.mode === "flow" ? "Log the time to this block and start fresh" : "Back to a fresh 25:00";
+  const d = workedToday(now);
+  $(".timer .pomos", top).textContent = fmtMins(d) + " today";
+  $(".timer .pomos", top).title = fmtMins(workedWeek(now)) + " in the last 7 days";
+  $("#t-mode").textContent = pomo.mode === "flow" ? "↑ count up" : "25 min";
+  $("#t-mode").disabled = timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc > 0);
   const s = $(".sync", top);
   s.className = "sync " + (conn.ok && !conn.stale ? "ok" : conn.ok ? "" : "bad");
   $("span", s).textContent = conn.ok ? (conn.stale ? "Offline · " : "Synced ") + fmtTime(conn.at) : (conn.error || "Connecting…");
@@ -1283,7 +1316,8 @@ function topBar() {
       h("div", null, h("div", { class: "phase" }), h("div", { class: "pomos" })),
       h("span", { class: "t", title: "Full screen (F)", onclick: () => setFs(true) }),
       h("button", { class: "pill-btn primary", id: "t-toggle", type: "button", onclick: toggleTimer }),
-      h("button", { class: "pill-btn", type: "button", onclick: resetTimer, text: "Reset" }),
+      h("button", { class: "pill-btn", id: "t-reset", type: "button", onclick: resetTimer, text: "Done" }),
+      h("button", { class: "mode-btn", id: "t-mode", type: "button", title: "Switch between counting up and 25-minute rounds", onclick: switchMode }),
       h("button", { class: "expand", type: "button", title: "Full screen (F)", "aria-label": "Full screen focus", onclick: () => setFs(true) }, ico("expand"))),
     h("div", { class: "sync" }, h("i"), h("span")));
 }
@@ -1616,13 +1650,15 @@ function setFs(on) {
 function renderFs(now) {
   if (!fsOpen) return;
   const t = now.getTime();
-  const left = pomo.endAt ? Math.max(0, pomo.endAt - t) : pomo.left, secs = Math.ceil(left / 1000);
-  const paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
-  $("#fs-time").textContent = pad(Math.floor(secs / 60)) + ":" + pad(secs % 60);
-  $("#fs").classList.toggle("is-rest", pomo.phase === "rest");
-  $("#fs-phase").textContent = (pomo.phase === "focus" ? "Focus" : "Break") + (pomo.endAt ? "" : paused ? " · paused" : " · ready");
+  $("#fs-time").textContent = timerText(pomo, t);
+  $("#fs").classList.toggle("is-rest", pomo.mode === "pomo" && pomo.phase === "rest");
+  $("#fs-phase").textContent = timerLabel(pomo, t);
   $("#fs-clock").textContent = fmtTime(t);
-  $("#fs-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
+  $("#fs-toggle").textContent = timerButton(pomo);
+  $("#fs-reset").textContent = pomo.mode === "flow" ? "Done" : "Reset";
+  $("#fs-discard").hidden = !(pomo.mode === "flow" && flowElapsed(pomo, t) > 0);
+  $("#fs-mode").textContent = pomo.mode === "flow" ? "25-min rounds" : "Count up";
+  $("#fs-mode").disabled = timerRunning(pomo);
   const blk = studyBlockAt(t);
   let title = "", step = "";
   if (blk) {
@@ -1630,17 +1666,18 @@ function renderFs(now) {
     const open = blk.steps.filter((x) => !stepDone(blk, x));
     step = blk.steps.length ? (open.length ? "Next: " + open[0].show + (blk.steps.length > 1 ? "  ·  " + (blk.steps.length - open.length) + "/" + blk.steps.length + " done" : "") : "All steps done")
       : /\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(blk.title) ? "" : "Open it and do one 25-min round.";
-    if (pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map((k) => PACER[k].verb).join(" · ");
+    if (pomo.mode === "pomo" && pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map((k) => PACER[k].verb).join(" · ");
   }
   if ($("#fs-title").textContent !== title) $("#fs-title").textContent = title;
   if ($("#fs-step").textContent !== step) $("#fs-step").textContent = step;
-  const n = Number(log[dayKey(now)]) || 0;
-  $("#fs-tally").textContent = n ? n + " focus round" + (n > 1 ? "s" : "") + " today" : "First round today";
+  $("#fs-tally").textContent = fmtMins(workedToday(now)) + " worked today";
 }
 $("#fs-time").addEventListener("click", () => setFs(false));
 $("#fs-exit").addEventListener("click", () => setFs(false));
 $("#fs-toggle").addEventListener("click", () => { toggleTimer(); renderFs(new Date()); });
 $("#fs-reset").addEventListener("click", () => { resetTimer(); renderFs(new Date()); });
+$("#fs-discard").addEventListener("click", discardTimer);
+$("#fs-mode").addEventListener("click", switchMode);
 // Esc in browser full screen leaves full screen first; take the overlay down with it.
 document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && fsOpen) setFs(false); });
 document.addEventListener("keydown", (e) => {

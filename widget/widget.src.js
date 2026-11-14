@@ -166,6 +166,10 @@ function model(data, now) {
     : Object.keys(src).some((k) => src[k] && src[k].ok === false && k !== "sleep") ? "A calendar didn't load: deadlines may be missing" : "";
 
   const pomos = Number((data.state && data.state.log && data.state.log[dayKey(now)]) || 0);
+  // Minutes worked today (count-up timer and focus rounds both log here), plus a count-up still running.
+  const tmr = data.state && data.state.timer;
+  const workedMin = Number((data.state && data.state.worked && data.state.worked[dayKey(now)]) || 0) +
+    (tmr && tmr.mode !== "pomo" ? Math.floor(((tmr.acc || 0) + (tmr.since ? Math.max(0, t - tmr.since) : 0)) / 60000) : 0);
 
   // Redraw when the current block ends or the next one starts, and at least every 15 minutes.
   const marks = [];
@@ -173,7 +177,7 @@ function model(data, now) {
   if (next) marks.push(next.start);
   marks.push(addDays(now, 1) + 60000);
   const soonest = Math.min.apply(null, marks.filter((m) => m > t).concat([t + 15 * 60000]));
-  return { card, later, pick, soonCount, alert, pomos, refresh: new Date(soonest + 30000) };
+  return { card, later, pick, soonCount, alert, pomos, workedMin, refresh: new Date(soonest + 30000) };
 }
 
 /* ---------- Drawing ---------- */
@@ -262,7 +266,7 @@ function baseWidget(cfg) {
 
 function footer(stack, m, res) {
   const parts = [];
-  parts.push(m.pomos ? m.pomos + " pomodoro" + (m.pomos > 1 ? "s" : "") + " today" : "No pomodoros yet");
+  parts.push(m.workedMin ? fmtMins(m.workedMin) + " worked today" : "Nothing logged yet today");
   parts.push(res.stale ? "offline" : "updated " + clockShort(Date.now()));
   text(stack, UP(parts.join(" · ")), lb(8), C.faint);
 }

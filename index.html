@@ -319,9 +319,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
         <span class="clock-row"><span class="seg clock" aria-live="off"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="clock-hm">--:--</span></span><span class="ampm" id="clock-ampm"></span></span>
       </div>
       <div class="focus" id="focus" role="button" tabindex="0" aria-label="Focus timer: tap for full screen">
-        <span class="label" id="timer-phase">Focus · 25 min</span>
-        <span class="seg timer"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="timer-text">25:00</span></span>
-        <span class="tally" id="tally">No pomodoros yet</span>
+        <span class="label" id="timer-phase">Count up · ready</span>
+        <span class="seg timer"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="timer-text">00:00</span></span>
+        <span class="tally" id="tally">0m today</span>
       </div>
     </div>
 
@@ -355,7 +355,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
       <span class="led-cell"><span class="led" id="led-due"></span><span class="led-name">Due</span></span>
     </div>
     <button class="cap" id="timer-toggle" type="button">Start</button>
-    <button class="cap cream" id="timer-reset" type="button">Reset</button>
+    <button class="cap cream" id="timer-reset" type="button">Done</button>
     <div class="keys-foot">
       <span class="label" id="sync"></span>
       <button class="info-key" id="info-btn" type="button" aria-label="What's on the board">i</button>
@@ -375,8 +375,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   </div>
   <div class="fs-bar">
     <button class="fs-btn primary" id="fs-toggle" type="button">Start</button>
-    <button class="fs-btn" id="fs-reset" type="button">Reset</button>
+    <button class="fs-btn" id="fs-reset" type="button">Done</button>
+    <button class="fs-btn" id="fs-discard" type="button" hidden>Discard</button>
     <span class="fs-tally" id="fs-tally"></span>
+    <button class="fs-btn" id="fs-mode" type="button">25-min rounds</button>
     <button class="fs-btn" id="fs-exit" type="button">Exit</button>
   </div>
 </section>
@@ -666,8 +668,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (Array.isArray(c.stats)) stats = c.stats;
     if (c.sources) sources = c.sources;
     conn = { status: "ok", message: "", at: c.at, stale: true };
-    // Only the pomodoro log: a cached timer could be hours old.
-    setTimeout(function () { if (c.state && c.state.log) applyState({ log: c.state.log, doneDue: c.state.doneDue }); }, 0);
+    // Logs and done marks only: a cached timer could be hours old.
+    setTimeout(function () { if (c.state) applyState({ log: c.state.log || {}, worked: c.state.worked || {}, doneDue: c.state.doneDue || {} }); }, 0);
   })();
 
   function allEvents() { return conn.status === "ok" ? events : []; }
@@ -954,7 +956,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var sync = $("#sync");
     sync.textContent = conn.stale ? "Offline" + (conn.at ? " · " + clockShort(conn.at) : "") : (conn.at ? "Synced " + clockShort(conn.at) : "");
     $("#led-sync").className = "led" + (ready() && !conn.stale ? " on" : (conn.status === "loading" ? "" : " warn"));
-    $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
+    $("#led-run").className = "led" + (timerRunning(pomo) ? " on" : "");
     var dueToday = ready() && liveDeadlines(now).some(function (d) { return d.day === dayKey(now) && !(d.dueAt && d.dueAt < t); });
     $("#led-due").className = "led" + (dueToday ? " warn" : "");
   }
@@ -975,39 +977,34 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var live = today.timed.some(function (i) { return i.start <= t && i.end > t && !/^sleep\b/i.test(i.title); });
     var soon = today.timed.some(function (i) { return i.start > t && i.start - t < 45 * 60000; });
     var dueSoon = liveDeadlines(now).some(function (d) { return dueEndOf(d) - t < 48 * 3600000; });
-    var calm = ready() && !live && !soon && !dueSoon && !dueAlert(now) && $("#checkin").hidden && !pomo.endAt;
+    var calm = ready() && !live && !soon && !dueSoon && !dueAlert(now) && $("#checkin").hidden && !timerRunning(pomo);
     document.querySelector(".lcd").classList.toggle("calm", calm);
   }
 
-  /* ---------- Focus timer (synced through the script) ---------- */
-  var LEN = { focus: 25 * 60000, rest: 5 * 60000 };
-  var pomo = { phase: "focus", endAt: null, left: LEN.focus };
-  var log = {}, holdServerTimerUntil = 0, lastLocalDone = null, audio = null;
+  /* ---------- Work timer (synced through the script; the logic is in rules.js) ---------- */
+  // Count up (default): Start, work as long as it takes, Done logs the minutes to the block.
+  // 25-minute rounds: switch in full screen. Either way "worked today" is what the tally shows.
+  var pomo = timerFresh("flow");
+  var log = {}, worked = {}, holdServerTimerUntil = 0, lastLocalDone = null, audio = null;
 
-  function cleanTimer(t) {
-    t = t || {};
-    return {
-      phase: t.phase === "rest" ? "rest" : "focus",
-      endAt: typeof t.endAt === "number" ? t.endAt : null,
-      left: typeof t.left === "number" ? t.left : LEN.focus
-    };
-  }
   function applyState(s) {
     if (!s) return;
     if (s.log && typeof s.log === "object") log = s.log;
+    if (s.worked && typeof s.worked === "object") worked = s.worked;
     if (s.doneDue && typeof s.doneDue === "object") doneDue = s.doneDue;
     ["reviewed", "lastActive", "resetAt"].forEach(function (k) { if (k in s) srv[k] = s[k]; });
-    if (Date.now() > holdServerTimerUntil && s.timer) pomo = cleanTimer(s.timer);
+    if (Date.now() > holdServerTimerUntil && s.timer) pomo = timerClean(s.timer);
     if (typeof s.lastDoneEnd === "number" && s.lastDoneEnd === pomo.endAt) lastLocalDone = s.lastDoneEnd;
+  }
+  function afterPost(d) {
+    if (d && d.state) { if (d.state.log) log = d.state.log; if (d.state.worked) worked = d.state.worked; }
   }
   // After a tap, the server's copy of the timer is ignored for 30 seconds, so a calendar refresh
   // that was already on its way (and carries the old timer) can't undo the tap.
   function pushTimer() {
     if (!cfg) return;
     holdServerTimerUntil = Date.now() + 30000;
-    apiPost({ action: "timer", timer: pomo }).then(function (d) {
-      if (d.state && d.state.log) log = d.state.log;
-    }, function () { holdServerTimerUntil = 0; });
+    apiPost({ action: "timer", timer: pomo }).then(afterPost, function () { holdServerTimerUntil = 0; });
   }
   function ensureAudio() {
     try {
@@ -1030,24 +1027,28 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       });
     } catch (e) { /* sound is optional */ }
   }
-  function weekCount(now) {
+  // Minutes worked today, including a count-up that's still running.
+  function workedToday(now) { return (Number(worked[dayKey(now)]) || 0) + (pomo.mode === "flow" ? Math.floor(flowElapsed(pomo, now.getTime()) / 60000) : 0); }
+  function workedWeek(now) {
     var n = 0;
-    for (var i = 0; i < 7; i++) n += Number(log[dayKey(addDays(now, -i, 12))]) || 0;
-    return n;
+    for (var i = 1; i < 7; i++) n += Number(worked[dayKey(addDays(now, -i, 12))]) || 0;
+    return n + workedToday(now);
+  }
+  function tallyText(now) {
+    var d = workedToday(now), w = workedWeek(now);
+    return (d ? fmtMins(d) + " today" : "0m today") + (w > d ? " · " + fmtMins(w) + " this wk" : "");
   }
   function renderTimer(now) {
-    var remaining = pomo.endAt ? Math.max(0, pomo.endAt - now.getTime()) : pomo.left;
-    var secs = Math.ceil(remaining / 1000);
-    segText($("#timer-text"), pad(Math.floor(secs / 60)) + ":" + pad(secs % 60));
-    $("#timer-phase").textContent = pomo.phase === "focus" ? "Focus · 25 min" : "Break · 5 min";
-    $("#focus").classList.toggle("is-rest", pomo.phase === "rest");
-    var paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
-    $("#timer-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
-    $("#led-run").className = "led" + (pomo.endAt ? " on" : "");
-    var n = Number(log[dayKey(now)]) || 0, wk = weekCount(now);
-    var tally = (n ? "■".repeat(Math.min(n, 6)) + " " + n + " today" : "0 today") + (wk ? " · " + wk + " this wk" : "");
+    var t = now.getTime();
+    segText($("#timer-text"), timerText(pomo, t));
+    $("#timer-phase").textContent = timerLabel(pomo, t);
+    $("#focus").classList.toggle("is-rest", pomo.mode === "pomo" && pomo.phase === "rest");
+    $("#timer-toggle").textContent = timerButton(pomo);
+    $("#timer-reset").textContent = pomo.mode === "flow" ? "Done" : "Reset";
+    $("#led-run").className = "led" + (timerRunning(pomo) ? " on" : "");
+    var tally = tallyText(now);
     // Break after a focus round in a learning block: digest first (a few minutes), then rest.
-    var blkNow = pomo.phase === "rest" && ready() ? studyBlockAt(now.getTime()) : null;
+    var blkNow = pomo.mode === "pomo" && pomo.phase === "rest" && ready() ? studyBlockAt(t) : null;
     if (blkNow && blkNow.modes && blkNow.modes.length) {
       $("#timer-phase").textContent = "Digest, then break";
       tally = "First: " + blkNow.modes.slice(0, 2).map(function (k) { return PACER[k].verb; }).join(" · ");
@@ -1056,16 +1057,18 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     renderFs(now);
   }
   function tickTimer(now) {
-    var nowMs = now.getTime();
-    if (pomo.endAt && nowMs >= pomo.endAt) {
-      var ended = pomo.endAt, wasFocus = pomo.phase === "focus";
+    var nowMs = now.getTime(), r = timerTick(pomo, nowMs);
+    if (r && r.autoPaused) {
+      pomo = r.timer; pushTimer();
+      note("Timer paused itself (the block ended a while ago). Done logs the time; Start keeps going.", 15000);
+    } else if (r) {
+      var ended = r.ended, wasFocus = r.wasFocus;
       var blk = wasFocus ? studyBlockAt(ended - 1000) : null;
-      // The break starts on its own (a skipped break costs the next round); the next focus round waits for Start.
-      pomo = wasFocus ? { phase: "rest", endAt: ended + LEN.rest, left: LEN.rest } : { phase: "focus", endAt: null, left: LEN.focus };
+      pomo = r.timer;
       if (lastLocalDone !== ended) {
         lastLocalDone = ended;
         if (wasFocus) {
-          var k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1;
+          var k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1; worked[k] = (Number(worked[k]) || 0) + 25;
           if (blk && blk.src !== "canvas") blk.pomos += 1;
         }
         if (nowMs - ended < 10000) chime();
@@ -1074,8 +1077,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
           apiPost({
             action: "pomoDone", ended: ended, focus: wasFocus, timer: pomo,
             block: blk && blk.src !== "canvas" ? { cal: blk.src, id: blk.id, start: blk.start } : null
-          }).then(function (d) { if (d.state && d.state.log) log = d.state.log; },
-                  function () { holdServerTimerUntil = 0; });
+          }).then(afterPost, function () { holdServerTimerUntil = 0; });
         }
       }
     }
@@ -1083,14 +1085,35 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
   function toggleTimer() {
     ensureAudio();
-    var n = Date.now();
-    if (pomo.endAt) { pomo.left = Math.max(0, pomo.endAt - n); pomo.endAt = null; }
-    else { pomo.endAt = n + pomo.left; }
+    var t = Date.now();
+    pomo = timerToggle(pomo, t, ready() ? studyBlockAt(t) : null);
     pushTimer();
     renderTimer(new Date());
   }
+  // Count-up: log the minutes (to the block it started in) and start fresh. 25-min mode: reset the round.
   function resetTimer() {
-    pomo = { phase: "focus", endAt: null, left: LEN.focus };
+    var t = Date.now();
+    if (pomo.mode === "flow") {
+      var f = timerFinish(pomo, t);
+      pomo = f.timer;
+      if (f.minutes >= 1) {
+        var k = dayKey(t); worked[k] = (Number(worked[k]) || 0) + f.minutes;
+        holdServerTimerUntil = Date.now() + 30000;
+        apiPost({ action: "worked", minutes: f.minutes, ended: t, block: f.block, timer: pomo }).then(afterPost, function () {
+          holdServerTimerUntil = 0; worked[k] -= f.minutes; note("That time didn't save. Check your connection.", 8000);
+        });
+        note("Logged " + fmtMins(f.minutes) + ".", 4000);
+      } else pushTimer();
+    } else {
+      pomo = timerFresh("pomo");
+      pushTimer();
+    }
+    renderTimer(new Date());
+  }
+  function discardTimer() { pomo = timerFresh(pomo.mode); pushTimer(); renderTimer(new Date()); }
+  function switchMode() {
+    if (timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc)) { note("Finish or discard this one first.", 4000); return; }
+    pomo = timerFresh(pomo.mode === "flow" ? "pomo" : "flow");
     pushTimer();
     renderTimer(new Date());
   }
@@ -1111,13 +1134,15 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function renderFs(now) {
     if (!fsOpen) return;
     var t = now.getTime();
-    var remaining = pomo.endAt ? Math.max(0, pomo.endAt - t) : pomo.left, secs = Math.ceil(remaining / 1000);
-    segText($("#fs-time"), pad(Math.floor(secs / 60)) + ":" + pad(secs % 60));
-    var paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
-    $("#fs").classList.toggle("is-rest", pomo.phase === "rest");
-    $("#fs-phase").textContent = (pomo.phase === "focus" ? "Focus" : "Break") + (pomo.endAt ? "" : paused ? " · paused" : " · ready");
+    segText($("#fs-time"), timerText(pomo, t));
+    $("#fs").classList.toggle("is-rest", pomo.mode === "pomo" && pomo.phase === "rest");
+    $("#fs-phase").textContent = timerLabel(pomo, t);
     $("#fs-clock").textContent = fmtTime(t);
-    $("#fs-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
+    $("#fs-toggle").textContent = timerButton(pomo);
+    $("#fs-reset").textContent = pomo.mode === "flow" ? "Done" : "Reset";
+    $("#fs-discard").hidden = !(pomo.mode === "flow" && flowElapsed(pomo, t) > 0);
+    $("#fs-mode").textContent = pomo.mode === "flow" ? "25-min rounds" : "Count up";
+    $("#fs-mode").disabled = timerRunning(pomo);
     var blk = ready() ? studyBlockAt(t) : null, title = "", step = "";
     if (blk) {
       title = blk.title;
@@ -1125,12 +1150,11 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       var open = steps.filter(function (x) { return !stepState(blk, x); });
       step = steps.length ? (open.length ? "> " + (open[0].show || open[0].text) + (steps.length > 1 ? "  (" + (steps.length - open.length) + "/" + steps.length + ")" : "") : "All steps done")
         : isWork(blk) ? "> " + DEFAULT_STEP : "";
-      if (pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map(function (k) { return PACER[k].verb; }).join(" · ");
+      if (pomo.mode === "pomo" && pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map(function (k) { return PACER[k].verb; }).join(" · ");
     }
     if ($("#fs-title").textContent !== title) $("#fs-title").textContent = title;
     if ($("#fs-step").textContent !== step) $("#fs-step").textContent = step;
-    var n = Number(log[dayKey(now)]) || 0;
-    var tally = n ? "■".repeat(Math.min(n, 8)) + " " + n + " today" : "first round today";
+    var tally = tallyText(now);
     if ($("#fs-tally").textContent !== tally) $("#fs-tally").textContent = tally;
   }
   $("#focus").addEventListener("click", function () { setFs(true); });
@@ -1139,6 +1163,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   $("#fs-exit").addEventListener("click", function () { setFs(false); });
   $("#fs-toggle").addEventListener("click", function () { toggleTimer(); renderFs(new Date()); });
   $("#fs-reset").addEventListener("click", function () { resetTimer(); renderFs(new Date()); });
+  $("#fs-discard").addEventListener("click", function () { discardTimer(); });
+  $("#fs-mode").addEventListener("click", function () { switchMode(); });
   document.addEventListener("keydown", function (e) {
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     if (!$("#setup").hidden || !$("#info").hidden) return;
@@ -1380,7 +1406,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     else parts.push("Nothing else on today");
     var dueSoon = liveDeadlines(now).filter(function (d) { return d.day <= dayKey(addDays(now, 1, 12)) && !(d.dueAt && d.dueAt < t); }).length;
     parts.push(dueSoon ? dueSoon + " due by tomorrow" : "nothing due by tomorrow");
-    parts.push(pomo.endAt ? (pomo.phase === "focus" ? "focus round running" : "on a break") : "timer stopped");
+    parts.push(timerRunning(pomo) ? (pomo.mode === "flow" ? "timer counting up" : pomo.phase === "focus" ? "focus round running" : "on a break") : "timer stopped");
     return parts.join(" · ");
   }
   function infoLights(now) {
@@ -1389,7 +1415,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var rows = [
       { cls: ready() && !conn.stale ? "on" : (conn.status === "loading" ? "" : "warn"), name: "Sync",
         text: ready() && !conn.stale ? "green: calendar is up to date (" + clockShort(conn.at) + ")" : conn.stale ? "orange: offline, showing the copy from " + clockShort(conn.at) : "orange: can't reach the calendar" },
-      { cls: pomo.endAt ? "on" : "", name: "Timer", text: pomo.endAt ? "green: a round is running" : "off: timer stopped" },
+      { cls: timerRunning(pomo) ? "on" : "", name: "Timer", text: timerRunning(pomo) ? "green: the timer is running" : "off: timer stopped" },
       { cls: dueToday ? "warn" : "", name: "Due", text: dueToday ? "orange: something is due today" : "off: nothing left due today" }
     ];
     var ul = $("#info-lights"); ul.replaceChildren();

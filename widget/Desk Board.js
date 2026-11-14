@@ -295,8 +295,16 @@ var KINDS = { essay: "essay", paper: "essay", draft: "essay", report: "report", 
   quiz: "exam", exam: "exam", test: "exam", midterm: "exam", "final": "exam", review: "review", slides: "slides",
   project: "project", presentation: "presentation" };
 var ACCEPTS = { exam: { exam: 1, review: 1, reading: 1 } };
-function kindOf(title) { var k = null; String(title).toLowerCase().split(/[^a-z]+/).some(function (w) { k = KINDS[w] || null; return k; }); return k; }
-function idsOf(title) { return (String(title).toLowerCase().match(/\b\d+[a-z]?\b|\bwr\d+\b/g) || []).map(function (x) { return x.replace(/^wr/, ""); }); }
+// The last kind word wins: "Lab Report 7" is a report, "Final Essay 3" an essay.
+function kindOf(title) { var k = null; String(title).toLowerCase().replace(/\[[^\]]*\]/g, " ").split(/[^a-z]+/).forEach(function (w) { var x = KINDS[w] || KINDS[w.replace(/s$/, "")] || KINDS[w.replace(/es$/, "")]; if (x) k = x; }); return k; }
+// Assignment numbers: "Essay 3", "PS6", "L4–L5", "WR5", "Lab 5a". Clock times ("due 6 PM", "18:00") aren't numbers of anything.
+function idsOf(title) {
+  var t = String(title).toLowerCase().replace(/\bdue\b.*$/, "").replace(/\b\d{1,2}:\d{2}\b/g, " ");
+  var out = [], re = /\b[a-z]{0,3}(\d{1,3})[a-z]?\b/g, m;
+  while ((m = re.exec(t))) out.push(String(Number(m[1])));
+  return out;
+}
+function sharesId(a, b) { var x = idsOf(a), y = idsOf(b); return x.some(function (v) { return y.indexOf(v) >= 0; }); }
 function sameIds(a, b) {
   var x = idsOf(a), y = idsOf(b);
   return !(x.length && y.length && !x.some(function (v) { return y.indexOf(v) >= 0; }));
@@ -320,6 +328,14 @@ function sameDeadline(a, b) {
   return Math.abs(dayGap(a.day, b.day)) <= 10 && n >= 2 && sharesNumber(a.tok, b.tok);
 }
 
+// Short names your own blocks use for a Canvas course ("AP lab work" belongs to Advanced Programming).
+var COURSE_ALIASES = [[/advanced programming/i, "ap"], [/university writing/i, "uw"], [/literature humanities|\blit hum/i, "lit hum"],
+  [/economics|\bun 1105\b/i, "econ"], [/chinese/i, "chinese chn"], [/\bphys/i, "phys physics"], [/chemistry/i, "chem"],
+  [/discrete/i, "discrete"], [/computing|python/i, "computing comp"], [/linear algebra/i, "lin alg"], [/music hum/i, "music"]];
+function courseAliases(course) {
+  return COURSE_ALIASES.filter(function (a) { return a[0].test(course || ""); }).map(function (a) { return a[1]; }).join(" ");
+}
+
 // Every deadline from today on, one row each, soonest first.
 // When two entries are the same deadline, the earlier date and time win.
 function buildDeadlines(events, now) {
@@ -329,7 +345,7 @@ function buildDeadlines(events, now) {
     // Timed: the start (an exam starts then; a "due" event's start is the earliest it could mean).
     var dueAt = e.allDay ? timeInTitle(e.title, e.start) : e.start;
     var day = e.allDay ? dayKey(e.start) : dayKey(dueAt);
-    return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course),
+    return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course + " " + courseAliases(parts.course)),
       refs: [{ cal: e.src, id: e.id, start: e.start, allDay: !!e.allDay, rec: !!e.rec }] };   // the calendar entries behind it
   }).filter(function (d) { return d.day >= today; });
 
@@ -368,14 +384,40 @@ function distinctTokens(tok) {
   for (var k in tok) if (!GENERIC[k] && !/^\d+$/.test(k) && k.length > 1) o[k] = 1;
   return o;
 }
-// Does a work block belong to this deadline? Same course words, no conflicting assignment
-// number, and a compatible kind of work (reading and review count toward a quiz).
+// Daily review decks (Anki, flashcards) are their own routine, not time toward an assignment.
+var CARDS_RX = /\b(anki|flashcards?|decks?)\b/i;
+// Course names and short forms: sharing only these says nothing about which assignment it is.
+var COURSE_TOKENS = { ap: 1, uw: 1, lit: 1, hum: 1, econ: 1, economics: 1, chinese: 1, chn: 1, phys: 1, physics: 1, lab: 1, cs: 1,
+  chem: 1, chemistry: 1, comp: 1, computing: 1, discrete: 1, math: 1, music: 1, pe: 1, advanced: 1, programming: 1, literature: 1,
+  humanities: 1, principles: 1, elementary: 1, intermediate: 1, intro: 1, introduction: 1, general: 1, university: 1, writing: 1 };
+var FILLER = { set: 1, sets: 1, work: 1, prep: 1, finish: 1, submit: 1, block: 1, session: 1, chapter: 1, chapters: 1, ch: 1, from: 1, with: 1 };
+function stem(w) { return w.length > 4 ? w.replace(/(es|s)$/, "") : w; }
+function specificWords(title, course) {
+  var skip = tokens(course || ""), out = {};
+  for (var w in tokens(title)) if (!GENERIC[w] && !COURSE_TOKENS[w] && !skip[w] && !/\d/.test(w) && w.length > 2 && !kindOf(w) && !FILLER[w]) out[stem(w)] = 1;
+  return out;
+}
+// Does a work block belong to this deadline? It has to be the same course, and then clearly the
+// same assignment:
+//   - a shared specific word ("Aeneid", "character", "Hydrogen") says yes;
+//   - different kinds of work ("reading" vs "lab"), or different specific words on both sides
+//     ("character practice" vs "reading questions" for the same lesson), say no;
+//   - otherwise a shared assignment number ("Essay 3", "PS6") or the same kind of work says yes.
+// Anki and flashcard blocks only count toward a deadline that is itself about cards.
 function sameWork(d, key, blockTitle) {
   if (shared(key, tokens(blockTitle)) < 1) return false;
+  var dt = d.raw || d.title;
+  if (CARDS_RX.test(blockTitle) && !CARDS_RX.test(dt)) return false;
   if (!sameIds(d.title, blockTitle)) return false;
-  var kd = kindOf(d.raw || d.title), kb = kindOf(blockTitle);
+  var sd = specificWords(d.title, d.course), sb = specificWords(blockTitle, "");
+  if (shared(sd, sb) >= 1) return true;
+  var kd = kindOf(dt), kb = kindOf(blockTitle);
   if (kd && kb && kd !== kb && !(ACCEPTS[kd] && ACCEPTS[kd][kb])) return false;
-  return true;
+  if (Object.keys(sd).length && Object.keys(sb).length) return false;
+  // One side names a kind of work, the other only something specific: not clearly the same thing.
+  if ((kd && !kb && Object.keys(sb).length) || (kb && !kd && Object.keys(sd).length)) return false;
+  if (sharesId(d.title, blockTitle)) return true;
+  return !!(kd && kb);
 }
 function plannedFor(events, d, now) {
   var t = now.getTime(), p = d.day.split("-").map(Number);
@@ -436,6 +478,79 @@ function timedFor(events, date) {
     out.push(ev);
   });
   return out.sort(function (a, b) { return a.start - b.start || a.end - b.end; });
+}
+
+/* ---------- Work timer (shared by the phone board and the desktop board) ----------
+   Two modes. "flow" counts up from Start for as long as you work (15 minutes of Anki counts
+   just like two hours of an essay); "pomo" runs 25-minute rounds with 5-minute breaks.
+   Either way the minutes are logged to the day and to the Study block they were for. */
+var TIMER_LEN = { focus: 25 * 60000, rest: 5 * 60000 };
+function timerFresh(mode) { return { mode: mode === "pomo" ? "pomo" : "flow", phase: "focus", endAt: null, left: TIMER_LEN.focus, since: null, acc: 0, cap: null, blk: null }; }
+function timerClean(x) {
+  x = x || {};
+  var num = function (v) { return typeof v === "number" && isFinite(v) ? v : null; };
+  var t = timerFresh(x.mode);
+  t.phase = x.phase === "rest" ? "rest" : "focus";
+  t.endAt = num(x.endAt);
+  t.left = typeof x.left === "number" ? Math.max(0, Math.min(x.left, TIMER_LEN.focus)) : (t.phase === "rest" ? TIMER_LEN.rest : TIMER_LEN.focus);
+  t.since = num(x.since); t.acc = Math.max(0, num(x.acc) || 0); t.cap = num(x.cap);
+  t.blk = x.blk && x.blk.id ? { cal: String(x.blk.cal || "study"), id: String(x.blk.id), start: Number(x.blk.start) } : null;
+  return t;
+}
+function timerRunning(p) { return p.mode === "flow" ? !!p.since : !!p.endAt; }
+function flowElapsed(p, t) { return (p.acc || 0) + (p.since ? Math.max(0, t - p.since) : 0); }
+function fmtMins(m) { m = Math.round(m); return m >= 60 ? Math.floor(m / 60) + "h" + (m % 60 ? " " + (m % 60 < 10 ? "0" : "") + (m % 60) + "m" : "") : m + "m"; }
+// The big digits: counting up shows mm:ss for the first hour, then h:mm.
+function timerText(p, t) {
+  if (p.mode === "flow") {
+    var ms = flowElapsed(p, t), m = Math.floor(ms / 60000);
+    return m < 60 ? pad(m) + ":" + pad(Math.floor(ms / 1000) % 60) : pad(Math.floor(m / 60)) + ":" + pad(m % 60);
+  }
+  var left = p.endAt ? Math.max(0, p.endAt - t) : p.left, s = Math.ceil(left / 1000);
+  return pad(Math.floor(s / 60)) + ":" + pad(s % 60);
+}
+function timerLabel(p, t) {
+  if (p.mode === "flow") {
+    if (p.since) return flowElapsed(p, t) >= 3600000 ? "Working · h:mm" : "Working";
+    return p.acc ? "Paused" : "Count up · ready";
+  }
+  var paused = !p.endAt && p.left < TIMER_LEN[p.phase];
+  return (p.phase === "focus" ? "Focus · 25 min" : "Break · 5 min") + (p.endAt ? "" : paused ? " · paused" : "");
+}
+function timerButton(p) {
+  if (p.mode === "flow") return p.since ? "Pause" : p.acc ? "Resume" : "Start";
+  return p.endAt ? "Pause" : (!p.endAt && p.left < TIMER_LEN[p.phase]) ? "Resume" : "Start";
+}
+// Start or pause. `blk` is the Study block on now (if any), so the time is logged to it.
+function timerToggle(p, t, blk) {
+  p = timerClean(p);
+  if (p.mode === "flow") {
+    if (p.since) { p.acc += Math.max(0, t - p.since); p.since = null; return p; }
+    p.since = t;
+    if (!p.blk && blk) p.blk = { cal: blk.src || "study", id: blk.id, start: blk.start };
+    // A forgotten timer stops itself: 30 minutes after the block ends, or 2 hours in without a block.
+    p.cap = blk ? Math.max(blk.end + 30 * 60000, t + 30 * 60000) : t + 2 * 3600000;
+    return p;
+  }
+  if (p.endAt) { p.left = Math.max(0, p.endAt - t); p.endAt = null; } else p.endAt = t + p.left;
+  return p;
+}
+// Count-up "Done": what to log, and a fresh timer.
+function timerFinish(p, t) {
+  p = timerClean(p);
+  return { minutes: Math.round(flowElapsed(p, t) / 60000), block: p.blk, timer: timerFresh("flow") };
+}
+// Every second: a finished round or break moves on; a forgotten count-up pauses itself.
+function timerTick(p, t) {
+  if (p.mode === "flow") {
+    if (p.since && p.cap && t >= p.cap) { var q = timerClean(p); q.acc += Math.max(0, q.cap - q.since); q.since = null; return { timer: q, autoPaused: true }; }
+    return null;
+  }
+  if (!p.endAt || t < p.endAt) return null;
+  var wasFocus = p.phase === "focus", ended = p.endAt;
+  var next = timerFresh("pomo");
+  if (wasFocus) { next.phase = "rest"; next.endAt = ended + TIMER_LEN.rest; next.left = TIMER_LEN.rest; }
+  return { timer: next, ended: ended, wasFocus: wasFocus };
 }
 
 
@@ -607,6 +722,10 @@ function model(data, now) {
     : Object.keys(src).some((k) => src[k] && src[k].ok === false && k !== "sleep") ? "A calendar didn't load: deadlines may be missing" : "";
 
   const pomos = Number((data.state && data.state.log && data.state.log[dayKey(now)]) || 0);
+  // Minutes worked today (count-up timer and focus rounds both log here), plus a count-up still running.
+  const tmr = data.state && data.state.timer;
+  const workedMin = Number((data.state && data.state.worked && data.state.worked[dayKey(now)]) || 0) +
+    (tmr && tmr.mode !== "pomo" ? Math.floor(((tmr.acc || 0) + (tmr.since ? Math.max(0, t - tmr.since) : 0)) / 60000) : 0);
 
   // Redraw when the current block ends or the next one starts, and at least every 15 minutes.
   const marks = [];
@@ -614,7 +733,7 @@ function model(data, now) {
   if (next) marks.push(next.start);
   marks.push(addDays(now, 1) + 60000);
   const soonest = Math.min.apply(null, marks.filter((m) => m > t).concat([t + 15 * 60000]));
-  return { card, later, pick, soonCount, alert, pomos, refresh: new Date(soonest + 30000) };
+  return { card, later, pick, soonCount, alert, pomos, workedMin, refresh: new Date(soonest + 30000) };
 }
 
 /* ---------- Drawing ---------- */
@@ -703,7 +822,7 @@ function baseWidget(cfg) {
 
 function footer(stack, m, res) {
   const parts = [];
-  parts.push(m.pomos ? m.pomos + " pomodoro" + (m.pomos > 1 ? "s" : "") + " today" : "No pomodoros yet");
+  parts.push(m.workedMin ? fmtMins(m.workedMin) + " worked today" : "Nothing logged yet today");
   parts.push(res.stale ? "offline" : "updated " + clockShort(Date.now()));
   text(stack, UP(parts.join(" · ")), lb(8), C.faint);
 }
