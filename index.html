@@ -116,6 +116,37 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .timer { font-size: clamp(48px, 18vh, 76px); }
 .focus.is-rest .timer, .focus.is-rest .label:first-child { color: var(--ink-soft); }
 .tally { font-size: 19px; line-height: 1.2; color: var(--ink-soft); white-space: nowrap; }
+.focus { cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 6px; }
+.focus:active { background: rgba(21, 48, 27, 0.06); }
+
+/* ---------- Full-screen focus ---------- */
+.fs {
+  position: fixed; inset: 0; z-index: 30;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(22px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-left, 0px));
+  background: radial-gradient(ellipse at 50% 40%, var(--lcd-hi) 0%, var(--lcd) 60%, var(--lcd-lo) 100%);
+  box-shadow: inset 0 0 0 4px var(--lcd-rim);
+  text-transform: uppercase;
+}
+.fs-top { display: flex; justify-content: space-between; gap: 12px; }
+.fs-top .label { font-size: 13px; }
+.fs-time { flex: 1; min-height: 0; display: grid; place-items: center; border: 0; background: none; padding: 0; color: var(--ink); font-family: var(--f-pixel); }
+.fs-time .seg { font-size: min(40vw, 62vh); }
+.fs.is-rest .fs-time { color: var(--ink-soft); }
+.fs-what { text-align: center; min-width: 0; }
+.fs-title { font-size: clamp(22px, 6vh, 36px); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-step { font-size: clamp(17px, 4.2vh, 24px); line-height: 1.2; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-step:empty, .fs-title:empty { display: none; }
+.fs-bar { display: flex; align-items: center; gap: 10px; }
+.fs-tally { flex: 1; text-align: center; font-size: 19px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-btn { font: 400 13px/1 var(--f-label); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 8px; padding: 12px 16px; min-width: 76px; }
+.fs-btn.primary { background: var(--ink); color: var(--lcd-hi); }
+.fs-btn:active { transform: translateY(1px); }
+@media (orientation: portrait) {
+  .fs-time .seg { font-size: min(46vw, 38vh); }
+  .fs-bar { flex-wrap: wrap; justify-content: center; }
+  .fs-tally { flex-basis: 100%; order: -1; }
+}
 
 .mid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: 22px; }
 .col { display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; }
@@ -287,7 +318,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
         <span class="label" id="date"></span>
         <span class="clock-row"><span class="seg clock" aria-live="off"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="clock-hm">--:--</span></span><span class="ampm" id="clock-ampm"></span></span>
       </div>
-      <div class="focus" id="focus" aria-label="Focus timer">
+      <div class="focus" id="focus" role="button" tabindex="0" aria-label="Focus timer: tap for full screen">
         <span class="label" id="timer-phase">Focus · 25 min</span>
         <span class="seg timer"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="timer-text">25:00</span></span>
         <span class="tally" id="tally">No pomodoros yet</span>
@@ -332,6 +363,24 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   </section>
 </main>
 
+<!-- Full-screen focus: tap the timer to open it, tap the time (or Exit) to close it. -->
+<section class="fs" id="fs" role="dialog" aria-label="Focus mode" hidden>
+  <div class="fs-top"><span class="label" id="fs-phase">Focus</span><span class="label" id="fs-clock"></span></div>
+  <button class="fs-time" id="fs-time-btn" type="button" aria-label="Leave full screen">
+    <span class="seg"><span class="ghost" aria-hidden="true" data-seg>88:88</span><span class="live" id="fs-time">25:00</span></span>
+  </button>
+  <div class="fs-what">
+    <div class="fs-title" id="fs-title"></div>
+    <div class="fs-step" id="fs-step"></div>
+  </div>
+  <div class="fs-bar">
+    <button class="fs-btn primary" id="fs-toggle" type="button">Start</button>
+    <button class="fs-btn" id="fs-reset" type="button">Reset</button>
+    <span class="fs-tally" id="fs-tally"></span>
+    <button class="fs-btn" id="fs-exit" type="button">Exit</button>
+  </div>
+</section>
+
 <div class="sheet" id="setup" role="dialog" aria-modal="true" aria-labelledby="setup-h" hidden>
   <form class="sheet-card" id="setup-form" novalidate>
     <h2 id="setup-h">Connect your calendar</h2>
@@ -366,6 +415,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
     <section class="info-sec">
       <h3>Clock and focus timer</h3>
       <p><b>Start</b> runs a 25-minute focus round. When it ends the board chimes and a 5-minute break starts on its own; the next round waits for Start. <b>Reset</b> goes back to a fresh 25:00.</p>
+      <p><b>Full screen:</b> tap the timer to fill the screen with it, along with the block and its next step. Tap the big time or <b>Exit</b> to come back. It stays full screen if the page reloads.</p>
       <p>The squares under the timer count today's finished rounds. During a learning block the break first says what to digest (for example "add it to your map").</p>
     </section>
 
@@ -469,10 +519,6 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   var addDays = function (d, n, hour) { d = new Date(d); return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, hour || 0).getTime(); };
   // 24-hour time everywhere ("09:05", "21:30").
   var fmtTime = function (d) { d = new Date(d); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
-  function fmtRange(s, e) {
-    var a = fmtTime(s), b = fmtTime(e);
-    return a + "–" + b;
-  }
   function fmtDur(ms) {
     var m = Math.max(1, Math.ceil(ms / 60000));
     if (m >= 60) { var h = Math.floor(m / 60), r = m % 60; return r ? h + "h " + r + "m" : h + "h"; }
@@ -526,7 +572,6 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
 
   /* ---------- Clock ---------- */
-  var clockFmt = null;   // the clock is drawn from the date directly (24-hour)
   var dateFmt = new Intl.DateTimeFormat("en-US", { weekday: "short", day: "numeric", month: "short" });
   function renderClock(now) {
     segText($("#clock-hm"), fmtTime(now));   // "09:05" sits on the LCD's 88:88
@@ -685,11 +730,13 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       extra.textContent = "+" + pick.hidden.length + " more · next " + dueDayLabel(pick.next.day, now).text + " " + shortText(pick.next.raw || pick.next.title, 18);
       list.append(extra);
     }
-    note.hidden = all.length > 0;
+    // Never say "nothing due" unless the calendar actually loaded.
+    note.hidden = all.length > 0 || !ready();
     note.textContent = "Nothing due in the next 6 weeks.";
   }
   // When what's on screen might be missing something, the Due column says so.
   function dueAlert(now) {
+    if (conn.status === "error") return "Calendar not loaded: deadlines can't be shown";
     if (conn.stale && conn.at && now.getTime() - conn.at > 3 * 3600000) return "Offline since " + clockShort(conn.at) + ": deadlines may be missing";
     var bad = Object.keys(sources).filter(function (k) { return sources[k] && sources[k].ok === false && k !== "sleep"; });
     if (bad.length) return (bad.indexOf("canvas") >= 0 ? "Canvas" : "Your " + bad[0] + " calendar") + " didn't load: deadlines may be missing";
@@ -733,11 +780,6 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     });
     timed.sort(function (a, b) { return a.start - b.start || a.end - b.end; });
     return { timed: timed, chips: chips };
-  }
-  function blockAt(ms) {
-    return buildDayFor(new Date(ms)).timed
-      .filter(function (b) { return b.start <= ms && b.end > ms; })
-      .sort(function (a, b) { return b.start - a.start; })[0] || null;
   }
   // Pomodoros and digest prompts belong to your own Study blocks, never to a class or meeting.
   function studyBlockAt(ms) {
@@ -900,7 +942,6 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function clockShort(ms) { return fmtTime(ms); }
   function renderToday(now, today) {
     var t = now.getTime(), later = $("#later");
-    var cur = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
     var upcoming = today.timed.filter(function (i) { return i.start > t; });
     upcoming = upcoming.slice(1);   // the next block is already shown: as "Next", or as "then …" under Now
     var parts = upcoming.slice(0, 3).map(function (i) { return clockShort(i.start) + " " + shortText(i.title, 16); });
@@ -959,11 +1000,12 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     if (Date.now() > holdServerTimerUntil && s.timer) pomo = cleanTimer(s.timer);
     if (typeof s.lastDoneEnd === "number" && s.lastDoneEnd === pomo.endAt) lastLocalDone = s.lastDoneEnd;
   }
+  // After a tap, the server's copy of the timer is ignored for 30 seconds, so a calendar refresh
+  // that was already on its way (and carries the old timer) can't undo the tap.
   function pushTimer() {
     if (!cfg) return;
-    holdServerTimerUntil = Date.now() + 20000;
+    holdServerTimerUntil = Date.now() + 30000;
     apiPost({ action: "timer", timer: pomo }).then(function (d) {
-      holdServerTimerUntil = 0;
       if (d.state && d.state.log) log = d.state.log;
     }, function () { holdServerTimerUntil = 0; });
   }
@@ -1011,6 +1053,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       tally = "First: " + blkNow.modes.slice(0, 2).map(function (k) { return PACER[k].verb; }).join(" · ");
     }
     if ($("#tally").textContent !== tally) $("#tally").textContent = tally;
+    renderFs(now);
   }
   function tickTimer(now) {
     var nowMs = now.getTime();
@@ -1027,29 +1070,82 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
         }
         if (nowMs - ended < 10000) chime();
         if (cfg) {
-          holdServerTimerUntil = Date.now() + 20000;
+          holdServerTimerUntil = Date.now() + 30000;
           apiPost({
             action: "pomoDone", ended: ended, focus: wasFocus, timer: pomo,
             block: blk && blk.src !== "canvas" ? { cal: blk.src, id: blk.id, start: blk.start } : null
-          }).then(function (d) { holdServerTimerUntil = 0; if (d.state && d.state.log) log = d.state.log; },
+          }).then(function (d) { if (d.state && d.state.log) log = d.state.log; },
                   function () { holdServerTimerUntil = 0; });
         }
       }
     }
     renderTimer(now);
   }
-  $("#timer-toggle").addEventListener("click", function () {
+  function toggleTimer() {
     ensureAudio();
     var n = Date.now();
     if (pomo.endAt) { pomo.left = Math.max(0, pomo.endAt - n); pomo.endAt = null; }
     else { pomo.endAt = n + pomo.left; }
     pushTimer();
     renderTimer(new Date());
-  });
-  $("#timer-reset").addEventListener("click", function () {
+  }
+  function resetTimer() {
     pomo = { phase: "focus", endAt: null, left: LEN.focus };
     pushTimer();
     renderTimer(new Date());
+  }
+  $("#timer-toggle").addEventListener("click", toggleTimer);
+  $("#timer-reset").addEventListener("click", resetTimer);
+
+  /* ---------- Full-screen focus ---------- */
+  // Tap the timer to fill the screen with it; tap the time again, Exit, Esc or F to go back.
+  // Stays open across reloads until you leave it.
+  var fsOpen = false;
+  function setFs(on) {
+    fsOpen = on;
+    $("#fs").hidden = !on;
+    try { localStorage.setItem("deskboard-fs", on ? "1" : ""); } catch (e) {}
+    if (on) { ensureAudio(); renderFs(new Date()); $("#fs-toggle").focus({ preventScroll: true }); }
+    else $("#focus").focus({ preventScroll: true });
+  }
+  function renderFs(now) {
+    if (!fsOpen) return;
+    var t = now.getTime();
+    var remaining = pomo.endAt ? Math.max(0, pomo.endAt - t) : pomo.left, secs = Math.ceil(remaining / 1000);
+    segText($("#fs-time"), pad(Math.floor(secs / 60)) + ":" + pad(secs % 60));
+    var paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
+    $("#fs").classList.toggle("is-rest", pomo.phase === "rest");
+    $("#fs-phase").textContent = (pomo.phase === "focus" ? "Focus" : "Break") + (pomo.endAt ? "" : paused ? " · paused" : " · ready");
+    $("#fs-clock").textContent = fmtTime(t);
+    $("#fs-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
+    var blk = ready() ? studyBlockAt(t) : null, title = "", step = "";
+    if (blk) {
+      title = blk.title;
+      var steps = blk.steps.map(function (x) { return typeof x === "string" ? { text: x, done: false } : x; });
+      var open = steps.filter(function (x) { return !stepState(blk, x); });
+      step = steps.length ? (open.length ? "> " + (open[0].show || open[0].text) + (steps.length > 1 ? "  (" + (steps.length - open.length) + "/" + steps.length + ")" : "") : "All steps done")
+        : isWork(blk) ? "> " + DEFAULT_STEP : "";
+      if (pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map(function (k) { return PACER[k].verb; }).join(" · ");
+    }
+    if ($("#fs-title").textContent !== title) $("#fs-title").textContent = title;
+    if ($("#fs-step").textContent !== step) $("#fs-step").textContent = step;
+    var n = Number(log[dayKey(now)]) || 0;
+    var tally = n ? "■".repeat(Math.min(n, 8)) + " " + n + " today" : "first round today";
+    if ($("#fs-tally").textContent !== tally) $("#fs-tally").textContent = tally;
+  }
+  $("#focus").addEventListener("click", function () { setFs(true); });
+  $("#focus").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFs(true); } });
+  $("#fs-time-btn").addEventListener("click", function () { setFs(false); });
+  $("#fs-exit").addEventListener("click", function () { setFs(false); });
+  $("#fs-toggle").addEventListener("click", function () { toggleTimer(); renderFs(new Date()); });
+  $("#fs-reset").addEventListener("click", function () { resetTimer(); renderFs(new Date()); });
+  document.addEventListener("keydown", function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (!$("#setup").hidden || !$("#info").hidden) return;
+    var k = e.key.toLowerCase();
+    if (k === "f" && !e.metaKey && !e.ctrlKey) { e.preventDefault(); setFs(!fsOpen); }
+    else if (k === "escape" && fsOpen) { e.preventDefault(); setFs(false); }
+    else if (k === " " && fsOpen && e.target === document.body) { e.preventDefault(); toggleTimer(); renderFs(new Date()); }
   });
 
   /* ---------- The dark strip: one question at a time ---------- */
@@ -1372,6 +1468,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   });
 
   renderAll(false);
+  try { if (localStorage.getItem("deskboard-fs") === "1") setFs(true); } catch (e) {}
   tick();
   setInterval(tick, 1000);
   setInterval(load, REFRESH_MS);

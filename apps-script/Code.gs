@@ -123,9 +123,9 @@ function setup() {
     if (t.getHandlerFunction() === 'dailyDigest' || t.getHandlerFunction() === 'refreshCanvas') ScriptApp.deleteTrigger(t);
   });
   if (PropertiesService.getScriptProperties().getProperty('CANVAS_ICS_URL')) {
-    ScriptApp.newTrigger('refreshCanvas').timeBased().everyMinutes(10).create();
-    refreshCanvas();
-    Logger.log('Canvas feed: refreshed in the background every 10 minutes.');
+    ScriptApp.newTrigger('refreshCanvas').timeBased().everyMinutes(15).create();
+    refreshCanvas(true);
+    Logger.log('Canvas feed: refreshed in the background every 15 minutes (not 02:00–08:00).');
   }
   if (DIGEST_HOUR != null) {
     ScriptApp.newTrigger('dailyDigest').timeBased().atHour(DIGEST_HOUR).everyDays(1).create();
@@ -230,7 +230,10 @@ function events_() {
         item.start = ev.getStartTime().getTime();
         item.end = ev.getEndTime().getTime();
       }
-      if (c.key !== 'canvas') item.desc = String(ev.getDescription() || '').slice(0, 2000);
+      // Steps, check-ins and modes live in your own blocks; other calendars only need a short note.
+      // (Keeps the whole answer small enough to cache, so the boards load fast.)
+      if (c.key === 'study') item.desc = String(ev.getDescription() || '').slice(0, 2000);
+      else if (c.key !== 'canvas') item.desc = String(ev.getDescription() || '').slice(0, 300);
       out.push(item); n++;
     });
     if (!sources[c.key]) sources[c.key] = { ok: true, n: n };
@@ -244,7 +247,7 @@ function events_() {
 
 /* ---------- Canvas feed ---------- */
 
-// Canvas can take 20+ seconds to answer, so a background job (refreshCanvas, every 10 minutes)
+// Canvas can take 20+ seconds to answer, so a background job (refreshCanvas, every 15 minutes)
 // keeps a fresh copy and the boards never wait on it. Only on a cold start does a request fetch it.
 function canvasFeed_(from, to) {
   var url = PropertiesService.getScriptProperties().getProperty('CANVAS_ICS_URL');
@@ -282,10 +285,13 @@ function fetchCanvas_(url) {
   }
 }
 
-/** Runs every 10 minutes (setup installs it) so the Canvas copy is always warm. */
-function refreshCanvas() {
+/** Runs every 15 minutes (setup installs it) so the Canvas copy is always warm.
+    Skips 02:00–08:00: background jobs on a free account get 90 minutes a day, and Canvas can be slow. */
+function refreshCanvas(force) {
   var url = PropertiesService.getScriptProperties().getProperty('CANVAS_ICS_URL');
   if (!url) return;
+  var h = new Date().getHours();
+  if (force !== true && h >= 2 && h < 8) return;
   var got = fetchCanvas_(url);
   if (got.ok) CacheService.getScriptCache().remove('events');   // boards see new assignments on their next refresh
 }

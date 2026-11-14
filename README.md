@@ -46,6 +46,7 @@ Hold the date for one second to reopen setup. Press the **i** key for a guide to
 - **Steps:** tap a step on the board to tick it off; it's saved on the calendar as `- [x] `. Tap the "steps done" row to untick the last one. You can also type `[x]` yourself in Google Calendar.
 - **Due:** see "Deadlines you can rely on" below. The right column is time already blocked on your Study Calendar before it's due. Only the most urgent deadline with nothing blocked gets a red `0h`. Finished early? Tap the row, then tap it again: it's marked done on every board, with an Undo for a few seconds.
 - **Timer:** Start runs a 25-minute focus round; the 5-minute break then starts on its own. During a learning block the break first says what to digest.
+- **Full-screen timer:** tap the timer (phone) or click it or press **F** (computer) to fill the screen with the countdown, the block and its next step. Tap the big time, press **Esc** or **F**, or use **Exit** to come back. On a computer it also goes browser full screen.
 - **Offline:** the board keeps the last calendar copy, so a relaunch without Wi-Fi still shows your day (marked Offline with the last sync time).
 - **Night check-in:** once a day, after 21:00 and your last block, the strip asks about the day. **All done** logs every block as Done. **Not all** goes through them one at a time, then offers to move what's left. If you never answer, the blocks count as done. There's no question after each block.
 - **Rescheduling:** what's left of a block (unticked steps, or the full length if missed) is copied to the first free slot at least 15 minutes away that's clear on every calendar, outside sleep (your Sleep calendar, plus `WAKE_HOUR`/`BED_HOUR` in `Code.gs`: 1–9 AM) and within the 70% rule.
@@ -92,7 +93,7 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Classes:** a card per class this semester with its next class, what's due soon and the next work block. Clicking a class (or picking it in the sidebar) filters the to-do list to just that class.
 - **Courses follow your calendar:** the board has the names, colors and title patterns for every course in the four-year plan built in, but only shows the ones on the Classes calendar right now, so it switches over by itself each semester.
 - **Right side:** the night check-in (each block with Done / Partly / Missed, then **Looks right**), the fresh-start offers, the block you're in or the next one with its steps and a focus button, and today's schedule.
-- **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star.
+- **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star, F full-screen timer (Esc leaves it, Space starts or pauses).
 
 ## Deadlines you can rely on
 
@@ -105,7 +106,7 @@ The deadline rules live in one file, `rules.js`, used by the phone board, the de
 - **Never hidden for space:** anything due within 36 hours and the next exam or quiz in 10 days always get a row on the phone and the widget. The rest say "+3 more · next Thu …". The desktop lists everything.
 - **Passed today:** stays on screen, faded, until the day ends, in case it wasn't handed in.
 - **When something might be missing:** if any calendar fails to load, or a screen hasn't synced for 3 hours, the phone, desktop and widget all say so in red.
-- **Canvas directly (recommended):** Google refreshes a subscribed Canvas calendar only every several hours. In Canvas, open Calendar → **Calendar Feed** and copy the link. In Apps Script, open Project Settings → Script properties → add `CANVAS_ICS_URL` with that link. The script then reads Canvas itself: a background job refreshes it every 10 minutes (Canvas can take 20+ seconds to answer, so the boards never wait on it), and it falls back to the Google calendar if Canvas can't be reached. Run `setup` once after adding the link to start the job.
+- **Canvas directly (recommended):** Google refreshes a subscribed Canvas calendar only every several hours. In Canvas, open Calendar → **Calendar Feed** and copy the link. In Apps Script, open Project Settings → Script properties → add `CANVAS_ICS_URL` with that link. The script then reads Canvas itself: a background job refreshes it every 15 minutes (skipping 02:00–08:00) (Canvas can take 20+ seconds to answer, so the boards never wait on it), and it falls back to the Google calendar if Canvas can't be reached. Run `setup` once after adding the link to start the job.
 - **Reminders that don't need a screen:** every evening at 20:00 the script emails you what's due tomorrow and any exam or quiz three days out, and says if a calendar didn't load. It only sends when there's something to say. The widget also reminds you the evening before (20:00), the morning of (09:15, for what's still ahead), and three days before exams. Turning off block notifications in Scriptable leaves these on.
 
 Limits: a deadline that's only in an email or a syllabus, and nowhere in Canvas or your calendars, can't be seen. Put it on your calendar with "due" in the title.

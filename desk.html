@@ -69,6 +69,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 body { background: var(--page); color: var(--ink); font: 400 15px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -97,6 +98,24 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep);
 .sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
 .sync.ok i { background: #7cc47a; box-shadow: 0 0 6px rgba(124, 196, 122, 0.8); }
 .sync.bad i { background: var(--alert); }
+
+/* ---------- Full-screen focus ---------- */
+.fs { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 28px 40px 32px; background: var(--page); }
+.fs-top { display: flex; justify-content: space-between; }
+.fs-top .label { font-size: 12px; }
+.fs-time { flex: 1; min-height: 0; border: 0; background: none; color: var(--ink); font: 400 min(34vw, 58vh)/0.8 var(--f-num); letter-spacing: 0.02em; display: grid; place-items: center; cursor: pointer; padding: 0; }
+.fs.is-rest .fs-time { color: var(--sage-deep); }
+.fs-what { text-align: center; max-width: 900px; margin: 0 auto; min-width: 0; width: 100%; }
+.fs-title { font-size: clamp(22px, 3.4vw, 36px); font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-step { margin-top: 6px; font-size: clamp(16px, 2vw, 22px); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-title:empty, .fs-step:empty { display: none; }
+.fs-bar { display: flex; align-items: center; gap: 12px; max-width: 900px; width: 100%; margin: 0 auto; }
+.fs-big { padding: 12px 22px; font-size: 1rem; }
+.fs-tally { flex: 1; text-align: center; color: var(--ink-3); font-size: 0.95rem; }
+.timer .t { cursor: pointer; }
+.timer .expand { border: 0; background: transparent; color: var(--ink-3); width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; padding: 0; }
+.timer .expand:hover { background: var(--page-2); color: var(--ink); }
+@media (max-width: 640px) { .fs { padding: 18px 16px 20px; } .fs-bar { flex-wrap: wrap; justify-content: center; } .fs-tally { flex-basis: 100%; order: -1; } }
 
 /* ---------- Page: sidebar · list · today ---------- */
 .shell { display: grid; grid-template-columns: 256px minmax(0, 1fr) 340px; grid-template-areas: "side main rail"; gap: 28px; max-width: 1640px; margin: 0 auto; padding: 22px 24px 60px; align-items: start; }
@@ -304,6 +323,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep);
 </head>
 <body>
 <div id="app"></div>
+<!-- Full-screen focus: click the timer (or press F) to open; Esc, F, Exit or clicking the time closes it. -->
+<div class="fs" id="fs" role="dialog" aria-label="Focus mode" hidden>
+  <div class="fs-top"><span class="label" id="fs-phase">Focus</span><span class="label" id="fs-clock"></span></div>
+  <button class="fs-time" id="fs-time" type="button" title="Leave full screen">25:00</button>
+  <div class="fs-what"><div class="fs-title" id="fs-title"></div><div class="fs-step" id="fs-step"></div></div>
+  <div class="fs-bar">
+    <button class="pill-btn primary fs-big" id="fs-toggle" type="button">Start</button>
+    <button class="pill-btn fs-big" id="fs-reset" type="button">Reset</button>
+    <span class="fs-tally" id="fs-tally"></span>
+    <button class="pill-btn ghost fs-big" id="fs-exit" type="button">Exit <span class="kbd">Esc</span></button>
+  </div>
+</div>
 
 <script src="rules.js"></script>
 <script src="shorten.js"></script>
@@ -544,9 +575,11 @@ function cleanTimer(x) {
   return { phase: x.phase === "rest" ? "rest" : "focus", endAt: typeof x.endAt === "number" ? x.endAt : null,
     left: typeof x.left === "number" ? x.left : (x.phase === "rest" ? LEN.rest : LEN.focus) };
 }
+// After a tap, the server's copy of the timer is ignored for 30 seconds, so a refresh already
+// on its way (carrying the old timer) can't undo the tap.
 function pushTimer() {
-  holdTimerUntil = Date.now() + 20000;
-  apiPost({ action: "timer", timer: pomo }).then((d) => { holdTimerUntil = 0; if (d.state && d.state.log) log = d.state.log; }, () => { holdTimerUntil = 0; });
+  holdTimerUntil = Date.now() + 30000;
+  apiPost({ action: "timer", timer: pomo }).then((d) => { if (d.state && d.state.log) log = d.state.log; }, () => { holdTimerUntil = 0; });
 }
 function chime() {
   if (!audio) return;
@@ -579,6 +612,7 @@ function tickTimer(nowMs) {
   if (nowMs - ended < 60000) chime();
   const blk = wasFocus ? studyBlockAt(ended - 1000) : null;
   if (wasFocus) { const k = dayKey(ended); log[k] = (Number(log[k]) || 0) + 1; }
+  holdTimerUntil = Date.now() + 30000;
   apiPost({ action: "pomoDone", ended, focus: wasFocus, timer: pomo, block: blk ? { cal: blk.src, id: blk.id, start: blk.start } : null })
     .then((d) => { if (d.state && d.state.log) log = d.state.log; }).catch(() => {});
 }
@@ -658,7 +692,8 @@ const ICONS = {
   check: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.8"/>',
   classes: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 14h5"/>',
   star: '<path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
-  chev: '<path d="m7 10 5 5 5-5"/>'
+  chev: '<path d="m7 10 5 5 5-5"/>',
+  expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'
 };
 function ico(name) { const s = h("span", { class: "ico", "aria-hidden": "true" }); s.innerHTML = '<svg viewBox="0 0 24 24">' + ICONS[name] + "</svg>"; return s; }
 
@@ -804,7 +839,7 @@ function renderTask(x, now) {
 }
 
 function taskDetail(x, now) {
-  const t = now.getTime(), hrsLeft = (x.dueEnd - t) / 3600000;
+  const t = now.getTime();
   const box = h("div", { class: "task-detail" });
   box.append(h("div", { class: "line" },
     x.course ? h("span", { class: "chip course", style: "--course:" + colorOf(x.course), text: nameOf(x.course) }) : null,
@@ -885,7 +920,7 @@ function renderTodo(now) {
     const week = open.filter((x) => x.dueEnd - t < 7 * DAY).length;
     wrap.append(h("header", { class: "list-head" },
       h("div", { class: "grow" }, h("h1", { text: "To do" }),
-        h("p", { text: open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : "Nothing due in the next 6 weeks." }))));
+        h("p", { text: !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : "Nothing due in the next 6 weeks." }))));
   }
   const alert = dueAlert(now);
   if (alert) wrap.append(h("div", { class: "warn-line", role: "alert", text: alert }));
@@ -901,6 +936,7 @@ function renderTodo(now) {
 
 // When what's on screen might be missing something, say so above the list.
 function dueAlert(now) {
+  if (!conn.ok && conn.error) return conn.error + ", so deadlines can't be shown right now.";
   if (conn.stale && conn.at && now.getTime() - conn.at > 3 * 3600000) return "Offline since " + whenText(conn.at) + ". Deadlines added since then aren't shown.";
   const bad = Object.keys(sources).filter((k) => sources[k] && sources[k].ok === false && k !== "sleep");
   if (bad.length) return bad.map((k) => (k === "canvas" ? "Canvas" : "Your " + k + " calendar") + " didn't load (" + (sources[k].error || "unknown error") + ")").join(". ") + ". Deadlines from it may be missing, so check it directly until this clears.";
@@ -972,6 +1008,7 @@ function renderSide(now) {
   side.append(h("div", { class: "side-foot" },
     h("div", null, h("span", { class: "kbd", text: "↑" }), " ", h("span", { class: "kbd", text: "↓" }), " move"),
     h("div", null, h("span", { class: "kbd", text: "Enter" }), " open · ", h("span", { class: "kbd", text: "D" }), " done · ", h("span", { class: "kbd", text: "S" }), " star"),
+    h("div", null, h("span", { class: "kbd", text: "F" }), " full-screen timer"),
     h("div", { text: "Drag to reorder or star." })));
   return side;
 }
@@ -1133,9 +1170,10 @@ function topBar() {
     h("span", { class: "spacer" }),
     h("div", { class: "timer" },
       h("div", null, h("div", { class: "phase" }), h("div", { class: "pomos" })),
-      h("span", { class: "t" }),
+      h("span", { class: "t", title: "Full screen (F)", onclick: () => setFs(true) }),
       h("button", { class: "pill-btn primary", id: "t-toggle", type: "button", onclick: toggleTimer }),
-      h("button", { class: "pill-btn", type: "button", onclick: resetTimer, text: "Reset" })),
+      h("button", { class: "pill-btn", type: "button", onclick: resetTimer, text: "Reset" }),
+      h("button", { class: "expand", type: "button", title: "Full screen (F)", "aria-label": "Full screen focus", onclick: () => setFs(true) }, ico("expand"))),
     h("div", { class: "sync" }, h("i"), h("span")));
 }
 function setView(v) { view = v; store("deskboard-view", v); expanded = null; render(); window.scrollTo(0, 0); }
@@ -1181,12 +1219,70 @@ function setupForm() {
   return form;
 }
 
+/* ---------- Full-screen focus ---------- */
+// Click the timer or press F to fill the screen with it (and go browser full screen where allowed).
+// Esc, F, Exit or clicking the time brings the board back. Stays open across reloads until you leave it.
+let fsOpen = false;
+function setFs(on) {
+  if (on === fsOpen) return;
+  fsOpen = on;
+  $("#fs").hidden = !on;
+  store("deskboard-fs", on);
+  if (on) {
+    if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
+    renderFs(new Date());
+    $("#fs-toggle").focus({ preventScroll: true });
+  } else {
+    try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); } catch (e) {}
+  }
+}
+function renderFs(now) {
+  if (!fsOpen) return;
+  const t = now.getTime();
+  const left = pomo.endAt ? Math.max(0, pomo.endAt - t) : pomo.left, secs = Math.ceil(left / 1000);
+  const paused = !pomo.endAt && pomo.left < LEN[pomo.phase];
+  $("#fs-time").textContent = pad(Math.floor(secs / 60)) + ":" + pad(secs % 60);
+  $("#fs").classList.toggle("is-rest", pomo.phase === "rest");
+  $("#fs-phase").textContent = (pomo.phase === "focus" ? "Focus" : "Break") + (pomo.endAt ? "" : paused ? " · paused" : " · ready");
+  $("#fs-clock").textContent = fmtTime(t);
+  $("#fs-toggle").textContent = pomo.endAt ? "Pause" : paused ? "Resume" : "Start";
+  const blk = studyBlockAt(t);
+  let title = "", step = "";
+  if (blk) {
+    title = blk.title;
+    const open = blk.steps.filter((x) => !stepDone(blk, x));
+    step = blk.steps.length ? (open.length ? "Next: " + open[0].show + (blk.steps.length > 1 ? "  ·  " + (blk.steps.length - open.length) + "/" + blk.steps.length + " done" : "") : "All steps done")
+      : /\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(blk.title) ? "" : "Open it and do one 25-min round.";
+    if (pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map((k) => PACER[k].verb).join(" · ");
+  }
+  if ($("#fs-title").textContent !== title) $("#fs-title").textContent = title;
+  if ($("#fs-step").textContent !== step) $("#fs-step").textContent = step;
+  const n = Number(log[dayKey(now)]) || 0;
+  $("#fs-tally").textContent = n ? n + " focus round" + (n > 1 ? "s" : "") + " today" : "First round today";
+}
+$("#fs-time").addEventListener("click", () => setFs(false));
+$("#fs-exit").addEventListener("click", () => setFs(false));
+$("#fs-toggle").addEventListener("click", () => { toggleTimer(); renderFs(new Date()); });
+$("#fs-reset").addEventListener("click", () => { resetTimer(); renderFs(new Date()); });
+// Esc in browser full screen leaves full screen first; take the overlay down with it.
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && fsOpen) setFs(false); });
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === "f") { e.preventDefault(); setFs(!fsOpen); }
+  else if (k === "escape" && fsOpen) { e.preventDefault(); setFs(false); }
+  else if (k === " " && fsOpen && (e.target === document.body || e.target === $("#fs"))) { e.preventDefault(); toggleTimer(); renderFs(new Date()); }
+});
+
 /* ---------- Clock ---------- */
 let lastMinute = -1;
 setInterval(() => {
   const now = new Date();
   tickTimer(now.getTime());
   renderTop(now);
+  renderFs(now);
   if (now.getMinutes() !== lastMinute) {
     lastMinute = now.getMinutes();
     if (checkNote && checkNote.until < now.getTime()) checkNote = null;
@@ -1196,6 +1292,7 @@ setInterval(() => {
 setInterval(load, 2 * 60000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 render();
+if (store("deskboard-fs") === true && cfg) setFs(true);
 load();
 </script>
 </body>
