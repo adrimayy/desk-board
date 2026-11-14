@@ -99,7 +99,60 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep);
 .sync.ok i { background: #7cc47a; box-shadow: 0 0 6px rgba(124, 196, 122, 0.8); }
 .sync.bad i { background: var(--alert); }
 
-/* ---------- Full-screen focus ---------- */
+/* ---------- Editor drawer ---------- */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(10, 20, 12, 0.28); }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; width: min(460px, 100vw); background: var(--card); border-left: 1px solid var(--line); box-shadow: var(--shadow-lift); display: flex; flex-direction: column; }
+.dr-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.dr-head h2 { margin: 0; font-size: 1.05rem; flex: 1; }
+.dr-x { border: 0; background: transparent; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; color: var(--ink-2); }
+.dr-x:hover { background: var(--page-2); }
+.dr-body { flex: 1; overflow-y: auto; padding: 14px 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+.dr-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 18px 16px; border-top: 1px solid var(--line); }
+.dr-foot .grow { flex: 1; }
+.fld { display: flex; flex-direction: column; gap: 6px; }
+.fld > .label { font-size: 10px; }
+.inp { width: 100%; font: inherit; color: var(--ink); background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+.inp:focus { outline: 2px solid var(--sage-deep); outline-offset: 0; background: var(--card); }
+.inp.big { font-size: 1.1rem; font-weight: 600; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row .inp { width: auto; flex: 1; min-width: 0; }
+.mini { border: 1px solid var(--line); background: var(--card); color: var(--ink-2); border-radius: 999px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600; }
+.mini:hover { border-color: var(--sage-deep); color: var(--ink); }
+.mini[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.mini.danger { color: var(--alert); }
+.mini.danger.arm { background: var(--alert); border-color: var(--alert); color: #fff; }
+.hint { font-size: 0.8rem; color: var(--ink-3); margin: 0; }
+.hint.err { color: var(--alert); font-weight: 600; }
+.ed-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ed-steps li { display: flex; align-items: center; gap: 4px; }
+.ed-steps input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--sage-deep); flex: none; margin-right: 4px; }
+.ed-steps .inp { padding: 7px 9px; }
+.ed-steps li.digest .inp { border-style: dashed; }
+.ico-btn { border: 0; background: transparent; color: var(--ink-3); width: 28px; height: 28px; border-radius: 8px; flex: none; font-size: 15px; padding: 0; }
+.ico-btn:hover:not(:disabled) { background: var(--page-2); color: var(--ink); }
+.ico-btn:disabled { opacity: 0.3; }
+.ico-btn[aria-pressed="true"] { color: var(--sage-deep); font-weight: 700; }
+.ro { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; }
+.ro b { font-size: 1.15rem; }
+a.gcal { color: var(--sage-deep); font-weight: 700; font-size: 0.85rem; text-decoration: none; }
+a.gcal:hover { text-decoration: underline; }
+.edit-link { border: 0; background: none; padding: 0; color: var(--sage-deep); font-weight: 700; font-size: 0.8rem; cursor: pointer; margin-left: 4px; }
+.edit-link:hover { text-decoration: underline; }
+.now h1 .edit-link { vertical-align: middle; }
+.agenda li { cursor: pointer; border-radius: 8px; }
+.agenda li:hover { background: var(--card-2); }
+.today-card .day-nav { display: flex; align-items: center; gap: 4px; }
+.today-card .day-nav h2 { flex: 1; }
+.composer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 20px; border-bottom: 1px solid var(--line); }
+.composer .plus { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--sage-deep); color: var(--sage-deep); display: grid; place-items: center; font-weight: 700; line-height: 1; flex: none; margin-right: 4px; }
+.composer .inp { flex: 1 1 220px; background: transparent; border-color: transparent; padding: 6px 8px; }
+.composer .inp:hover { border-color: var(--line); }
+.composer input[type=date], .composer .inp.time { flex: 0 0 auto; width: auto; border-color: var(--line); }
+.inp.time { width: 5.2em !important; flex: 0 0 auto !important; text-align: center; font-variant-numeric: tabular-nums; }
+.inp.bad { outline: 2px solid var(--alert); }
+.composer:not(.open) .more { display: none; }
+
+/* ---------- Full-screen focus (styles) ---------- */
 .fs { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 28px 40px 32px; background: var(--page); }
 .fs-top { display: flex; justify-content: space-between; }
 .fs-top .label { font-size: 12px; }
@@ -323,6 +376,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep);
 </head>
 <body>
 <div id="app"></div>
+<!-- Editor: opens from any block, the day list, a deadline, or "+ Block". -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-h" hidden></aside>
 <!-- Full-screen focus: click the timer (or press F) to open; Esc, F, Exit or clicking the time closes it. -->
 <div class="fs" id="fs" role="dialog" aria-label="Focus mode" hidden>
   <div class="fs-top"><span class="label" id="fs-phase">Focus</span><span class="label" id="fs-clock"></span></div>
@@ -366,6 +422,7 @@ function parseEvents(list) {
     return {
       id: String(e.id || ""), src: String(e.cal || "primary"), title: String(e.title || "Busy"), where: String(e.where || ""),
       allDay, start, end, checkin: ci ? ci[1].toLowerCase() : null, moved: /^\s*Moved to:/im.test(text),
+      rec: !!e.rec, url: String(e.url || ""),
       steps: e.cal === "canvas" ? [] : stepsFrom(text), modes: e.cal === "canvas" ? [] : modesFrom(text)
     };
   }).filter((e) => !isNaN(e.start) && !isNaN(e.end));
@@ -484,7 +541,7 @@ function apiPost(body) {
 }
 
 /* ---------- State ---------- */
-let events = [], stats = [], conn = { ok: false, at: 0, error: "" }, sources = {};
+let events = [], stats = [], conn = { ok: false, at: 0, error: "" }, sources = {}, calIds = {}, owner = "";
 let doneDue = {}, layout = {}, holdLayoutUntil = 0, srv = {};   // srv: reviewed day, last tap anywhere, last fresh start
 const localChecks = {}, localSteps = {};
 let view = store("deskboard-view") || "todo";
@@ -496,6 +553,7 @@ if (cache && cache.events && Date.now() - cache.at < 36 * 3600000) {
   events = parseEvents(cache.events);
   stats = cache.stats || [];
   sources = cache.sources || {};
+  calIds = cache.calendars || {}; owner = cache.owner || "";
   conn = { ok: true, at: cache.at, stale: true };
   if (cache.state) { doneDue = cache.state.doneDue || {}; layout = cache.state.layout || {}; ["reviewed", "lastActive", "resetAt"].forEach((k) => { if (k in cache.state) srv[k] = cache.state[k]; }); }
 }
@@ -520,7 +578,8 @@ function load() {
     applyState(d.state);
     conn = { ok: true, at: Date.now(), stale: false };
     sources = d.sources || {};
-    store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state, stats: d.stats, sources: d.sources });
+    calIds = d.calendars || calIds; owner = d.owner || owner;
+    store("deskboard-cache", { at: Date.now(), events: d.events, state: d.state, stats: d.stats, sources: d.sources, calendars: calIds, owner });
   }).catch((err) => {
     conn = Object.assign({}, conn, { stale: conn.ok, error: err && err.error === "unauthorized" ? "Wrong board key" : "Can't reach your calendar script" });
     if (!conn.ok) conn.ok = false;
@@ -851,12 +910,14 @@ function taskDetail(x, now) {
     else if (!x.past) plan.append(h("span", { class: "chip", text: "No time planned yet" }));
     if (!x.past) plan.append(h("span", { class: "find" }, "Find ",
       h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 60); }, text: "1h" }),
-      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 120); }, text: "2h" })));
+      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 120); }, text: "2h" }),
+      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); newBlockAt(Date.now() + 15 * 60000, 60, { title: x.title }); }, text: "Pick a time…" })));
     if (plan.childNodes.length) box.append(plan);
     const nb = x.nextBlock;
     if (nb) {
       const live = nb.start <= t;
-      box.append(h("div", { class: "line" }, live ? "Working on it now, until " : "Next block ", h("b", { text: live ? fmtTime(nb.end) : whenText(nb.start) + "–" + fmtTime(nb.end) }), nb.where ? " · " + nb.where : ""));
+      box.append(h("div", { class: "line" }, live ? "Working on it now, until " : "Next block ", h("b", { text: live ? fmtTime(nb.end) : whenText(nb.start) + "–" + fmtTime(nb.end) }), nb.where ? " · " + nb.where : "",
+        h("button", { class: "edit-link", type: "button", onclick: (e) => { e.stopPropagation(); editBlock(nb); }, text: "Edit block" })));
       if (nb.steps.length) {
         const firstOpen = nb.steps.find((s) => !stepDone(nb, s));
         box.append(h("ul", { class: "mini-steps" }, nb.steps.map((s) => stepButton(nb, s, { first: s === firstOpen }))));
@@ -867,6 +928,8 @@ function taskDetail(x, now) {
     const note = cardNotes[x.key];
     if (note) box.append(h("div", { class: "note" + (note.err ? " err" : ""), text: note.text }));
   }
+  box.append(h("div", { class: "line" }, h("button", { class: "edit-link", type: "button", onclick: (e) => { e.stopPropagation(); editDue(x); },
+    text: ownRef(x) ? "Edit name or date" : "Details" })));
   return box;
 }
 
@@ -925,6 +988,7 @@ function renderTodo(now) {
   const alert = dueAlert(now);
   if (alert) wrap.append(h("div", { class: "warn-line", role: "alert", text: alert }));
   const list = h("div", { class: "panel list", role: "list" });
+  if (!courseFilter || courseFilter !== "~") list.append(composer());
   GROUPS.forEach((G) => {
     const g = sortGroup(items.filter((x) => groupOf(x, now) === G.id), G.id);
     if (!g.length && !(G.id === "done" && items.length)) return;
@@ -941,6 +1005,38 @@ function dueAlert(now) {
   const bad = Object.keys(sources).filter((k) => sources[k] && sources[k].ok === false && k !== "sleep");
   if (bad.length) return bad.map((k) => (k === "canvas" ? "Canvas" : "Your " + k + " calendar") + " didn't load (" + (sources[k].error || "unknown error") + ")").join(". ") + ". Deadlines from it may be missing, so check it directly until this clears.";
   return "";
+}
+
+// "Add a deadline", Google Tasks style: type a name, pick a day, optional time, Enter.
+let composerDraft = { title: "", day: "", time: "" }, composerOpen = false;
+function composer() {
+  const tomorrow = dayKey(addDays(new Date(), 1, 12));
+  const box = h("form", { class: "composer" + (composerOpen || composerDraft.title ? " open" : "") });
+  const prefix = courseFilter && COURSES[courseFilter] ? courseFilter + " " : "";
+  const name = h("input", { class: "inp", value: composerDraft.title, placeholder: "Add a deadline" + (prefix ? " for " + nameOf(courseFilter) : " (e.g. Econ PS7, Lit Hum essay 2)"), "aria-label": "New deadline", autocomplete: "off" });
+  const day = h("input", { class: "inp more", type: "date", value: composerDraft.day || tomorrow, "aria-label": "Due day" });
+  const time = timeBox(composerDraft.time, "Due time, optional", true);
+  time.classList.add("more");
+  const add = h("button", { class: "pill-btn primary more", type: "submit", text: "Add" });
+  name.addEventListener("focus", () => { composerOpen = true; box.classList.add("open"); });
+  name.addEventListener("input", () => { composerDraft.title = name.value; });
+  name.addEventListener("keydown", (e) => { if (e.key === "Escape") { composerDraft = { title: "", day: "", time: "" }; composerOpen = false; name.blur(); render(); } });
+  day.addEventListener("input", () => { composerDraft.day = day.value; });
+  time.addEventListener("input", () => { composerDraft.time = time.value; });
+  box.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = name.value.trim();
+    if (!title) return;
+    const tv = normTime(time.value);
+    if (tv === null) { say("Times are 24-hour, like 18:00.", 5000); return; }
+    const full = prefix && !new RegExp("^" + courseFilter + "\\b", "i").test(title) ? prefix + title : title;
+    add.disabled = true; add.textContent = "Adding…";
+    apiPost({ action: "saveDue", title: full, day: day.value, time: tv }).then(() => {
+      composerDraft = { title: "", day: "", time: "" }; composerOpen = false; say("Added “" + full + "”.", 4000); load();
+    }).catch((err) => { add.disabled = false; add.textContent = "Add"; say("Didn't add: " + errText(err) + ".", 6000); });
+  });
+  box.append(h("span", { class: "plus", "aria-hidden": "true", text: "+" }), name, day, time, add);
+  return box;
 }
 
 /* ----- Classes ----- */
@@ -1046,6 +1142,10 @@ function renderCheck(now) {
   const t = now.getTime();
   const card = (text, ...btns) => h("div", { class: "checkin" }, h("p", { text }), btns);
   const btn = (label, fn, cls) => h("button", { class: "pill-btn" + (cls ? " " + cls : ""), type: "button", onclick: fn, text: label });
+  if (undoOffer) {
+    const u = undoOffer;
+    return card(u.text, btn(u.label, () => { undoOffer = null; u.run(); say("Restoring…", 4000); }, "sage"), btn("OK", () => { undoOffer = null; render(); }));
+  }
   if (moveOffer) {
     const mo = moveOffer;
     return card("Move what's left of " + plural(mo.n, "block") + " to free slots?",
@@ -1103,7 +1203,7 @@ function renderNow(now) {
     h("span", { class: "label", text: isNow ? "Now" : "Up next" }),
     course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null,
     ev.modes && ev.modes.length ? ev.modes.map((k) => h("span", { class: "chip", title: PACER[k].verb }, h("span", { class: "mode-k", text: k }), PACER[k].short)) : null));
-  panel.append(h("h1", { text: ev.title }));
+  panel.append(h("h1", null, ev.title, h("button", { class: "edit-link", type: "button", onclick: () => openEvent(ev), text: ev.src === "study" ? "Edit" : "Details" })));
   panel.append(h("div", { class: "meta" },
     h("span", null, h("b", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) }), ev.where ? " · " + ev.where : ""),
     isNow && next && next !== ev ? h("span", { text: "Then " + next.title + " at " + fmtTime(next.start) }) : null));
@@ -1124,20 +1224,31 @@ function renderNow(now) {
   }
   return panel;
 }
+let agendaOffset = 0;   // 0 = today; the arrows page through the week behind and two weeks ahead
 function renderAgenda(now) {
   const t = now.getTime();
-  const items = timedFor(events, now);
-  const card = h("section", { class: "panel today-card", "aria-label": "Today" }, h("h2", { text: "Today" }));
-  if (!items.length) card.append(h("p", { class: "empty-now", text: "Nothing on the calendar today." }));
+  const day = new Date(addDays(now, agendaOffset, 12));
+  const items = timedFor(events, day);
+  const label = agendaOffset === 0 ? "Today" : agendaOffset === 1 ? "Tomorrow" : agendaOffset === -1 ? "Yesterday" : day.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const card = h("section", { class: "panel today-card", "aria-label": label },
+    h("div", { class: "day-nav" },
+      h("button", { class: "ico-btn", type: "button", "aria-label": "Previous day", disabled: agendaOffset <= -7 ? "" : null, onclick: () => { agendaOffset--; render(); }, text: "‹" }),
+      h("h2", { text: label }),
+      agendaOffset ? h("button", { class: "mini", type: "button", onclick: () => { agendaOffset = 0; render(); }, text: "Today" }) : null,
+      h("button", { class: "ico-btn", type: "button", "aria-label": "Next day", disabled: agendaOffset >= 14 ? "" : null, onclick: () => { agendaOffset++; render(); }, text: "›" }),
+      h("button", { class: "mini", type: "button", title: "New Study block", onclick: () => newBlockAt(agendaOffset === 0 ? t + 15 * 60000 : addDays(now, agendaOffset, 14), 60), text: "+ Block" })));
+  if (!items.length) card.append(h("p", { class: "empty-now", text: "Nothing on the calendar " + (agendaOffset === 0 ? "today" : "that day") + "." }));
   card.append(h("ul", { class: "agenda" }, items.map((ev) => {
     const r = ev.src === "study" ? rating(ev) : null;
     const c = courseOf(ev.title);
-    return h("li", { class: (ev.end <= t ? "past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : ""), style: "--course:" + (ev.src === "study" || ev.src === "classes" ? colorOf(c) : "var(--line)") },
+    return h("li", { class: (ev.end <= t ? "past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : ""), style: "--course:" + (ev.src === "study" || ev.src === "classes" ? colorOf(c) : "var(--line)"),
+      tabindex: "0", role: "button", title: ev.src === "study" ? "Edit this block" : "Details", onclick: () => openEvent(ev),
+      onkeydown: (e) => { if (e.key === "Enter") openEvent(ev); } },
       h("span", { class: "when", text: fmtTime(ev.start) }), h("span", { class: "bar" }),
       h("span", { class: "what" }, h("b", { text: ev.title }), h("span", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") + (ev.src === "classes" ? " · class" : "") })));
   })));
   const done = Number(log[dayKey(now)]) || 0;
-  card.append(h("div", { class: "foot", text: done ? done + " focus round" + (done > 1 ? "s" : "") + " so far today." : "No focus rounds yet today." }));
+  card.append(h("div", { class: "foot", text: (agendaOffset === 0 && done ? done + " focus round" + (done > 1 ? "s" : "") + " so far. " : "") + "Click a block to edit it." }));
   return card;
 }
 function renderRail(now) {
@@ -1190,11 +1301,18 @@ function render() {
   if (courseFilter && courseFilter !== "~" && !COURSES[courseFilter]) courseFilter = "";
   const scroll = window.scrollY;
   const focusKey = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute("data-key") : null;
+  // Typing in "Add a deadline" survives a refresh: the draft is kept and the cursor put back.
+  const ae = document.activeElement, comp = ae && ae.closest ? ae.closest(".composer") : null;
+  const compIdx = comp ? [...comp.querySelectorAll("input")].indexOf(ae) : -1;
   const shell = h("div", { class: "shell" }, renderSide(now), view === "classes" ? renderClasses(now) : renderTodo(now), renderRail(now));
   app.replaceChildren(topBar(), shell);
   renderTop(now);
   window.scrollTo(0, scroll);
   if (focusKey) { const n = document.querySelector('[data-key="' + CSS.escape(focusKey) + '"]'); if (n) n.focus({ preventScroll: true }); }
+  if (compIdx >= 0) {
+    const n = document.querySelectorAll(".composer input")[compIdx];
+    if (n) { n.focus({ preventScroll: true }); try { if (n.type === "text") n.setSelectionRange(n.value.length, n.value.length); } catch (e) {} }
+  }
 }
 
 function setupForm() {
@@ -1217,6 +1335,264 @@ function setupForm() {
     }).catch((err) => { btn.disabled = false; msg.textContent = err && err.error === "unauthorized" ? "That key doesn't match." : "Couldn't reach the script."; });
   });
   return form;
+}
+
+/* ---------- Editing ----------
+   Your Study blocks and your own deadlines are edited right here. Anything else (classes,
+   sleep, meetings, repeating events, Canvas) opens in Google Calendar or Canvas, where it lives. */
+function gcalLink(ev) {
+  const au = owner ? "authuser=" + encodeURIComponent(owner) : "";
+  const cal = calIds[ev.src];
+  if (cal && ev.id && !ev.rec && ev.src !== "canvas") {
+    try {
+      const eid = btoa(ev.id.replace(/@google\.com$/, "") + " " + cal).replace(/=+$/, "");
+      return "https://calendar.google.com/calendar/event?eid=" + eid + (au ? "&" + au : "");
+    } catch (e) { /* odd characters: fall back to the day */ }
+  }
+  const d = new Date(ev.start);
+  return "https://calendar.google.com/calendar/r/day/" + d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate() + (au ? "?" + au : "");
+}
+// Time boxes are plain text so they're always 24-hour (a browser's time picker follows the
+// computer's 12-hour setting). "930" → 09:30, "14" → 14:00, "7:5" → 07:05.
+function normTime(v) {
+  const t = String(v || "").trim().replace(/[.h]/i, ":");
+  if (!t) return "";
+  let m = /^(\d{1,2}):(\d{1,2})$/.exec(t) || /^(\d{1,2})(\d{2})$/.exec(t) || /^(\d{1,2})()$/.exec(t);
+  if (!m) return null;
+  const hh = Number(m[1]), mm = Number(m[2] || 0);
+  return hh > 23 || mm > 59 ? null : pad(hh) + ":" + pad(mm);
+}
+function timeBox(value, label, allowEmpty) {
+  const el = h("input", { class: "inp time", value: value || "", placeholder: allowEmpty ? "time" : "14:00", inputmode: "numeric", maxlength: "5", "aria-label": label + " (24-hour)", autocomplete: "off" });
+  el.addEventListener("blur", () => { const n = normTime(el.value); if (n != null) el.value = n; el.classList.toggle("bad", n === null || (!allowEmpty && !n)); el.dispatchEvent(new Event("input")); });
+  return el;
+}
+function atTime(day, time) {
+  time = normTime(time);
+  if (!time) return NaN;
+  const p = String(day).split("-").map(Number), q = String(time).split(":").map(Number);
+  return new Date(p[0], p[1] - 1, p[2], q[0], q[1]).getTime();
+}
+const CAL_NAMES = { study: "Study Calendar", classes: "Classes calendar", sleep: "Sleep calendar", primary: "school calendar", personal: "personal calendar", canvas: "Canvas" };
+let drawerOpen = false, undoOffer = null;
+const errText = (err) => (err && err.error) || "can't reach the calendar script";
+
+function openDrawer(title, body, foot) {
+  const d = $("#drawer");
+  d.replaceChildren(
+    h("div", { class: "dr-head" }, h("h2", { id: "dr-h", text: title }), h("button", { class: "dr-x", type: "button", "aria-label": "Close", onclick: closeDrawer, text: "×" })),
+    h("div", { class: "dr-body" }, body), foot ? h("div", { class: "dr-foot" }, foot) : null);
+  d.hidden = false; $("#scrim").hidden = false; drawerOpen = true;
+}
+function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; drawerOpen = false; render(); }
+$("#scrim").addEventListener("click", closeDrawer);
+
+// Any event: Study blocks open the editor, everything else a short card with a link.
+function openEvent(ev) {
+  if (ev.src === "study") return editBlock(ev);
+  const when = ev.allDay ? new Date(ev.start).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
+    : whenText(ev.start) + "–" + fmtTime(ev.end);
+  const why = ev.src === "canvas" ? "This comes from Canvas, so it changes there."
+    : ev.src === "classes" || ev.src === "sleep" || ev.rec ? "Classes, sleep and anything that repeats are easiest to change in Google Calendar, where the whole series lives."
+    : "This is on your " + (CAL_NAMES[ev.src] || "calendar") + ". Change it in Google Calendar.";
+  openDrawer("Event", [
+    h("div", { class: "ro" }, h("b", { text: ev.title }), h("span", { text: when + (ev.where ? " · " + ev.where : "") }),
+      h("span", { class: "hint", text: "From your " + (CAL_NAMES[ev.src] || ev.src) + (ev.rec ? " · repeats" : "") })),
+    h("p", { class: "hint", text: why })
+  ], [h("span", { class: "grow" }),
+    ev.url ? h("a", { class: "gcal", href: ev.url, target: "_blank", rel: "noopener", text: "Open in Canvas ↗" })
+      : h("a", { class: "gcal", href: gcalLink(ev), target: "_blank", rel: "noopener", text: "Open in Google Calendar ↗" })]);
+}
+
+// The block editor. `ev` is an existing Study block, or null with `seed` for a new one.
+function editBlock(ev, seed) {
+  const isNew = !ev;
+  const base = ev || seed || {};
+  const st = {
+    modes: (base.modes || []).slice(),
+    steps: (base.steps || []).map((s) => ({ text: s.show || s.text, done: ev ? stepDone(ev, s) : false, digest: !!s.digest }))
+  };
+  const msg = h("p", { class: "hint", role: "status" });
+  const title = h("input", { class: "inp big", value: base.title || "", placeholder: "What's this block for? (e.g. Econ PS7)", "aria-label": "Title" });
+  const day = h("input", { class: "inp", type: "date", value: dayKey(base.start), "aria-label": "Day" });
+  const from = timeBox(fmtTime(base.start), "Start"), to = timeBox(fmtTime(base.end), "End");
+  const len = h("span", { class: "hint" });
+  const times = () => { const a = atTime(day.value, from.value); let b = atTime(day.value, to.value); if (b <= a) b += DAY; return { a, b }; };
+  const showLen = () => { const { a, b } = times(); len.textContent = isNaN(a) || isNaN(b) ? "" : fmtDur(b - a); };
+  const shift = (startMin, endMin) => {
+    const { a, b } = times();
+    if (isNaN(a) || isNaN(b)) return;
+    const na = a + startMin * 60000, nb = Math.max(na + 15 * 60000, b + endMin * 60000);
+    day.value = dayKey(na); from.value = fmtTime(na); to.value = fmtTime(nb); showLen();
+  };
+  [day, from, to].forEach((x) => x.addEventListener("input", showLen));
+  showLen();
+
+  const place = h("input", { class: "inp", value: base.where == null ? "Library" : base.where, placeholder: "Somewhere else", "aria-label": "Place" });
+  const placeBtns = ["Library", "Dorm desk"].map((p) => h("button", { class: "mini", type: "button", onclick: () => { place.value = p; syncPlace(); }, text: p }));
+  const syncPlace = () => placeBtns.forEach((b) => b.setAttribute("aria-pressed", b.textContent === place.value.trim() ? "true" : "false"));
+  place.addEventListener("input", syncPlace);
+  syncPlace();
+
+  const modeBtns = "PACER".split("").map((k) => h("button", { class: "mini", type: "button", title: PACER[k].name + ": " + PACER[k].verb,
+    "aria-pressed": st.modes.includes(k) ? "true" : "false",
+    onclick: (e) => {
+      const i = st.modes.indexOf(k);
+      if (i >= 0) st.modes.splice(i, 1); else st.modes.push(k);
+      st.modes.sort((a, b) => "PACER".indexOf(a) - "PACER".indexOf(b));
+      e.currentTarget.setAttribute("aria-pressed", i >= 0 ? "false" : "true");
+    }, text: k + " · " + PACER[k].short }));
+
+  const list = h("ul", { class: "ed-steps" });
+  const drawSteps = (focusAt) => {
+    list.replaceChildren(...st.steps.map((s, i) => {
+      const inp = h("input", { class: "inp", value: s.text, placeholder: s.digest ? "Digest step" : "Step", "aria-label": "Step " + (i + 1) });
+      inp.addEventListener("input", () => { s.text = inp.value; });
+      inp.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); st.steps.splice(i + 1, 0, { text: "", done: false, digest: s.digest }); drawSteps(i + 1); }
+        else if (e.key === "Backspace" && !inp.value) { e.preventDefault(); st.steps.splice(i, 1); drawSteps(Math.max(0, i - 1)); }
+      });
+      return h("li", { class: s.digest ? "digest" : "" },
+        h("input", { type: "checkbox", checked: s.done ? "" : null, "aria-label": "Done", onchange: (e) => { s.done = e.target.checked; } }),
+        inp,
+        h("button", { class: "ico-btn", type: "button", title: "Digest step: what to do with it after a round", "aria-pressed": s.digest ? "true" : "false", onclick: () => { s.digest = !s.digest; drawSteps(i); }, text: "◇" }),
+        h("button", { class: "ico-btn", type: "button", title: "Move up", "aria-label": "Move up", disabled: i === 0 ? "" : null, onclick: () => { st.steps.splice(i - 1, 0, st.steps.splice(i, 1)[0]); drawSteps(i - 1); }, text: "↑" }),
+        h("button", { class: "ico-btn", type: "button", title: "Move down", "aria-label": "Move down", disabled: i === st.steps.length - 1 ? "" : null, onclick: () => { st.steps.splice(i + 1, 0, st.steps.splice(i, 1)[0]); drawSteps(i + 1); }, text: "↓" }),
+        h("button", { class: "ico-btn", type: "button", title: "Remove", "aria-label": "Remove step", onclick: () => { st.steps.splice(i, 1); drawSteps(st.steps.length ? Math.min(i, st.steps.length - 1) : null); }, text: "×" }));
+    }));
+    if (focusAt != null && list.children[focusAt]) list.children[focusAt].querySelector(".inp").focus();
+  };
+  drawSteps();
+  const addStep = (digest) => { st.steps.push({ text: "", done: false, digest }); drawSteps(st.steps.length - 1); };
+
+  const body = [
+    h("div", { class: "fld" }, title),
+    h("div", { class: "fld" }, h("span", { class: "label", text: "When" }),
+      h("div", { class: "row" }, day, from, h("span", { text: "–" }), to, len),
+      h("div", { class: "row" },
+        h("button", { class: "mini", type: "button", onclick: () => shift(-15, -15), text: "← 15 min" }),
+        h("button", { class: "mini", type: "button", onclick: () => shift(15, 15), text: "15 min →" }),
+        h("button", { class: "mini", type: "button", onclick: () => shift(0, -15), text: "Shorter" }),
+        h("button", { class: "mini", type: "button", onclick: () => shift(0, 15), text: "Longer" }),
+        h("button", { class: "mini", type: "button", onclick: () => shift(-24 * 60, -24 * 60), text: "Day before" }),
+        h("button", { class: "mini", type: "button", onclick: () => shift(24 * 60, 24 * 60), text: "Day after" }))),
+    h("div", { class: "fld" }, h("span", { class: "label", text: "Where" }), h("div", { class: "row" }, placeBtns, place)),
+    h("div", { class: "fld" }, h("span", { class: "label", text: "Steps (optional)" }), list,
+      h("div", { class: "row" },
+        h("button", { class: "mini", type: "button", onclick: () => addStep(false), text: "+ Step" }),
+        h("button", { class: "mini", type: "button", onclick: () => addStep(true), text: "+ Digest step" }),
+        h("span", { class: "hint", text: "Enter adds another, Backspace on an empty one removes it." }))),
+    h("div", { class: "fld" }, h("span", { class: "label", text: "Learning mode (optional)" }), h("div", { class: "row" }, modeBtns))
+  ];
+  if (ev && ev.end <= Date.now() && checkable(ev)) {
+    const r = rating(ev);
+    body.push(h("div", { class: "fld" }, h("span", { class: "label", text: "How it went (saves right away)" }), h("div", { class: "row" },
+      ["done", "partly", "missed"].map((k) => h("button", { class: "mini", type: "button", "aria-pressed": (r || "") === k ? "true" : "false",
+        onclick: (e) => { rateBlock(ev, k); e.currentTarget.parentNode.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b === e.currentTarget ? "true" : "false")); },
+        text: k === "done" ? "Done" : k === "partly" ? "Partly" : "Missed" })))));
+  }
+  if (ev && ev.rec) body.push(h("p", { class: "hint", text: "This block repeats. Changes here apply to this one only; change the series in Google Calendar." }));
+  body.push(msg);
+
+  const payload = (extra) => {
+    const { a, b } = times();
+    return Object.assign({ action: "saveBlock", block: isNew ? null : { cal: ev.src, id: ev.id, start: ev.start },
+      title: title.value.trim() || "Work block", start: a, end: b, where: place.value.trim(),
+      steps: st.steps.filter((s) => s.text.trim()).map((s) => ({ text: s.text.trim(), done: s.done, digest: s.digest })), modes: st.modes.slice() }, extra || {});
+  };
+  const busy = (on, text) => {
+    $("#drawer").querySelectorAll(".dr-foot button").forEach((b) => { b.disabled = on; });
+    msg.className = "hint"; msg.textContent = text || "";
+  };
+  const fail = (what) => (err) => { busy(false); msg.className = "hint err"; msg.textContent = "Didn't " + what + ": " + errText(err) + "."; };
+  const send = (body, done) => {
+    if (isNaN(body.start) || isNaN(body.end)) { msg.className = "hint err"; msg.textContent = "Check the day and times (24-hour, like 14:00)."; return; }
+    busy(true, "Saving…");
+    apiPost(body).then((d) => { closeDrawer(); done(d); load(); }).catch(fail("save"));
+  };
+  const saveBtn = h("button", { class: "pill-btn primary", type: "button", text: isNew ? "Add block" : "Save",
+    onclick: () => send(payload(), () => say(isNew ? "Added “" + (title.value.trim() || "Work block") + "”." : "Saved.", 5000)) });
+  const foot = [saveBtn];
+  if (!isNew) {
+    const delBtn = h("button", { class: "mini danger", type: "button", text: "Delete" });
+    delBtn.addEventListener("click", () => {
+      if (!delBtn.classList.contains("arm")) { delBtn.classList.add("arm"); delBtn.textContent = "Click again to delete"; return; }
+      const copy = payload({ block: null, start: ev.start, end: ev.end });
+      busy(true, "Deleting…");
+      apiPost({ action: "deleteBlock", block: { cal: ev.src, id: ev.id, start: ev.start } }).then(() => {
+        closeDrawer();
+        undoOffer = { text: "Deleted “" + copy.title + "”.", label: "Undo", run: () => apiPost(copy).then(load, () => say("Undo didn't work. The block is gone; add it again with + Block.", 8000)) };
+        load();
+      }).catch(fail("delete"));
+    });
+    foot.push(
+      h("button", { class: "mini", type: "button", title: "Same length, first free slot (keeps the 70% rule)",
+        onclick: () => send(payload({ nextFree: true }), (d) => say("Moved to " + whenText(d.start) + ".", 6000)), text: "Next free slot" }),
+      h("button", { class: "mini", type: "button", title: "A copy right after this one (not saved until you add it)",
+        onclick: () => { const { a, b } = times(); editBlock(null, { title: title.value, start: b, end: b + (b - a), where: place.value, modes: st.modes, steps: st.steps.map((s) => ({ text: s.text, digest: s.digest })) }); }, text: "Duplicate" }),
+      h("span", { class: "grow" }), delBtn,
+      h("a", { class: "gcal", href: gcalLink(ev), target: "_blank", rel: "noopener", title: "Open in Google Calendar", text: "Calendar ↗" }));
+  }
+  openDrawer(isNew ? "New block" : "Edit block", body, foot);
+  title.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); saveBtn.click(); } });
+  if (isNew) title.focus({ preventScroll: true });
+}
+function newBlockAt(startMs, mins, seed) {
+  const q = 15 * 60000, a = Math.ceil(startMs / q) * q;
+  editBlock(null, Object.assign({ title: "", start: a, end: a + (mins || 60) * 60000, where: "Library", steps: [], modes: [] }, seed || {}));
+}
+
+// Your own deadlines: name, day, optional time. Canvas items are read-only (Canvas would undo a change).
+const refsOf = (x) => x.refs || (x.d && x.d.refs) || [];
+function ownRef(x) { return refsOf(x).find((r) => (r.cal === "personal" || r.cal === "primary") && !r.rec && r.id) || null; }
+function editDue(x) {
+  const ref = ownRef(x);
+  const canvas = refsOf(x).find((r) => r.cal === "canvas");
+  const canvasEv = canvas && events.find((e) => e.src === "canvas" && e.id === canvas.id);
+  const msg = h("p", { class: "hint", role: "status" });
+  const name = h("input", { class: "inp big", value: x.title, "aria-label": "Name" });
+  const day = h("input", { class: "inp", type: "date", value: x.d.day, "aria-label": "Due day" });
+  const time = timeBox(x.d.dueAt ? fmtTime(x.d.dueAt) : "", "Due time, optional", true);
+  const body = [];
+  if (ref) {
+    body.push(h("div", { class: "fld" }, name),
+      h("div", { class: "fld" }, h("span", { class: "label", text: "Due" }), h("div", { class: "row" }, day, time,
+        h("button", { class: "mini", type: "button", onclick: () => { time.value = ""; }, text: "No time" }))),
+      h("p", { class: "hint", text: "Lives on your " + CAL_NAMES[ref.cal] + " as “name due HH:MM”, which every board and the evening email read." }));
+  } else {
+    body.push(h("div", { class: "ro" }, h("b", { text: x.title }), h("span", { text: "Due " + dueText(x, new Date()) })),
+      h("p", { class: "hint", text: canvas ? "This comes from Canvas, so its name and date change there. Here you can mark it done, star it, or plan time for it."
+        : "This is part of a repeating event or another calendar. Change it in Google Calendar." }));
+  }
+  body.push(msg);
+  const fail = (what) => (err) => { msg.className = "hint err"; msg.textContent = "Didn't " + what + ": " + errText(err) + "."; };
+  const save = () => {
+    const tv = normTime(time.value);
+    if (tv === null) { msg.className = "hint err"; msg.textContent = "Times are 24-hour, like 18:00."; return; }
+    msg.className = "hint"; msg.textContent = "Saving…";
+    apiPost({ action: "saveDue", ref: { cal: ref.cal, id: ref.id, start: ref.start }, title: name.value, day: day.value, time: tv })
+      .then(() => { closeDrawer(); say("Saved.", 4000); load(); }).catch(fail("save"));
+  };
+  const foot = [];
+  if (ref) foot.push(h("button", { class: "pill-btn primary", type: "button", onclick: save, text: "Save" }));
+  foot.push(h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); newBlockAt(Date.now() + 15 * 60000, 60, { title: x.title }); }, text: "Plan a block…" }),
+    h("span", { class: "grow" }));
+  if (ref) {
+    const del = h("button", { class: "mini danger", type: "button", text: "Delete" });
+    del.addEventListener("click", () => {
+      if (!del.classList.contains("arm")) { del.classList.add("arm"); del.textContent = "Click again to delete"; return; }
+      const copy = { action: "saveDue", title: x.title, day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "" };
+      apiPost({ action: "deleteDue", ref: { cal: ref.cal, id: ref.id, start: ref.start } }).then(() => {
+        closeDrawer(); undoOffer = { text: "Deleted “" + x.title + "”.", label: "Undo", run: () => apiPost(copy).then(load) }; load();
+      }).catch(fail("delete"));
+    });
+    foot.push(del);
+  }
+  const first = refsOf(x)[0];
+  if (canvasEv && canvasEv.url) foot.push(h("a", { class: "gcal", href: canvasEv.url, target: "_blank", rel: "noopener", text: "Canvas ↗" }));
+  else if (first && first.cal !== "canvas") foot.push(h("a", { class: "gcal", href: gcalLink({ src: first.cal, id: first.id, start: first.start, rec: first.rec }), target: "_blank", rel: "noopener", text: "Calendar ↗" }));
+  openDrawer(ref ? "Edit deadline" : "Deadline", body, foot);
+  if (ref) name.addEventListener("keydown", (e) => { if (e.key === "Enter") save(); });
 }
 
 /* ---------- Full-screen focus ---------- */
@@ -1268,6 +1644,8 @@ $("#fs-reset").addEventListener("click", () => { resetTimer(); renderFs(new Date
 // Esc in browser full screen leaves full screen first; take the overlay down with it.
 document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && fsOpen) setFs(false); });
 document.addEventListener("keydown", (e) => {
+  if (drawerOpen && e.key === "Escape") { e.preventDefault(); closeDrawer(); return; }
+  if (drawerOpen) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   const k = e.key.toLowerCase();

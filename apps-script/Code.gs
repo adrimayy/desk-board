@@ -47,7 +47,8 @@ function doGet(e) {
     var stats = stats_();
     try { writeEstimates_(stats); } catch (err) { /* estimates are a bonus */ }
     var data = events_();
-    return json_({ ok: true, now: Date.now(), tz: Session.getScriptTimeZone(), events: data.events, sources: data.sources, state: state_(), stats: stats });
+    return json_({ ok: true, now: Date.now(), tz: Session.getScriptTimeZone(), events: data.events, sources: data.sources,
+      calendars: calendarIds_(), owner: Session.getEffectiveUser().getEmail(), state: state_(), stats: stats });
   }
   return json_({ ok: false, error: 'unknown action' });
 }
@@ -101,6 +102,10 @@ function route_(body) {
     if (body.action === 'layout') return layout_(body);
     if (body.action === 'plan') return plan_(body);
     if (body.action === 'reviewed') return reviewed_(body);
+    if (body.action === 'saveBlock') return saveBlock_(body);
+    if (body.action === 'deleteBlock') return deleteBlock_(body);
+    if (body.action === 'saveDue') return saveDue_(body);
+    if (body.action === 'deleteDue') return deleteDue_(body);
     if (body.action === 'reset') return reset_(body);
     if (body.action === 'active') return { ok: true };
     return { ok: false, error: 'unknown action' };
@@ -223,6 +228,7 @@ function events_() {
         where: ev.getLocation() || '',
         allDay: ev.isAllDayEvent()
       };
+      try { if (ev.isRecurringEvent()) item.rec = 1; } catch (err) { /* not available everywhere */ }
       if (item.allDay) {
         item.startDate = Utilities.formatDate(ev.getAllDayStartDate(), tz, 'yyyy-MM-dd');
         item.endDate = Utilities.formatDate(ev.getAllDayEndDate(), tz, 'yyyy-MM-dd');
@@ -316,6 +322,7 @@ function parseIcs_(text, tz) {
     var s = icsTime_(v.DTSTART, tz), e = v.DTEND ? icsTime_(v.DTEND, tz) : null;
     if (!s) return;
     var item = { id: (v.UID ? unescape(v.UID.val) : unescape(v.SUMMARY.val)), cal: 'canvas', title: unescape(v.SUMMARY.val), where: v.LOCATION ? unescape(v.LOCATION.val) : '' };
+    if (v.URL && /^https:\/\//.test(v.URL.val)) item.url = v.URL.val.trim();   // the assignment's page, for "Open in Canvas"
     if (s.date) {
       item.allDay = true; item.startDate = s.date;
       item.endDate = e && e.date ? e.date : Utilities.formatDate(new Date(localDate(s.date) + 36 * 3600000), tz, 'yyyy-MM-dd');
@@ -638,6 +645,119 @@ function plan_(body) {
   study.createEvent(title, slot.start, slot.end, { location: String(body.where || 'Library').slice(0, 60) });
   CacheService.getScriptCache().remove('events');
   return { ok: true, start: slot.start.getTime(), end: slot.end.getTime() };
+}
+
+/* ---------- Editing from the desktop board ----------
+   Your own Study blocks can be changed in full; your own deadline entries (on your personal or
+   school calendar) can be added, renamed, moved or deleted. Classes, sleep, meetings, repeating
+   events and Canvas stay read-only here: the boards link to Google Calendar for those. */
+
+/** Calendar ids by key, so the boards can open an event in Google Calendar. */
+function calendarIds_() {
+  var out = {};
+  calendars_().forEach(function (c) { out[c.key] = c.cal.getId(); });
+  return out;
+}
+
+var STEP_LINE = /^\s*(?:(?:[-•*·]|\d+[.)])\s+(?:\[[ xX]?\]\s*)?|\[[ xX]?\]\s+)\S/;
+
+/** A block's description with new steps and modes; every other line (check-ins, notes) is kept. */
+function blockDesc_(desc, steps, modes) {
+  var text = /<[a-z][^>]*>/i.test(desc) ? plainText(desc) : String(desc || '');
+  var keep = text.split(/\r?\n/).filter(function (l) { return !STEP_LINE.test(l) && !/^\s*Mode\s*:/i.test(l); })
+    .join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  var head = [];
+  if (modes.length) head.push('Mode: ' + modes.join(' + '));
+  steps.forEach(function (st) { head.push('- [' + (st.done ? 'x' : ' ') + '] ' + (st.digest ? 'Digest: ' : '') + st.text); });
+  return head.join('\n') + (keep ? (head.length ? '\n\n' : '') + keep : '');
+}
+
+function cleanSteps_(list) {
+  return (Array.isArray(list) ? list : []).slice(0, 12).map(function (st) {
+    return { text: String(st && st.text || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 200), done: !!(st && st.done), digest: !!(st && st.digest) };
+  }).filter(function (st) { return st.text; });
+}
+
+// Creates a Study block, or changes one: title, time, place, steps, modes. With nextFree, the
+// block keeps its length and moves to the first free slot (the same 70% rule as Find).
+function saveBlock_(body) {
+  var study = calendarFor_('study');
+  if (!study) return { ok: false, error: 'no Study calendar' };
+  var ev = null;
+  if (body.block) {
+    if (body.block.cal !== 'study') return { ok: false, error: 'only Study blocks can be edited here' };
+    ev = findEvent_(body.block);
+    if (!ev) return { ok: false, error: 'block not found (it may have changed in Google Calendar; refresh)' };
+  }
+  var title = String(body.title != null ? body.title : (ev ? ev.getTitle() : 'Work block')).trim().slice(0, 120) || 'Work block';
+  var start = Number(body.start) || (ev ? ev.getStartTime().getTime() : 0);
+  var end = Number(body.end) || (ev ? ev.getEndTime().getTime() : 0);
+  if (body.nextFree) {
+    var slot = freeSlot_(end - start);
+    if (!slot) return { ok: false, error: 'no free slot in the next week' };
+    start = slot.start.getTime(); end = slot.end.getTime();
+  }
+  if (!(start > 0) || !(end > start) || end - start > 10 * 3600000) return { ok: false, error: 'check the start and end times' };
+  var where = String(body.where != null ? body.where : (ev ? ev.getLocation() : 'Library') || '').slice(0, 60);
+  var modes = (Array.isArray(body.modes) ? body.modes : []).filter(function (k) { return /^[PACER]$/.test(k); });
+  var steps = body.steps ? cleanSteps_(body.steps) : null;
+  if (ev) {
+    if (ev.getTitle() !== title) ev.setTitle(title);
+    if (ev.getStartTime().getTime() !== start || ev.getEndTime().getTime() !== end) ev.setTime(new Date(start), new Date(end));
+    if ((ev.getLocation() || '') !== where) ev.setLocation(where);
+    if (steps) ev.setDescription(blockDesc_(String(ev.getDescription() || ''), steps, modes));
+  } else {
+    ev = study.createEvent(title, new Date(start), new Date(end), { location: where, description: blockDesc_('', steps || [], modes) });
+  }
+  CacheService.getScriptCache().remove('events');
+  return { ok: true, block: { cal: 'study', id: ev.getId(), start: start }, start: start, end: end };
+}
+
+function deleteBlock_(body) {
+  if (!body.block || body.block.cal !== 'study') return { ok: false, error: 'only Study blocks can be deleted here' };
+  var ev = findEvent_(body.block);
+  if (!ev) return { ok: false, error: 'block not found' };
+  ev.deleteEvent();
+  CacheService.getScriptCache().remove('events');
+  return { ok: true };
+}
+
+// Your own deadline: an all-day event on your personal calendar named "Title due 18:00"
+// (the time is optional), which every board and the evening email read as a deadline.
+function saveDue_(body) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(body.day || ''));
+  if (!m) return { ok: false, error: 'pick a date' };
+  var day = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  var name = String(body.title || '').replace(/\s+due\b.*$/i, '').trim().slice(0, 100);
+  if (!name) return { ok: false, error: 'give it a name' };
+  var time = /^([01]\d|2[0-3]):([0-5]\d)$/.test(String(body.time || '')) ? body.time : '';
+  var title = name + ' due' + (time ? ' ' + time : '');
+  var ev;
+  if (body.ref) {
+    if (body.ref.cal === 'canvas') return { ok: false, error: 'Canvas items change in Canvas' };
+    if (body.ref.cal !== 'personal' && body.ref.cal !== 'primary') return { ok: false, error: 'edit this one in Google Calendar' };
+    ev = findEvent_(body.ref);
+    if (!ev) return { ok: false, error: 'deadline not found (refresh)' };
+    ev.setTitle(title);
+    if (ev.isAllDayEvent()) ev.setAllDayDate(day);
+    else { var len = ev.getEndTime() - ev.getStartTime(); var at = time ? time.split(':') : [23, 59];
+      var st = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Number(at[0]), Number(at[1])); ev.setTime(st, new Date(st.getTime() + len)); }
+  } else {
+    var cal = calendarFor_('personal') || calendarFor_('primary');
+    if (!cal) return { ok: false, error: 'no personal calendar found' };
+    ev = cal.createAllDayEvent(title, day);
+  }
+  CacheService.getScriptCache().remove('events');
+  return { ok: true };
+}
+
+function deleteDue_(body) {
+  if (!body.ref || (body.ref.cal !== 'personal' && body.ref.cal !== 'primary')) return { ok: false, error: 'delete this one where it came from' };
+  var ev = findEvent_(body.ref);
+  if (!ev) return { ok: false, error: 'deadline not found' };
+  ev.deleteEvent();
+  CacheService.getScriptCache().remove('events');
+  return { ok: true };
 }
 
 /* ---------- How long things take ---------- */

@@ -127,7 +127,8 @@ function buildDeadlines(events, now) {
     // Timed: the start (an exam starts then; a "due" event's start is the earliest it could mean).
     var dueAt = e.allDay ? timeInTitle(e.title, e.start) : e.start;
     var day = e.allDay ? dayKey(e.start) : dayKey(dueAt);
-    return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course) };
+    return { title: parts.title, raw: e.title, course: parts.course, dueAt: dueAt, day: day, src: e.src, tok: tokens(parts.title + " " + parts.course),
+      refs: [{ cal: e.src, id: e.id, start: e.start, allDay: !!e.allDay, rec: !!e.rec }] };   // the calendar entries behind it
   }).filter(function (d) { return d.day >= today; });
 
   var merged = [];
@@ -142,6 +143,7 @@ function buildDeadlines(events, now) {
     if (d.src !== "canvas" && d.title.length < twin.title.length) { twin.title = d.title; twin.raw = d.raw; }
     if (!twin.course && d.course) twin.course = d.course;
     twin.also = (twin.also || []).concat([d.raw]);
+    twin.refs = twin.refs.concat(d.refs);
     for (var k in d.tok) twin.tok[k] = 1;
   });
   merged.sort(function (a, b) {

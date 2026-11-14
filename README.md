@@ -93,7 +93,17 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Classes:** a card per class this semester with its next class, what's due soon and the next work block. Clicking a class (or picking it in the sidebar) filters the to-do list to just that class.
 - **Courses follow your calendar:** the board has the names, colors and title patterns for every course in the four-year plan built in, but only shows the ones on the Classes calendar right now, so it switches over by itself each semester.
 - **Right side:** the night check-in (each block with Done / Partly / Missed, then **Looks right**), the fresh-start offers, the block you're in or the next one with its steps and a focus button, and today's schedule.
+- **Editing:** see "Changing things" below.
 - **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star, F full-screen timer (Esc leaves it, Space starts or pauses).
+
+## Changing things
+
+**On the desktop board** (quick, one-off changes):
+- **Study blocks:** click one in the day list (the arrows page through the past week and the next two), the Now card's **Edit**, or **Edit block** under a deadline. You can change the title, day and time (or nudge it with ← 15 min, 15 min →, Shorter, Longer, Day before, Day after), place, steps (add, rename, tick, reorder, remove, mark as digest), learning mode, and how it went. **Next free slot** moves it to the first gap that fits the 70% rule, and **Duplicate** copies it right after. **Delete** asks twice and offers Undo. Times are typed 24-hour: `930` becomes 09:30.
+- **New block:** **+ Block** on the day list, or **Pick a time…** under a deadline (its name is filled in).
+- **Deadlines:** "Add a deadline" at the top of To do: type a name, pick a day, add a time if there is one, press Enter. It goes on your personal calendar as "Name due 18:00". Open any deadline and use **Edit name or date** to change or delete one you added. Done and star work on everything.
+
+**In Google Calendar** (repeating, structural or bulk changes): classes, sleep, meetings, anything that repeats, colors and sharing, and moving a lot of blocks around a week at once. Every event on the board has a **Google Calendar ↗** link that opens it there. Canvas items change in Canvas; their **Canvas ↗** link opens the assignment when Canvas is read through its feed.
 
 ## Deadlines you can rely on
 
