@@ -474,6 +474,27 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
   </div>
 </div>
 
+<script>
+/* If anything on this page fails to load or run, say so on screen instead of showing a blank page. */
+(function () {
+  var shown = false;
+  function show(msg) {
+    if (shown) return; shown = true;
+    var box = document.createElement("div");
+    box.setAttribute("role", "alert");
+    box.style.cssText = "position:fixed;left:16px;right:16px;bottom:16px;z-index:99;padding:14px 16px;border-radius:12px;background:#7a2e22;color:#fff;font:14px/1.45 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.3)";
+    box.textContent = "Desk Board hit a problem: " + msg + ". Try reloading with Cmd+Shift+R. If it stays, send a screenshot of this.";
+    (document.body || document.documentElement).appendChild(box);
+  }
+  window.addEventListener("error", function (e) {
+    var t = e.target;
+    if (t && t !== window && (t.src || t.href)) { if (t.tagName === "SCRIPT") show("couldn't load " + t.src.split("/").pop()); return; }   // a missing font is fine
+    else show((e.message || "script error") + (e.filename ? " (" + e.filename.split("/").pop() + ":" + e.lineno + ")" : ""));
+  }, true);
+  window.addEventListener("unhandledrejection", function (e) { var r = e.reason; if (r && r.message && !/fetch|network|abort/i.test(r.message)) show(r.message); });
+  window.addEventListener("load", function () { if (typeof buildDeadlines !== "function") show("rules.js didn't load (an old cached copy, or a blocker)"); });
+})();
+</script>
 <script src="rules.js"></script>
 <script src="shorten.js"></script>
 <script>
