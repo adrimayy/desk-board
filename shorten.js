@@ -48,7 +48,7 @@
   ];
   var FILLER = { the: 1, a: 1, an: 1, of: 1, "for": 1, to: 1, with: 1, on: 1, "in": 1, at: 1, my: 1, your: 1 };
   var COURSES = [
-    [/chinese/i, "Chn"], [/writing/i, "UW"], [/phys/i, "Phys"], [/econ/i, "Econ"],
+    [/chinese/i, "Chn"], [/writing/i, "UW"], [/phys/i, "Phys"], [/econ|\b1105\b/i, "Econ"],
     [/literature|lit\s*hum/i, "Lit Hum"], [/programming|computer|\bcs\b/i, "CS"],
     [/intro(duction)? to comp|computing|engi\s*\d/i, "Comp"], [/discrete/i, "Discrete"], [/math|calc|algebra/i, "Math"], [/chem/i, "Chem"], [/bio/i, "Bio"], [/spanish/i, "Span"], [/history/i, "Hist"]
   ];

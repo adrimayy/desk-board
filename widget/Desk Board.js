@@ -52,7 +52,7 @@ const Shorten = (function () { var module = { exports: {} };
   ];
   var FILLER = { the: 1, a: 1, an: 1, of: 1, "for": 1, to: 1, with: 1, on: 1, "in": 1, at: 1, my: 1, your: 1 };
   var COURSES = [
-    [/chinese/i, "Chn"], [/writing/i, "UW"], [/phys/i, "Phys"], [/econ/i, "Econ"],
+    [/chinese/i, "Chn"], [/writing/i, "UW"], [/phys/i, "Phys"], [/econ|\b1105\b/i, "Econ"],
     [/literature|lit\s*hum/i, "Lit Hum"], [/programming|computer|\bcs\b/i, "CS"],
     [/intro(duction)? to comp|computing|engi\s*\d/i, "Comp"], [/discrete/i, "Discrete"], [/math|calc|algebra/i, "Math"], [/chem/i, "Chem"], [/bio/i, "Bio"], [/spanish/i, "Span"], [/history/i, "Hist"]
   ];
@@ -176,12 +176,22 @@ const Shorten = (function () { var module = { exports: {} };
     return out;
   }
 
-  /** Shows the longest version that fits el's width. Needs el to have a fixed or flex-limited width. */
+  /** Shows the longest version that fits on one line. If even the shortest is too long and the element
+      may wrap (it is line-clamped in CSS), takes the longest version that fits in its lines instead,
+      so text is never cut off. */
   function fit(el, versions) {
     if (!el) return;
-    for (var i = 0; i < versions.length; i++) {
+    var fits = function () { return el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1; };
+    var ws = el.style.whiteSpace, i;
+    el.style.whiteSpace = "nowrap";
+    for (i = 0; i < versions.length; i++) {
       el.textContent = versions[i];
-      if (el.scrollWidth <= el.clientWidth + 1) return versions[i];
+      if (fits()) { el.style.whiteSpace = ws; return versions[i]; }
+    }
+    el.style.whiteSpace = ws;
+    for (i = 0; i < versions.length; i++) {
+      el.textContent = versions[i];
+      if (fits()) return versions[i];
     }
     return versions[versions.length - 1];
   }
