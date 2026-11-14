@@ -119,7 +119,14 @@ function setup() {
   var names = calendars_().map(function (c) { return c.key + ': ' + c.cal.getName(); });
   Logger.log('Calendars found -> ' + names.join(' | '));
   Logger.log('Your board key: ' + key);
-  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'dailyDigest') ScriptApp.deleteTrigger(t); });
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'dailyDigest' || t.getHandlerFunction() === 'refreshCanvas') ScriptApp.deleteTrigger(t);
+  });
+  if (PropertiesService.getScriptProperties().getProperty('CANVAS_ICS_URL')) {
+    ScriptApp.newTrigger('refreshCanvas').timeBased().everyMinutes(10).create();
+    refreshCanvas();
+    Logger.log('Canvas feed: refreshed in the background every 10 minutes.');
+  }
   if (DIGEST_HOUR != null) {
     ScriptApp.newTrigger('dailyDigest').timeBased().atHour(DIGEST_HOUR).everyDays(1).create();
     Logger.log('Evening deadline email: every day around ' + DIGEST_HOUR + ':00, only when something is due tomorrow.');
@@ -237,28 +244,50 @@ function events_() {
 
 /* ---------- Canvas feed ---------- */
 
+// Canvas can take 20+ seconds to answer, so a background job (refreshCanvas, every 10 minutes)
+// keeps a fresh copy and the boards never wait on it. Only on a cold start does a request fetch it.
 function canvasFeed_(from, to) {
   var url = PropertiesService.getScriptProperties().getProperty('CANVAS_ICS_URL');
   if (!url) return { ok: false, tried: false };
-  var cache = CacheService.getScriptCache();
-  var text = cache.get('canvasIcs');
-  if (!text) {
-    try {
-      var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true });
-      if (res.getResponseCode() !== 200) return { ok: false, tried: true, error: 'HTTP ' + res.getResponseCode() };
-      text = res.getContentText();
-      if (text.indexOf('BEGIN:VCALENDAR') < 0) return { ok: false, tried: true, error: 'not a calendar feed' };
-      try { cache.put('canvasIcs', text, 15 * 60); } catch (err) { /* over 100 KB: fetch each time */ }
-    } catch (err) {
-      return { ok: false, tried: true, error: String(err && err.message || err).slice(0, 80) };
-    }
+  var cached = CacheService.getScriptCache().get('canvasEvents');
+  var all = cached ? JSON.parse(cached) : null;
+  if (!all) {
+    var got = fetchCanvas_(url);
+    if (!got.ok) return got;
+    all = got.events;
   }
   var lo = from.getTime(), hi = to.getTime();
-  var events = parseIcs_(text, Session.getScriptTimeZone()).filter(function (e) {
+  return { ok: true, tried: true, events: all.filter(function (e) {
     var s = e.allDay ? localDate(e.startDate) : e.start;
     return s >= lo && s < hi;
-  });
-  return { ok: true, tried: true, events: events };
+  }) };
+}
+
+/** Downloads the Canvas feed and caches its events from last week to DEADLINE_DAYS ahead. */
+function fetchCanvas_(url) {
+  try {
+    var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true });
+    if (res.getResponseCode() !== 200) return { ok: false, tried: true, error: 'HTTP ' + res.getResponseCode() };
+    var text = res.getContentText();
+    if (text.indexOf('BEGIN:VCALENDAR') < 0) return { ok: false, tried: true, error: 'not a calendar feed' };
+    var now = Date.now(), lo = now - (PAST_DAYS + 1) * 86400000, hi = now + (DEADLINE_DAYS + 1) * 86400000;
+    var events = parseIcs_(text, Session.getScriptTimeZone()).filter(function (e) {
+      var s = e.allDay ? localDate(e.startDate) : e.start;
+      return s >= lo && s < hi;
+    });
+    try { CacheService.getScriptCache().put('canvasEvents', JSON.stringify(events), 25 * 60); } catch (err) { /* too large: fetch next time */ }
+    return { ok: true, tried: true, events: events };
+  } catch (err) {
+    return { ok: false, tried: true, error: String(err && err.message || err).slice(0, 80) };
+  }
+}
+
+/** Runs every 10 minutes (setup installs it) so the Canvas copy is always warm. */
+function refreshCanvas() {
+  var url = PropertiesService.getScriptProperties().getProperty('CANVAS_ICS_URL');
+  if (!url) return;
+  var got = fetchCanvas_(url);
+  if (got.ok) CacheService.getScriptCache().remove('events');   // boards see new assignments on their next refresh
 }
 
 /** The VEVENTs of an iCalendar file, in the same shape as calendar events. */
