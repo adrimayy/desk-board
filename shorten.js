@@ -172,12 +172,22 @@
     return out;
   }
 
-  /** Shows the longest version that fits el's width. Needs el to have a fixed or flex-limited width. */
+  /** Shows the longest version that fits on one line. If even the shortest is too long and the element
+      may wrap (it is line-clamped in CSS), takes the longest version that fits in its lines instead,
+      so text is never cut off. */
   function fit(el, versions) {
     if (!el) return;
-    for (var i = 0; i < versions.length; i++) {
+    var fits = function () { return el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1; };
+    var ws = el.style.whiteSpace, i;
+    el.style.whiteSpace = "nowrap";
+    for (i = 0; i < versions.length; i++) {
       el.textContent = versions[i];
-      if (el.scrollWidth <= el.clientWidth + 1) return versions[i];
+      if (fits()) { el.style.whiteSpace = ws; return versions[i]; }
+    }
+    el.style.whiteSpace = ws;
+    for (i = 0; i < versions.length; i++) {
+      el.textContent = versions[i];
+      if (fits()) return versions[i];
     }
     return versions[versions.length - 1];
   }

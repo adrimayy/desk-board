@@ -134,8 +134,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .fs-time .seg { font-size: min(40vw, 62vh); }
 .fs.is-rest .fs-time { color: var(--ink-soft); }
 .fs-what { text-align: center; min-width: 0; }
-.fs-title { font-size: clamp(22px, 6vh, 36px); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fs-step { font-size: clamp(17px, 4.2vh, 24px); line-height: 1.2; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-title { font-size: clamp(22px, 6vh, 36px); line-height: 1.15; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.fs-step { font-size: clamp(17px, 4.2vh, 24px); line-height: 1.2; color: var(--ink-soft); overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .fs-step:empty, .fs-title:empty { display: none; }
 .fs-bar { display: flex; align-items: center; gap: 10px; }
 .fs-tally { flex: 1; text-align: center; font-size: 19px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -152,8 +152,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .col { display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; }
 /* Lines never squeeze: when space runs out, the lowest lines drop off instead. */
 .col > *, .top, .checkin { flex-shrink: 0; }
-.now-title { font-size: 33px; line-height: 1.2; margin-bottom: -2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.now-meta { font-size: 19px; line-height: 1.25; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-title { font-size: 33px; line-height: 1.02; margin-bottom: -2px; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.now-meta { font-size: 19px; line-height: 1.1; color: var(--ink-soft); overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .steps { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .steps li { display: flex; gap: 8px; min-width: 0; font-size: 22px; line-height: 1.2; }
 .steps li::before { content: ""; flex: none; width: 0.5em; height: 0.5em; margin-top: 0.3em; border: 2px solid var(--ink-soft); }
@@ -171,11 +171,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .steps li.tap:active { opacity: 0.6; }
 .steps li:not(.first) { color: var(--ink-soft); font-size: 20px; }
 .steps .lead { display: none; }
-.steps .txt { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.steps .txt { flex: 1 1 auto; min-width: 0; line-height: 1.05; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .cells { display: flex; gap: 2px; margin-top: 4px; }
 .cells span { flex: 1; height: 9px; background: rgba(21, 48, 27, 0.12); }
 .cells span.on { background: var(--ink); }
-.later { font-size: 19px; line-height: 1.25; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: auto; }
+.later { font-size: 19px; line-height: 1.1; color: var(--ink-soft); overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-top: auto; flex-shrink: 0; }
 
 .due-head { display: flex; justify-content: space-between; gap: 8px; }
 /* One shared grid for all rows: the day column is as wide as its widest label ("Today", "11/14")
@@ -186,9 +186,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .due-row .rest .t { flex: 1 1 auto; }
 .due-row .rest .meta { flex: none; }
 @supports not (grid-template-columns: subgrid) { .due-row { grid-template-columns: minmax(2.8em, max-content) minmax(0, 1fr); } }
-.due-more-row { grid-column: 1 / -1; font-size: 18px; line-height: 1.2; color: var(--ink-soft); padding: 2px 4px 0; }
+.due-more-row { grid-column: 1 / -1; font-size: 18px; line-height: 1.1; color: var(--ink-soft); padding: 2px 4px 0; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .due-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; column-gap: 10px; font-size: 21px; line-height: 1.2; align-items: baseline; padding: 0 4px; }
-.due-row .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.due-row .t { min-width: 0; line-height: 1.05; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .due-row .meta { white-space: nowrap; color: var(--ink-soft); }
 .due-row.soon-0 { background: var(--ink); color: var(--lcd-hi); }
 .due-row.soon-0 .meta { color: var(--lcd); }
@@ -750,8 +750,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     more.textContent = all.length ? "time planned" : "";
     if (pick.hidden.length) {
       var extra = document.createElement("li"); extra.className = "due-more-row";
-      extra.textContent = "+" + pick.hidden.length + " more · next " + dueDayLabel(pick.next.day, now).text + " " + shortText(pick.next.raw || pick.next.title, 18);
       list.append(extra);
+      var head = "+" + pick.hidden.length + " more · next " + dueDayLabel(pick.next.day, now).text + " ";
+      Shorten.fit(extra, [60, 32, 24, 18, 12].map(function (n) { return head + shortText(pick.next.raw || pick.next.title, n); }));
     }
     // Never say "nothing due" unless the calendar actually loaded.
     note.hidden = all.length > 0 || !ready();
@@ -838,7 +839,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       card.classList.add("is-live");
       label.textContent = "Now";
       fitTitle(title, cur.title);
-      meta.textContent = "Until " + fmtTime(cur.end) + " · " + fmtDur(cur.end - t) + " left" + (cur.where && cur.steps.length ? " · " + cur.where : "") + (next ? " · then " + shortText(next.title, 22) : "");
+      var base = "Until " + fmtTime(cur.end) + " · " + fmtDur(cur.end - t) + " left" + (cur.where && cur.steps.length ? " · " + cur.where : "");
+      Shorten.fit(meta, next ? [40, 22, 14].map(function (n) { return base + " · then " + shortText(next.title, n); }).concat([base]) : [base]);
       var span = cur.end - cur.start, lit = span > 0 ? Math.round(Math.min(1, (t - cur.start) / span) * 10) : 0;
       var cells = bar.children;
       for (var ci = 0; ci < cells.length; ci++) cells[ci].className = ci < lit ? "on" : "";
@@ -967,11 +969,16 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var t = now.getTime(), later = $("#later");
     var upcoming = today.timed.filter(function (i) { return i.start > t; });
     upcoming = upcoming.slice(1);   // the next block is already shown: as "Next", or as "then …" under Now
-    var parts = upcoming.slice(0, 3).map(function (i) { return clockShort(i.start) + " " + shortText(i.title, 16); });
-    var allDay = today.chips.map(function (e) { return shortText(e.title, 20); });
+    // Longest wording that fits: full titles first, then tighter character budgets.
+    var line = function (head, items, label) {
+      return [60, 32, 24, 16, 11].map(function (n) {
+        return head + items.map(function (i) { return label(i) + shortText(i.title, n); }).join(" · ");
+      });
+    };
+    var parts = upcoming.slice(0, 3);
     if (!ready()) later.textContent = "";
-    else if (parts.length) later.textContent = "Later: " + parts.join(" · ");
-    else if (allDay.length) later.textContent = "Today: " + allDay.join(" · ");
+    else if (parts.length) Shorten.fit(later, line("Later: ", parts, function (i) { return clockShort(i.start) + " "; }));
+    else if (today.chips.length) Shorten.fit(later, line("Today: ", today.chips, function () { return ""; }));
     else later.textContent = "";
 
     var sync = $("#sync");
