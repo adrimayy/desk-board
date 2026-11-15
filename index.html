@@ -130,21 +130,28 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 }
 .fs-top { display: flex; justify-content: space-between; gap: 12px; }
 .fs-top .label { font-size: 13px; }
-.fs-time { flex: 1; min-height: 0; display: grid; place-items: center; border: 0; background: none; padding: 0; color: var(--ink); font-family: var(--f-pixel); }
-.fs-time .seg { font-size: min(40vw, 62vh); }
+/* The clock and what you're working on sit together in the middle; the controls stay at the bottom. */
+.fs-time { flex: 0 1 auto; min-height: 0; margin-top: auto; display: grid; place-items: center; border: 0; background: none; padding: 0; color: var(--ink); font-family: var(--f-pixel); }
+.fs-time .seg { font-size: min(40vw, 56vh); }
+/* Jersey 10 draws its digits a little left of their box; nudge them so the ink is centered. */
+.fs .seg { transform: translateX(0.028em); }
 .fs.is-rest .fs-time { color: var(--ink-soft); }
-.fs-what { text-align: center; min-width: 0; }
+.fs-what { text-align: center; min-width: 0; margin: 1.5vh 0 auto; }
 .fs-title { font-size: clamp(22px, 6vh, 36px); line-height: 1.15; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .fs-step { font-size: clamp(17px, 4.2vh, 24px); line-height: 1.2; color: var(--ink-soft); overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .fs-step:empty, .fs-title:empty { display: none; }
-.fs-bar { display: flex; align-items: center; gap: 10px; }
-.fs-tally { flex: 1; text-align: center; font-size: 19px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Three columns of equal outer width, so the tally sits exactly in the middle. */
+.fs-bar { display: grid; grid-template-columns: 1fr minmax(0, max-content) 1fr; align-items: center; gap: 10px; }
+.fs-group { display: flex; gap: 10px; }
+.fs-group.end { justify-content: flex-end; }
+.fs-tally { text-align: center; font-size: 19px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fs-btn { font: 400 13px/1 var(--f-label); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); background: transparent; border: 2px solid var(--ink); border-radius: 8px; padding: 12px 16px; min-width: 76px; }
 .fs-btn.primary { background: var(--ink); color: var(--lcd-hi); }
 .fs-btn:active { transform: translateY(1px); }
 @media (orientation: portrait) {
   .fs-time .seg { font-size: min(46vw, 38vh); }
-  .fs-bar { flex-wrap: wrap; justify-content: center; }
+  .fs-bar { display: flex; flex-wrap: wrap; justify-content: center; }
+  .fs-group { display: contents; }
   .fs-tally { flex-basis: 100%; order: -1; }
 }
 
@@ -374,12 +381,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
     <div class="fs-step" id="fs-step"></div>
   </div>
   <div class="fs-bar">
-    <button class="fs-btn primary" id="fs-toggle" type="button">Start</button>
+    <div class="fs-group"><button class="fs-btn primary" id="fs-toggle" type="button">Start</button>
     <button class="fs-btn" id="fs-reset" type="button">Done</button>
-    <button class="fs-btn" id="fs-discard" type="button" hidden>Discard</button>
+    <button class="fs-btn" id="fs-discard" type="button" hidden>Discard</button></div>
     <span class="fs-tally" id="fs-tally"></span>
-    <button class="fs-btn" id="fs-mode" type="button">25-min rounds</button>
-    <button class="fs-btn" id="fs-exit" type="button">Exit</button>
+    <div class="fs-group end"><button class="fs-btn" id="fs-mode" type="button">25-min rounds</button>
+    <button class="fs-btn" id="fs-exit" type="button">Exit</button></div>
   </div>
 </section>
 
