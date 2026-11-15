@@ -495,7 +495,7 @@ function timedFor(events, date) {
    just like two hours of an essay); "pomo" runs 25-minute rounds with 5-minute breaks.
    Either way the minutes are logged to the day and to the Study block they were for. */
 var TIMER_LEN = { focus: 25 * 60000, rest: 5 * 60000 };
-function timerFresh(mode) { return { mode: mode === "pomo" ? "pomo" : "flow", phase: "focus", endAt: null, left: TIMER_LEN.focus, since: null, acc: 0, cap: null, blk: null }; }
+function timerFresh(mode) { return { mode: mode === "pomo" ? "pomo" : "flow", phase: "focus", endAt: null, left: TIMER_LEN.focus, since: null, acc: 0, cap: null, blk: null, due: null }; }
 function timerClean(x) {
   x = x || {};
   var num = function (v) { return typeof v === "number" && isFinite(v) ? v : null; };
@@ -505,7 +505,12 @@ function timerClean(x) {
   t.left = typeof x.left === "number" ? Math.max(0, Math.min(x.left, TIMER_LEN.focus)) : (t.phase === "rest" ? TIMER_LEN.rest : TIMER_LEN.focus);
   t.since = num(x.since); t.acc = Math.max(0, num(x.acc) || 0); t.cap = num(x.cap);
   t.blk = x.blk && x.blk.id ? { cal: String(x.blk.cal || "study"), id: String(x.blk.id), start: Number(x.blk.start) } : null;
+  t.due = timerDue(x.due);
   return t;
+}
+// The deadline a timer is for, when it was started from one (outside a Study block, or from its row).
+function timerDue(d) {
+  return d && d.key ? { key: String(d.key).slice(0, 200), title: String(d.title || "").slice(0, 120) } : null;
 }
 function timerRunning(p) { return p.mode === "flow" ? !!p.since : !!p.endAt; }
 function flowElapsed(p, t) { return (p.acc || 0) + (p.since ? Math.max(0, t - p.since) : 0); }
@@ -531,9 +536,11 @@ function timerButton(p) {
   if (p.mode === "flow") return p.since ? "Pause" : p.acc ? "Resume" : "Start";
   return p.endAt ? "Pause" : (!p.endAt && p.left < TIMER_LEN[p.phase]) ? "Resume" : "Start";
 }
-// Start or pause. `blk` is the Study block on now (if any), so the time is logged to it.
-function timerToggle(p, t, blk) {
+// Start or pause. `blk` is the Study block on now (if any), so the time is logged to it;
+// `due` is the deadline it's for when you started it from one ({ key, title }).
+function timerToggle(p, t, blk, due) {
   p = timerClean(p);
+  if (!p.due && due && !timerRunning(p)) p.due = timerDue(due);
   if (p.mode === "flow") {
     if (p.since) { p.acc += Math.max(0, t - p.since); p.since = null; return p; }
     p.since = t;
@@ -548,7 +555,7 @@ function timerToggle(p, t, blk) {
 // Count-up "Done": what to log, and a fresh timer.
 function timerFinish(p, t) {
   p = timerClean(p);
-  return { minutes: Math.round(flowElapsed(p, t) / 60000), block: p.blk, timer: timerFresh("flow") };
+  return { minutes: Math.round(flowElapsed(p, t) / 60000), block: p.blk, due: p.due, timer: timerFresh("flow") };
 }
 // Every second: a finished round or break moves on; a forgotten count-up pauses itself.
 function timerTick(p, t) {
@@ -561,6 +568,28 @@ function timerTick(p, t) {
   var next = timerFresh("pomo");
   if (wasFocus) { next.phase = "rest"; next.endAt = ended + TIMER_LEN.rest; next.left = TIMER_LEN.rest; }
   return { timer: next, ended: ended, wasFocus: wasFocus };
+}
+
+/* ---------- Free time ----------
+   Between blocks the boards suggest a start on the most urgent thing: starred first, then
+   whatever is due soonest (in the next two weeks). `starred(d)` is optional. */
+function pickSuggestion(ds, now, starred) {
+  var t = now.getTime();
+  return ds.filter(function (d) { var e = dueEndOf(d); return e >= t && e - t < 14 * DAY; })
+    .sort(function (a, b) {
+      var sa = starred && starred(a) ? 0 : 1, sb = starred && starred(b) ? 0 : 1;
+      return sa - sb || dueEndOf(a) - dueEndOf(b);
+    })[0] || null;
+}
+// Is now a gap worth using? No timed event on, and the next one (if any today) 30+ minutes away.
+// Returns { until } (null = nothing else today) or null when it isn't a gap.
+var GAP_MIN = 30;
+function freeGap(timed, t) {
+  var real = timed.filter(function (i) { return !/^sleep\b/i.test(i.title); });
+  if (real.some(function (i) { return i.start <= t && i.end > t; })) return null;
+  var next = real.filter(function (i) { return i.start > t; })[0];
+  if (next && next.start - t < GAP_MIN * 60000) return null;
+  return { until: next ? next.start : null, next: next || null };
 }
 
 

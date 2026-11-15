@@ -858,6 +858,7 @@ function cleanTimer_(t) {
   t = t || {};
   var num = function (x) { return typeof x === 'number' && isFinite(x) ? x : null; };
   var blk = t.blk && typeof t.blk === 'object' && t.blk.id ? { cal: String(t.blk.cal || 'study'), id: String(t.blk.id), start: Number(t.blk.start) } : null;
+  var due = t.due && typeof t.due === 'object' && t.due.key ? { key: String(t.due.key).slice(0, 200), title: String(t.due.title || '').slice(0, 120) } : null;
   return {
     mode: t.mode === 'pomo' ? 'pomo' : 'flow',
     phase: t.phase === 'rest' ? 'rest' : 'focus',
@@ -866,7 +867,8 @@ function cleanTimer_(t) {
     since: num(t.since),
     acc: Math.max(0, Math.min(num(t.acc) || 0, 6 * 3600000)),
     cap: num(t.cap),
-    blk: blk
+    blk: blk,
+    due: due
   };
 }
 
@@ -878,6 +880,7 @@ function state_() {
     timer: cleanTimer_(s.timer),
     log: obj(s.log),             // focus rounds finished per day
     worked: obj(s.worked),       // minutes worked per day, from either timer mode
+    dueWorked: obj(s.dueWorked), // minutes worked per deadline, when the timer was started from one
     lastWorked: typeof s.lastWorked === 'number' ? s.lastWorked : null,
     lastDoneEnd: typeof s.lastDoneEnd === 'number' ? s.lastDoneEnd : null,
     doneDue: obj(s.doneDue),     // deadlines you've marked finished: key -> when
@@ -894,7 +897,7 @@ function saveState_(s) {
   var cutoff = Utilities.formatDate(new Date(Date.now() - 45 * 86400000), tz, 'yyyy-MM-dd');
   [s.log, s.active, s.worked].forEach(function (m) { Object.keys(m || {}).forEach(function (k) { if (k < cutoff) delete m[k]; }); });
   // Deadline keys start with their due date ("2026-11-05|…"), so old ones can be dropped.
-  [s.doneDue, s.layout].forEach(function (m) { Object.keys(m || {}).forEach(function (k) { if (k.slice(0, 10) < cutoff) delete m[k]; }); });
+  [s.doneDue, s.layout, s.dueWorked].forEach(function (m) { Object.keys(m || {}).forEach(function (k) { if (k.slice(0, 10) < cutoff) delete m[k]; }); });
   PropertiesService.getScriptProperties().setProperty('STATE', JSON.stringify(s));
 }
 
@@ -941,6 +944,7 @@ function worked_(body) {
   s.lastWorked = ended;
   var day = Utilities.formatDate(new Date(ended), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   s.worked[day] = (Number(s.worked[day]) || 0) + minutes;
+  if (body.due && body.due.key) { var dk = String(body.due.key).slice(0, 200); s.dueWorked[dk] = (Number(s.dueWorked[dk]) || 0) + minutes; }
   var ev = body.block && body.block.cal === 'study' ? findEvent_(body.block) : null;
   if (ev) {
     ev.setDescription(addWorked_(String(ev.getDescription() || ''), minutes));

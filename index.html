@@ -423,14 +423,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 
     <section class="info-sec">
       <h3>Clock and focus timer</h3>
-      <p><b>Start</b> runs a 25-minute focus round. When it ends the board chimes and a 5-minute break starts on its own; the next round waits for Start. <b>Reset</b> goes back to a fresh 25:00.</p>
+      <p><b>Start</b> counts up from zero for as long as you work; <b>Done</b> logs the minutes to the day, the block, and the deadline it was for. Prefer rounds? Switch to 25-minute rounds in full screen.</p>
       <p><b>Full screen:</b> tap the timer to fill the screen with it, along with the block and its next step. Tap the big time or <b>Exit</b> to come back. It stays full screen if the page reloads.</p>
       <p>The squares under the timer count today's finished rounds. During a learning block the break first says what to digest (for example "add it to your map").</p>
     </section>
 
     <section class="info-sec">
       <h3>Now, Next and Tomorrow</h3>
-      <p><b>Now</b> is the block you're in, <b>Next</b> is the next one today, and late at night <b>Tomorrow</b> shows your first block of the next day.</p>
+      <p><b>Now</b> is the block you're in and <b>Next</b> is the next one today. With 30+ free minutes before it, <b>Free until …</b> shows the most urgent thing to start instead, and Start puts the timer on it. Late at night <b>Tomorrow</b> shows your first block of the next day.</p>
       <ul class="info-key-list">
         <li><span class="ik box"></span>A step. Tap it when it's done; it's ticked on the calendar too.</li>
         <li><span class="ik box diamond"></span>A digest step: process what you just read before reading more.</li>
@@ -841,8 +841,32 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     var live = today.timed.filter(function (i) { return i.start <= t && i.end > t; });
     var cur = live.sort(function (a, b) { return b.start - a.start; })[0];
     var next = today.timed.filter(function (i) { return i.start > t; })[0];
+    // Free time (no block on, the next one 30+ min away, daytime): suggest the most urgent thing.
+    var hr = now.getHours();
+    var gap = hr >= 9 && hr < 23 ? freeGap(today.timed, t) : null;
+    gapDue = gap ? pickSuggestion(liveDeadlines(now), now) : null;
+    var curStudy = cur && cur.src === "study";
+    var onDue = pomo.due && !curStudy && (timerRunning(pomo) || flowElapsed(pomo, t) > 0) ? pomo.due : null;
 
-    if (cur) {
+    if (onDue) {
+      gapDue = null;
+      card.classList.add("is-live");
+      label.textContent = timerRunning(pomo) ? "Working on" : "Paused";
+      fitTitle(title, onDue.title);
+      var od = liveDeadlines(now).filter(function (d) { return dueKey(d) === onDue.key; })[0];
+      var ob = od ? "Due " + dueDayLabel(od.day, now).text + (od.dueAt ? " " + fmtTime(od.dueAt) : "") : "";
+      Shorten.fit(meta, next ? [40, 22, 14].map(function (n) { return (ob ? ob + " · " : "") + "next " + fmtTime(next.start) + " " + shortText(next.title, n); }).concat([ob]) : [ob]);
+      bar.hidden = true; renderModes(null); fillSteps([], false);
+    } else if (gapDue) {
+      label.textContent = gap.until ? "Free until " + fmtTime(gap.until) : "Free now";
+      fitTitle(title, gapLabel(gapDue));
+      var gb = "Due " + dueDayLabel(gapDue.day, now).text + (gapDue.dueAt ? " " + fmtTime(gapDue.dueAt) : "");
+      var gp = plannedForD(gapDue, now);
+      gb += gp.min ? " · " + fmtHours(gp.min) + " planned" : " · nothing planned";
+      Shorten.fit(meta, gap.next ? [40, 22, 14].map(function (n) { return gb + " · next " + fmtTime(gap.next.start) + " " + shortText(gap.next.title, n); }).concat([gb]) : [gb]);
+      bar.hidden = true; renderModes(null);
+      fillSteps([gap.until && gap.until - t < 50 * 60000 ? "Press Start: just the first 15 min" : "Press Start: one 25-min round on it"], true, null);
+    } else if (cur) {
       card.classList.add("is-live");
       label.textContent = "Now";
       fitTitle(title, cur.title);
@@ -885,6 +909,9 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       }
     }
   }
+  // What a suggested deadline is called on the board (and on the timer when you start it).
+  var gapDue = null;
+  function gapLabel(d) { var v = Shorten.shorten(d.raw || d.title); return v[0] || d.title; }
   /* Steps are checkboxes: tap one to tick it off (it's written back to the calendar
      as "[x]"), tap the "done" row to untick the last one. */
   function renderModes(ev) {
@@ -975,7 +1002,8 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function renderToday(now, today) {
     var t = now.getTime(), later = $("#later");
     var upcoming = today.timed.filter(function (i) { return i.start > t; });
-    upcoming = upcoming.slice(1);   // the next block is already shown: as "Next", or as "then …" under Now
+    // The next block is already shown (as "Next", or "then …" under Now), except when free time is.
+    if (!gapDue) upcoming = upcoming.slice(1);
     // Longest wording that fits: full titles first, then tighter character budgets.
     var line = function (head, items, label) {
       return [60, 32, 24, 16, 11].map(function (n) {
@@ -1121,9 +1149,11 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   function toggleTimer() {
     ensureAudio();
     var t = Date.now();
-    pomo = timerToggle(pomo, t, ready() ? studyBlockAt(t) : null);
+    var blk = ready() ? studyBlockAt(t) : null;
+    // In free time, Start goes on the suggested deadline so the minutes count toward it.
+    pomo = timerToggle(pomo, t, blk, !blk && gapDue ? { key: dueKey(gapDue), title: gapLabel(gapDue) } : null);
     pushTimer();
-    renderTimer(new Date());
+    renderAll(false);
   }
   // Count-up: log the minutes (to the block it started in) and start fresh. 25-min mode: reset the round.
   function resetTimer() {
@@ -1134,7 +1164,7 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       if (f.minutes >= 1) {
         var k = dayKey(t); worked[k] = (Number(worked[k]) || 0) + f.minutes;
         holdServerTimerUntil = Date.now() + 30000;
-        apiPost({ action: "worked", minutes: f.minutes, ended: t, block: f.block, timer: pomo }).then(afterPost, function () {
+        apiPost({ action: "worked", minutes: f.minutes, ended: t, block: f.block, due: f.due, timer: pomo }).then(afterPost, function () {
           holdServerTimerUntil = 0; worked[k] -= f.minutes; note("That time didn't save. Check your connection.", 8000);
         });
         note("Logged " + fmtMins(f.minutes) + ".", 4000);
@@ -1143,14 +1173,14 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
       pomo = timerFresh("pomo");
       pushTimer();
     }
-    renderTimer(new Date());
+    renderAll(false);
   }
-  function discardTimer() { pomo = timerFresh(pomo.mode); pushTimer(); renderTimer(new Date()); }
+  function discardTimer() { pomo = timerFresh(pomo.mode); pushTimer(); renderAll(false); }
   function switchMode() {
     if (timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc)) { note("Finish or discard this one first.", 4000); return; }
     pomo = timerFresh(pomo.mode === "flow" ? "pomo" : "flow");
     pushTimer();
-    renderTimer(new Date());
+    renderAll(false);
   }
   $("#timer-toggle").addEventListener("click", toggleTimer);
   $("#timer-reset").addEventListener("click", resetTimer);
@@ -1179,7 +1209,11 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
     $("#fs-mode").textContent = pomo.mode === "flow" ? "25-min rounds" : "Count up";
     $("#fs-mode").disabled = timerRunning(pomo);
     var blk = ready() ? studyBlockAt(t) : null, title = "", step = "";
-    if (blk) {
+    if (pomo.due && !(blk && pomo.blk && pomo.blk.id === blk.id)) {
+      title = pomo.due.title;
+      var fd = ready() ? liveDeadlines(now).filter(function (d) { return dueKey(d) === pomo.due.key; })[0] : null;
+      step = fd ? "Due " + dueDayLabel(fd.day, now).text + (fd.dueAt ? " " + fmtTime(fd.dueAt) : "") : "";
+    } else if (blk) {
       title = blk.title;
       var steps = blk.steps.map(function (x) { return typeof x === "string" ? { text: x, done: false } : x; });
       var open = steps.filter(function (x) { return !stepState(blk, x); });

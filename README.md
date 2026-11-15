@@ -47,6 +47,7 @@ Hold the date for one second to reopen setup. Press the **i** key for a guide to
 - **Steps:** tap a step on the board to tick it off; it's saved on the calendar as `- [x] `. Tap the "steps done" row to untick the last one. You can also type `[x]` yourself in Google Calendar.
 - **Due:** see "Deadlines you can rely on" below. The right column is time already blocked on your Study Calendar before it's due. Only the most urgent deadline with nothing blocked gets a red `0h`. Finished early? Tap the row, then tap it again: it's marked done on every board, with an Undo for a few seconds.
 - **Timer:** counts up by default. Start when you begin anything (15 minutes of Anki counts as much as a two-hour essay), Pause if you step away, and **Done** logs the minutes to the day and to the Study block you started it in (as a `Worked: 1h 05m` line). It pauses itself 30 minutes after the block ends (or after 2 hours without a block) so a forgotten timer doesn't inflate anything. The tally shows minutes worked today and this week. If you like rounds, switch to **25-minute rounds** (in full screen, or the switch next to the timer on a computer); each finished round logs 25 minutes. During a learning block the break first says what to digest.
+- **Free time:** between blocks (no block on, the next one 30+ minutes away, 09:00–23:00) both boards show "Free until 13:00" with the most urgent thing to start: starred first, then whatever is due soonest in the next two weeks. Start puts the timer on it, and Done logs the minutes to that deadline as well as to the day.
 - **Estimates** in the weekly review also say how long similar blocks actually took when the timer tracked them.
 - **Full-screen timer:** tap the timer (phone) or click it or press **F** (computer) to fill the screen with the countdown, the block and its next step. Tap the big time, press **Esc** or **F**, or use **Exit** to come back. On a computer it also goes browser full screen.
 - **Offline:** the board keeps the last calendar copy, so a relaunch without Wi-Fi still shows your day (marked Offline with the last sync time).
@@ -89,14 +90,17 @@ To pin a layout on one device, add `?view=board` or `?view=desk` to the address 
 It's laid out like Google Tasks with a Google Classroom side: a sidebar on the left, the to-do list in the middle, and what's happening now down the right.
 
 - **To do:** everything due in the next six weeks as a task list, grouped into Starred, Today, Tomorrow, This week, Later and Completed. Later and Completed start folded (Later's header still names what's next). Something whose due time passed today stays in Today, marked "Passed", until you tick it or the day ends. Each row shows the class, how much time is planned and when the next block is. Only the most urgent deadline with no time planned is flagged. Click a row (or press Enter) to open it: due date and countdown, Find 1h / 2h, the next block's steps as checkboxes, and the blocks after that.
+- **Top of the list:** what to do now, with the button that starts it: the block you're in (or the next one, with **Start early**), the deadline the timer is on, or in free time the most urgent thing with **Start** and **Plan**. Under it, exams in the next 10 days with how much prep is on the calendar (red when it's under 3 hours with less than 4 days to go).
+- **Start from any row:** hover a row and press **Start** (or G). The timer goes on that deadline and opens full screen; time already running for something else is logged first. The row shows the running time while it's on, and "Xm worked" afterwards.
+- **Plan it:** a deadline in the next two weeks with nothing planned has a **Plan 1h/1.5h/2h** button right on the row (2h for essays and exams, 1.5h for psets, labs and reports, 1h otherwise). It adds a Study block in the next free slot before it's due.
 - **Mark done:** the circle on a row, the D key, or dragging it to Completed. Finished assignments also disappear from the phone board and widget.
 - **Star and reorder:** the star on a row (or S) pins it to Starred at the top. Drag rows to reorder them inside a group. Dates can't be changed by dragging. The order and stars are saved to the calendar script, so they're the same on every computer.
 - **Find 1h / 2h:** adds a Study block in the first free slot before it's due.
 - **Classes:** a card per class this semester with its next class, what's due soon and the next work block. Clicking a class (or picking it in the sidebar) filters the to-do list to just that class.
 - **Courses follow your calendar:** the board has the names, colors and title patterns for every course in the four-year plan built in, but only shows the ones on the Classes calendar right now, so it switches over by itself each semester.
-- **Right side:** the night check-in (each block with Done / Partly / Missed, then **Looks right**), the fresh-start offers, the block you're in or the next one with its steps and a focus button, and today's schedule.
+- **Right side:** the night check-in (each block with Done / Partly / Missed, then **Looks right**), the fresh-start offers, and today's schedule.
 - **Editing:** see "Changing things" below.
-- **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star, F full-screen timer (Esc leaves it, Space starts or pauses).
+- **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star, G start the timer on it, F full-screen timer (Esc leaves it, Space starts or pauses). The list is folded under **Keyboard shortcuts** in the sidebar.
 
 ## Changing things
 
