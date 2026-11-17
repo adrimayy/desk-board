@@ -71,7 +71,7 @@
       .replace(/\bweek\s*\d+\b/gi, " ")                               // "Week 6"
       .replace(/\(\s*(see description|optional|tentative)\s*\)/gi, " ")
       .replace(/\(\s*due[^)]*\)/gi, " ")                              // "(due Sun)"
-      .replace(/\bdue\b(\s+\d{1,2}(:\d{2})?\s*(am|pm))?:?/gi, " ")    // "due 6 PM", "due:"
+      .replace(/\bdue\b(\s+(at|by))?(\s+\d{1,2}(:\d{2}\s*(am|pm)?|\s*(am|pm)))?:?/gi, " ")    // "due 6 PM", "due 18:00", "due:"
       .replace(/\s+([:,])/g, "$1").replace(/^[\s:·,–-]+|[\s:·,–-]+$/g, "");
     s = squash(s);
     if (tag && s.toLowerCase().indexOf(tag.toLowerCase()) < 0) {

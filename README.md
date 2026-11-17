@@ -100,6 +100,12 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Courses follow your calendar:** the board has the names, colors and title patterns for every course in the four-year plan built in, but only shows the ones on the Classes calendar right now, so it switches over by itself each semester.
 - **Right side:** the night check-in (each block with Done / Partly / Missed, then **Looks right**), the fresh-start offers, and today's schedule.
 - **Editing:** see "Changing things" below.
+- **Adding things:** **New task** (or N) opens one box for tasks and blocks. Type it the way you'd say it and the chips underneath fill themselves in: `Econ PS7 fri 18:00`, `lit hum essay tmr !` (! stars it), `chinese quiz wed before class` (due when that class starts), `reading response nov 20 #econ`, `in 3 days`, `next mon 9am`. Click a chip to change it: due day (quick picks plus a month calendar), time, class, type (exam, quiz, essay, reading…), star, notes. Switch to **Block** (or press B) for Study time: day, start, length (30m–3h), class, place, and which deadline it's for; it warns when it overlaps something. Enter adds and keeps the box open for the next one. Each group also has its own "+ Add a task" row with the date filled in.
+- **Ctrl/⌘ K:** search tasks, blocks and classes, or type a task anywhere and add it as a task or a block.
+- **Right-click anything** (or the ⋯ on a row, or M): rename, change date, time, class or type, move to tomorrow, plan time, start the timer, duplicate, done, delete. Double-click a name to rename it in place; click a due date to move it. Delete removes your own tasks and blocks (Canvas items change in Canvas).
+- **Timeline:** today on the right is a real day view. Drag on empty time to make a block (a small box asks for the title, length and class), drag a block to move it, drag its bottom edge to change its length, drop a to-do on it to plan time for it, Alt ↑/↓ nudges a selected block 15 minutes.
+- **Undo:** every change shows up right away with a toast at the bottom; most have **Undo**, and Ctrl/⌘ Z undoes the last one.
+- **Class and type** are saved as part of the name ("Econ PS7", "… exam"), because that's what every board, the widget and the evening email read. **Notes** go in the calendar event's description.
 - **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star, G start the timer on it, F full-screen timer (Esc leaves it, Space starts or pauses). The list is folded under **Keyboard shortcuts** in the sidebar.
 
 ## Changing things

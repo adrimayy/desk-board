@@ -149,14 +149,9 @@ a.gcal:hover { text-decoration: underline; }
 .agenda li:hover { background: var(--card-2); }
 .today-card .day-nav { display: flex; align-items: center; gap: 4px; }
 .today-card .day-nav h2 { flex: 1; }
-.composer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 20px; border-bottom: 1px solid var(--line); }
 .composer .plus { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--sage-deep); color: var(--sage-deep); display: grid; place-items: center; font-weight: 700; line-height: 1; flex: none; margin-right: 4px; }
-.composer .inp { flex: 1 1 220px; background: transparent; border-color: transparent; padding: 6px 8px; }
-.composer .inp:hover { border-color: var(--line); }
-.composer input[type=date], .composer .inp.time { flex: 0 0 auto; width: auto; border-color: var(--line); }
 .inp.time { width: 5.2em !important; flex: 0 0 auto !important; text-align: center; font-variant-numeric: tabular-nums; }
 .inp.bad { outline: 2px solid var(--alert); }
-.composer:not(.open) .more { display: none; }
 
 /* ---------- Full-screen focus (styles) ---------- */
 .fs { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 28px 40px 32px; background: var(--page); }
@@ -230,7 +225,7 @@ a.gcal:hover { text-decoration: underline; }
 .drop-hint { height: 3px; margin: 0 20px 0 58px; border-radius: 3px; background: var(--sage-deep); }
 
 .task { position: relative; }
-.task-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto 32px; align-items: center; gap: 4px 14px; padding: 9px 12px 9px 20px; cursor: pointer; border-radius: 0; }
+.task-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto 32px 28px; align-items: center; gap: 4px 14px; padding: 9px 12px 9px 20px; cursor: pointer; border-radius: 0; }
 .task-row:hover { background: var(--card-2); }
 .task.dragging { opacity: 0.35; }
 .task:focus-visible { outline: none; }
@@ -356,6 +351,7 @@ a.gcal:hover { text-decoration: underline; }
 .exam .nm { font-weight: 700; font-size: 0.95rem; line-height: 1.25; overflow-wrap: anywhere; }
 .exam .when { font-size: 0.82rem; color: var(--ink-2); }
 .exam .prep { font-size: 0.78rem; font-weight: 600; color: var(--ok); }
+.exam .prep.none { color: var(--ink-3); }
 .exam.thin .prep { color: var(--alert); }
 .today-card { padding: 16px 16px 12px; }
 .today-card h2 { margin: 0; font-size: 0.95rem; font-weight: 700; }
@@ -424,11 +420,155 @@ a.gcal:hover { text-decoration: underline; }
   .tasks .none { padding-left: 54px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* ---------- Adding and editing ---------- */
+/* Composer: one box for tasks and blocks */
+.composer { display: flex; flex-direction: column; gap: 8px; padding: 12px 18px; border-bottom: 1px solid var(--line); flex-wrap: nowrap; align-items: stretch; }
+.composer.open { background: var(--card); box-shadow: inset 0 0 0 2px var(--sage-deep); border-radius: var(--radius) var(--radius) 0 0; padding-bottom: 12px; }
+.composer .c-row { display: flex; align-items: center; gap: 8px; }
+.composer .c-inp { flex: 1 1 auto; min-width: 0; font-size: 1rem; background: transparent; border-color: transparent; padding: 7px 8px; }
+.composer .c-inp:focus { outline: none; }
+.composer:not(.open) .c-chips, .composer:not(.open) .c-notes, .composer:not(.open) .seg { display: none; }
+.composer .c-chips { display: flex; gap: 12px; align-items: flex-start; padding-left: 34px; }
+.composer .cc { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.composer .ca { flex: none; display: flex; gap: 10px; align-items: center; }
+@media (max-width: 1100px) { .composer .hint.keys { display: none; } }
+.composer .c-notes { margin-left: 34px; width: calc(100% - 34px); resize: vertical; min-height: 54px; }
+.composer .hint.keys { font-size: 0.74rem; color: var(--ink-3); }
+.composer .c-add { padding: 7px 16px; }
+.composer .durs { display: inline-flex; gap: 4px; }
+.shake { animation: shake 0.35s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.seg { display: inline-flex; background: var(--card-2); border-radius: 999px; padding: 3px; flex: none; }
+.seg button { border: 0; background: transparent; color: var(--ink-2); border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; font-weight: 700; }
+.seg button[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+.chip-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink-2); border-radius: 8px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600; max-width: 260px; }
+.chip-btn:hover { border-color: var(--sage-deep); color: var(--ink); }
+.chip-btn .cl { color: var(--ink-3); font-weight: 600; }
+.chip-btn .cv { color: var(--ink); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-btn.soft { border-style: dashed; }
+.chip-btn.set.star-chip, .chip-btn.star-chip[aria-pressed="true"] { color: var(--gold, #b88a2e); border-color: currentColor; }
+.chip-btn .ico { width: 14px; height: 14px; }
+.chip-btn .dot, .mi .dot, .pal-row .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; display: inline-block; }
+.clash { color: var(--alert); font-size: 0.78rem; font-weight: 600; }
+.hint.clash:empty { display: none; }
+.task-list .add-row, .tasks .add-row { list-style: none; }
+.add-row button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: transparent; color: var(--ink-3); padding: 9px 20px 9px 22px; font-size: 0.88rem; text-align: left; }
+.add-row button:hover { color: var(--sage-deep); background: var(--card-2); }
+.add-row .plus { width: 18px; text-align: center; font-weight: 700; font-size: 1.05rem; }
+.task.pending, .tl-ev.pending { opacity: 0.55; }
+.task.pending .task-title::after { content: " · saving…"; color: var(--ink-3); font-weight: 500; }
+.more-btn { width: 28px; height: 28px; border: 0; background: transparent; color: var(--ink-3); border-radius: 8px; font-size: 18px; line-height: 1; opacity: 0; }
+.task-row:hover .more-btn, .task:focus-within .more-btn { opacity: 1; }
+.more-btn:hover { background: var(--card-2); color: var(--ink); }
+button.due-pill { border: 0; cursor: pointer; font: inherit; }
+button.due-pill:hover { box-shadow: inset 0 0 0 1px var(--sage-deep); }
+.inline-edit { font: inherit; font-weight: 600; width: 100%; padding: 3px 6px; margin: -4px 0; }
+/* Sidebar: New + search */
+.new-wrap { display: flex; margin: 0 0 8px; box-shadow: var(--shadow); border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+.new-btn { flex: 1; display: flex; align-items: center; gap: 10px; border: 0; background: transparent; padding: 12px 14px; font-weight: 700; font-size: 0.95rem; color: var(--ink); border-radius: 16px 0 0 16px; }
+.new-btn .plus { width: 24px; height: 24px; border-radius: 50%; background: var(--sage-deep); color: var(--card); display: grid; place-items: center; font-size: 17px; line-height: 1; }
+.new-more { border: 0; border-left: 1px solid var(--line); background: transparent; width: 38px; border-radius: 0 16px 16px 0; color: var(--ink-3); }
+.new-btn:hover, .new-more:hover { background: var(--card-2); }
+.new-more .ico { width: 14px; height: 14px; }
+.search-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; border: 1px solid var(--line); background: transparent; color: var(--ink-3); border-radius: 10px; padding: 7px 10px; font-size: 0.82rem; margin-bottom: 14px; }
+.search-btn:hover { color: var(--ink-2); border-color: var(--sage-deep); }
+.search-btn > :first-child, .search-btn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-btn .kbd { flex: none; white-space: nowrap; }
+/* Popovers and menus */
+.pop { position: fixed; z-index: 60; background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lift); padding: 6px; min-width: 200px; max-width: min(360px, calc(100vw - 20px)); max-height: calc(100vh - 20px); overflow: auto; }
+.pop .pop-h { font: 600 0.7rem/1.6 var(--f-ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 4px 8px 2px; }
+.pop .row.pad { padding: 4px 4px 6px; display: flex; gap: 8px; align-items: center; }
+.pop .row.end { display: flex; justify-content: flex-end; gap: 8px; padding-top: 6px; }
+.mi { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: transparent; color: var(--ink); text-align: left; padding: 7px 10px; border-radius: 8px; font-size: 0.86rem; }
+.mi .ml { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mi .kbd { flex: none; }
+.mi:hover, .mi:focus { background: var(--card-2); outline: none; }
+.mi.sel { background: var(--mint); }
+.mi.danger { color: var(--alert); }
+.mi[disabled] { color: var(--ink-3); cursor: default; background: transparent; font-size: 0.78rem; }
+.msep { height: 1px; background: var(--line); margin: 4px 6px; }
+.daypop { width: 270px; }
+.daypop .quick { display: flex; flex-direction: column; }
+.cal { padding: 6px 4px 2px; border-top: 1px solid var(--line); margin-top: 4px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 4px; font-size: 0.86rem; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.cal-grid .dow { font-size: 0.68rem; color: var(--ink-3); font-weight: 700; padding: 2px 0; }
+.cd { border: 0; background: transparent; border-radius: 8px; height: 30px; font-size: 0.82rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cd:hover { background: var(--card-2); }
+.cd.past { color: var(--ink-3); }
+.cd.today { box-shadow: inset 0 0 0 1.5px var(--sage-deep); font-weight: 700; }
+.cd.sel { background: var(--sage-deep); color: var(--card); font-weight: 700; }
+.timepop .pop-time { width: 90px; }
+.coursepop { width: 300px; }
+.coursepop .clist { max-height: 300px; overflow: auto; }
+.coursepop .mi .kbd { border: 0; background: none; color: var(--ink-3); font-weight: 500; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.qc { width: 330px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.qc .inp.big { font-size: 1.05rem; font-weight: 600; }
+.qc .qc-when { font-size: 0.86rem; color: var(--ink-2); }
+.qc .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.qc .qc-sugg { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.qc .mini.sugg { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: inset 3px 0 0 var(--course); }
+.renamepop { width: 320px; }
+.renamepop .inp { flex: 1; }
+/* Toasts */
+.toasts { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 70; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; align-items: center; gap: 12px; background: var(--ink); color: var(--card); border-radius: 12px; padding: 10px 10px 10px 16px; box-shadow: var(--shadow-lift); font-size: 0.88rem; max-width: min(560px, calc(100vw - 32px)); animation: toastIn 0.18s ease-out; }
+.toast.err { background: var(--alert); }
+.toast .undo { border: 0; background: transparent; color: var(--mint-strong, #9fe0ae); font-weight: 800; padding: 4px 8px; border-radius: 8px; }
+.toast .undo:hover { background: rgba(255, 255, 255, 0.12); }
+.toast .x { border: 0; background: transparent; color: inherit; opacity: 0.6; font-size: 17px; width: 26px; height: 26px; border-radius: 8px; }
+@keyframes toastIn { from { transform: translateY(8px); opacity: 0; } }
+/* Command bar */
+.pal-wrap { position: fixed; inset: 0; z-index: 80; background: rgba(15, 25, 18, 0.28); display: flex; justify-content: center; align-items: flex-start; padding-top: 12vh; }
+.pal { width: min(620px, calc(100vw - 32px)); background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-lift); overflow: hidden; }
+.pal-inp { width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 18px 20px; font-size: 1.08rem; color: var(--ink); outline: none; }
+.pal-list { max-height: 52vh; overflow: auto; padding: 6px; }
+.pal-g { font: 700 0.68rem/1.6 var(--f-ui); letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-3); padding: 8px 12px 2px; }
+.pal-row { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: transparent; color: var(--ink); padding: 9px 12px; border-radius: 10px; text-align: left; font-size: 0.92rem; }
+.pal-row .ml { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal-row .kbd { flex: none; border: 0; background: none; color: var(--ink-3); font-weight: 500; }
+.pal-row.sel { background: var(--mint); }
+.pal-row .dot.none { background: transparent; }
+.pal-foot { border-top: 1px solid var(--line); padding: 8px 16px; font-size: 0.74rem; color: var(--ink-3); }
+.keys-list { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; margin: 0; align-items: center; }
+.keys-list dd { margin: 0; color: var(--ink-2); font-size: 0.9rem; }
+/* Timeline */
+.tl-scroll { margin-top: 10px; max-height: calc(100vh - 230px); min-height: 240px; overflow-y: auto; overflow-x: hidden; border-top: 1px solid var(--line); scrollbar-width: thin; }
+.tl { position: relative; margin-left: 2px; }
+.tl-hour { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line); height: 0; }
+.tl-hour span { position: absolute; top: -8px; left: 0; width: 40px; font: 400 13px/1 var(--f-num); color: var(--ink-3); background: var(--card); padding-right: 4px; }
+.tl-hour:first-child span { top: 2px; }
+.tl-lane { position: absolute; top: 0; bottom: 0; left: 46px; right: 4px; cursor: crosshair; touch-action: none; }
+.tl-ev { position: absolute; box-sizing: border-box; border-radius: 7px; padding: 3px 7px; overflow: hidden; cursor: pointer; font-size: 0.76rem; line-height: 1.25;
+  background: color-mix(in srgb, var(--course) 16%, var(--card)); border-left: 3px solid var(--course); color: var(--ink); user-select: none; }
+.tl-ev.study { cursor: grab; background: color-mix(in srgb, var(--course) 22%, var(--card)); }
+.tl-ev.src-classes { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--course) 12%, var(--card)) 0 6px, color-mix(in srgb, var(--course) 7%, var(--card)) 6px 12px); }
+.tl-ev.src-primary, .tl-ev.src-personal { background: var(--card-2); border-left-color: var(--ink-3); }
+.tl-ev b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-weight: 700; overflow: hidden; overflow-wrap: anywhere; }
+.tl-ev.tall b { -webkit-line-clamp: 4; }
+.tl-ev.short b { display: block; white-space: nowrap; text-overflow: ellipsis; }
+.tl-ev .tm { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-variant-numeric: tabular-nums; }
+.tl-ev.short { padding-top: 1px; display: flex; gap: 6px; align-items: baseline; }
+.tl-ev.short b { flex: 0 1 auto; min-width: 0; }
+.tl-ev.short .tm { flex: none; }
+.tl-ev.past { opacity: 0.5; }
+.tl-ev.live { box-shadow: 0 0 0 2px var(--ok) inset; }
+.tl-ev.rated-done b::after { content: " ✓"; color: var(--ok); }
+.tl-ev.rated-missed b { text-decoration: line-through; }
+.tl-ev:hover { filter: brightness(0.97); box-shadow: var(--shadow); z-index: 2; }
+.tl-ev:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 1px; z-index: 3; }
+.tl-ev.dragging { cursor: grabbing; box-shadow: var(--shadow-lift); z-index: 5; opacity: 0.92; }
+.tl-rs { position: absolute; left: 0; right: 0; bottom: 0; height: 7px; cursor: ns-resize; }
+.tl-ev:hover .tl-rs::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 18px; margin-left: -9px; height: 3px; border-radius: 2px; background: var(--course); opacity: 0.7; }
+.tl-now { position: absolute; left: -6px; right: 0; height: 0; border-top: 2px solid var(--alert); z-index: 4; pointer-events: none; }
+.tl-now::before { content: ""; position: absolute; left: -4px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--alert); }
+.tl-ghost { position: absolute; left: 0; right: 0; border-radius: 7px; background: color-mix(in srgb, var(--sage-deep) 22%, transparent); border: 2px dashed var(--sage-deep); color: var(--ink); font-size: 0.76rem; font-weight: 700; padding: 3px 7px; z-index: 6; pointer-events: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box; }
 </style>
 </head>
 <body>
 <div id="app"></div>
 <!-- Editor: opens from any block, the day list, a deadline, or "+ Block". -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-h" hidden></aside>
 <!-- Full-screen focus: click the timer (or press F) to open; Esc, F, Exit or clicking the time closes it. -->
@@ -497,7 +637,7 @@ function parseEvents(list) {
     return {
       id: String(e.id || ""), src: String(e.cal || "primary"), title: String(e.title || "Busy"), where: String(e.where || ""),
       allDay, start, end, checkin: ci ? ci[1].toLowerCase() : null, moved: /^\s*Moved to:/im.test(text),
-      rec: !!e.rec, url: String(e.url || ""),
+      rec: !!e.rec, url: String(e.url || ""), notes: e.cal === "study" || e.cal === "canvas" ? "" : text.trim(),
       worked: ((w) => w ? Number(w[1] || 0) * 60 + Number(w[2] || 0) : 0)(/^\s*Worked:\s*(?:(\d+)h)?\s*(?:(\d+)m)?/im.exec(text)),
       steps: e.cal === "canvas" ? [] : stepsFrom(text), modes: e.cal === "canvas" ? [] : modesFrom(text)
     };
@@ -681,7 +821,7 @@ function deadlines(now) {
     const upcoming = blocks.filter((b) => b.end > t);
     const planned = plannedFor(events, d, now);
     return {
-      key, d, course, dueEnd, title: deskTitle(d.title),
+      key, d, course, dueEnd, title: deskTitle(d.title), pending: (d.refs || []).some((r) => String(r.id).startsWith("tmp-")),
       // A deadline whose time passed today stays in Today (faded) until you tick it or the day ends.
       done: !!doneDue[key], auto: false, past: dueEnd < t, planned, upcoming, nextBlock: upcoming[0] || null
     };
@@ -692,7 +832,7 @@ function deskTitle(t) {
   const s = String(t || "")
     .replace(/\s*\(due[^)]*\)/i, "")
     .replace(/\s+due\s*:\s*/i, ": ")
-    .replace(/\s+due\b(\s+\d{1,2}(:\d{2})?\s*(am|pm))?\s*$/i, "")
+    .replace(/\s+due\b(?:\s+(?:at|by))?(\s+\d{1,2}(:\d{2})?\s*(am|pm|a\.m\.|p\.m\.)?)?\s*$/i, "")
     .replace(/\s+/g, " ").trim();
   return s || String(t || "");
 }
@@ -853,7 +993,7 @@ function whenText(ms) {
 function post(body, ok, fail) {
   return apiPost(body).then((d) => { applyState(d.state); if (ok) ok(d); }).catch((err) => { if (fail) fail(err); });
 }
-function say(text, ms) { checkNote = { text, until: Date.now() + (ms || 8000) }; render(); }
+function say(text, ms) { toast(text, null, ms); }
 function rateBlock(ev, r) {
   const k = ev.src + "|" + ev.id + "|" + ev.start;
   localChecks[k] = r;
@@ -1021,11 +1161,19 @@ function renderTask(x, now) {
       title: active ? (timerRunning(pomo) ? "On the clock: open the timer" : "Paused: resume") : "Start the timer on this",
       "aria-label": (active ? "Timer: " : "Start: ") + x.title, onclick: (e) => { e.stopPropagation(); startOn(x); } },
       ico("play"), active ? h("span", { text: timerText(pomo, t) }) : h("span", { text: "Start" })),
-    h("span", { class: "due-pill" + pill, text: (x.past && !x.done ? "Passed · " : "") + dueShort(x, now) }),
+    ownRef(x) && !x.done ? h("button", { class: "due-pill" + pill, type: "button", title: "Change the date (T)",
+        onclick: (e) => { e.stopPropagation(); pickDay(e.currentTarget, x.d.day, (k) => updateDue(x, { day: k }), { title: "Move to" }); }, text: (x.past ? "Passed · " : "") + dueShort(x, now) })
+      : h("span", { class: "due-pill" + pill, title: refsOf(x).some((r) => r.cal === "canvas") ? "From Canvas: the date changes there" : null, text: (x.past && !x.done ? "Passed · " : "") + dueShort(x, now) }),
     x.done ? h("span") : h("button", { class: "star" + (star ? " on" : ""), type: "button", title: star ? "Unstar" : "Star",
       "aria-label": star ? "Unstar" : "Star", "aria-pressed": star ? "true" : "false",
-      onclick: (e) => { e.stopPropagation(); setStar(x, !star, now); } }, ico("star"))));
+      onclick: (e) => { e.stopPropagation(); setStar(x, !star, now); } }, ico("star")),
+    h("button", { class: "more-btn", type: "button", title: "More (M or right-click)", "aria-label": "More actions for " + x.title,
+      onclick: (e) => { e.stopPropagation(); taskMenu(x, e.currentTarget); } }, h("span", { "aria-hidden": "true", text: "⋯" }))));
   if (open) li.append(taskDetail(x, now));
+  if (x.pending) li.classList.add("pending");
+  li.addEventListener("contextmenu", (e) => { if (e.target.closest("input, textarea")) return; e.preventDefault(); taskMenu(x, li, { x: e.clientX, y: e.clientY }); });
+  const tt = li.querySelector(".task-title");
+  if (tt) tt.addEventListener("dblclick", (e) => { e.stopPropagation(); if (ownRef(x)) renameInline(x); else toast("That one comes from Canvas, so its name changes there."); });
 
   li.addEventListener("dragstart", (e) => { if (e.target !== li) return; dragging = x; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", x.key); });
   li.addEventListener("dragend", () => { dragging = null; li.classList.remove("dragging"); document.querySelectorAll(".drop-hint").forEach((n) => n.remove()); document.querySelectorAll(".group.over").forEach((n) => n.classList.remove("over")); });
@@ -1036,6 +1184,12 @@ function renderTask(x, now) {
     else if (k === "d" && !x.auto) { e.preventDefault(); toggleDone(x); }
     else if (k === "s" && !x.done) { e.preventDefault(); setStar(x, !star, now); }
     else if (k === "g" && !x.done && !x.past) { e.preventDefault(); startOn(x); }
+    else if (k === "e") { e.preventDefault(); editDue(x); }
+    else if ((k === "r" || k === "f2") && ownRef(x)) { e.preventDefault(); renameInline(x); }
+    else if (k === "t" && ownRef(x)) { e.preventDefault(); pickDay(li.querySelector(".due-pill") || li, x.d.day, (d) => updateDue(x, { day: d }), { title: "Move to" }); }
+    else if (k === "p" && !x.done && !x.past) { e.preventDefault(); findTime(x, sittingMinutes(x)); }
+    else if (k === "delete" || k === "backspace") { e.preventDefault(); deleteDue(x); }
+    else if (k === "m" || k === "contextmenu" || (e.shiftKey && k === "f10")) { e.preventDefault(); taskMenu(x, li.querySelector(".more-btn") || li); }
     else if (k === "arrowdown" || k === "arrowup" || k === "j" || k === "k") {
       e.preventDefault();
       const all = [...document.querySelectorAll(".task")], i = all.indexOf(li);
@@ -1086,7 +1240,8 @@ function renderGroup(G, items, now) {
   const isClosed = !!collapsed[G.id];
   const list = h("ul", { class: "tasks" });
   items.forEach((x) => list.append(renderTask(x, now)));
-  if (!items.length) list.append(h("li", { class: "none", text: G.empty || "" }));
+  if (!items.length && G.id !== "today" && G.id !== "tomorrow") list.append(h("li", { class: "none", text: G.empty || "" }));
+  if (G.id !== "done" && (!courseFilter || courseFilter !== "~")) list.append(addRow(G));
   const sec = h("section", { class: "group group-" + G.id + (isClosed ? " closed" : ""), "data-group": G.id },
     h("button", { class: "group-head", type: "button", "aria-expanded": isClosed ? "false" : "true",
       onclick: () => { collapsed[G.id] = !isClosed; store("deskboard-collapsed3", collapsed); render(); } },
@@ -1162,38 +1317,6 @@ function dueAlert(now) {
   return "";
 }
 
-// "Add a deadline", Google Tasks style: type a name, pick a day, optional time, Enter.
-let composerDraft = { title: "", day: "", time: "" }, composerOpen = false;
-function composer() {
-  const tomorrow = dayKey(addDays(new Date(), 1, 12));
-  const box = h("form", { class: "composer" + (composerOpen || composerDraft.title ? " open" : "") });
-  const prefix = courseFilter && COURSES[courseFilter] ? courseFilter + " " : "";
-  const name = h("input", { class: "inp", value: composerDraft.title, placeholder: "Add a deadline" + (prefix ? " for " + nameOf(courseFilter) : " (e.g. Econ PS7, Lit Hum essay 2)"), "aria-label": "New deadline", autocomplete: "off" });
-  const day = h("input", { class: "inp more", type: "date", value: composerDraft.day || tomorrow, "aria-label": "Due day" });
-  const time = timeBox(composerDraft.time, "Due time, optional", true);
-  time.classList.add("more");
-  const add = h("button", { class: "pill-btn primary more", type: "submit", text: "Add" });
-  name.addEventListener("focus", () => { composerOpen = true; box.classList.add("open"); });
-  name.addEventListener("input", () => { composerDraft.title = name.value; });
-  name.addEventListener("keydown", (e) => { if (e.key === "Escape") { composerDraft = { title: "", day: "", time: "" }; composerOpen = false; name.blur(); render(); } });
-  day.addEventListener("input", () => { composerDraft.day = day.value; });
-  time.addEventListener("input", () => { composerDraft.time = time.value; });
-  box.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const title = name.value.trim();
-    if (!title) return;
-    const tv = normTime(time.value);
-    if (tv === null) { say("Times are 24-hour, like 18:00.", 5000); return; }
-    const full = prefix && !new RegExp("^" + courseFilter + "\\b", "i").test(title) ? prefix + title : title;
-    add.disabled = true; add.textContent = "Adding…";
-    apiPost({ action: "saveDue", title: full, day: day.value, time: tv }).then(() => {
-      composerDraft = { title: "", day: "", time: "" }; composerOpen = false; say("Added “" + full + "”.", 4000); load();
-    }).catch((err) => { add.disabled = false; add.textContent = "Add"; say("Didn't add: " + errText(err) + ".", 6000); });
-  });
-  box.append(h("span", { class: "plus", "aria-hidden": "true", text: "+" }), name, day, time, add);
-  return box;
-}
-
 /* ----- Classes ----- */
 function shownCourses() {
   const keys = activeCourses.slice();
@@ -1243,6 +1366,10 @@ function setFilter(k) { courseFilter = k; store("deskboard-course", k); view = "
 function renderSide(now) {
   const openAll = currentItems.filter((x) => !x.done);
   const side = h("nav", { class: "side", "aria-label": "Views" },
+    h("div", { class: "new-wrap" },
+      h("button", { class: "new-btn", type: "button", title: "New task (N)", onclick: () => focusComposer("task") }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }), "New task"),
+      h("button", { class: "new-more", type: "button", title: "More: new block, search", "aria-label": "More ways to add", onclick: (e) => newMenu(e.currentTarget) }, ico("chev"))),
+    h("button", { class: "search-btn", type: "button", onclick: () => openPalette() }, "Search or add anything", h("span", { class: "kbd", text: (navigator.platform || "").includes("Mac") ? "⌘K" : "Ctrl K" })),
     h("button", { class: "nav-item", type: "button", "aria-current": view === "todo" && !courseFilter ? "true" : "false", onclick: () => setFilter("") },
       ico("check"), "To do", h("span", { class: "n", text: String(openAll.length) })),
     h("button", { class: "nav-item", type: "button", "aria-current": view === "classes" ? "true" : "false", onclick: () => setView("classes") },
@@ -1262,7 +1389,9 @@ function renderSide(now) {
     h("div", null, h("span", { class: "kbd", text: "↑" }), " ", h("span", { class: "kbd", text: "↓" }), " move"),
     h("div", null, h("span", { class: "kbd", text: "Enter" }), " open · ", h("span", { class: "kbd", text: "D" }), " done · ", h("span", { class: "kbd", text: "S" }), " star"),
     h("div", null, h("span", { class: "kbd", text: "G" }), " start timer on it · ", h("span", { class: "kbd", text: "F" }), " full screen"),
-    h("div", { text: "Drag to reorder or star." }));
+    h("div", null, h("span", { class: "kbd", text: "N" }), " new task · ", h("span", { class: "kbd", text: "B" }), " new block · ", h("span", { class: "kbd", text: "⌘K" }), " search"),
+    h("div", { text: "Right-click anything for more. Drag to reorder or star." }),
+    h("button", { class: "edit-link", type: "button", onclick: showKeys, text: "All shortcuts" }));
   help.addEventListener("toggle", () => store("deskboard-keys", help.open ? 1 : 0));
   side.append(help);
   return side;
@@ -1449,36 +1578,10 @@ function examStrip(now) {
       title: "Open it in the list", onclick: () => { expanded = x.key; collapsed[groupOf(x, now)] = false; render(); const n = document.querySelector('[data-key="' + CSS.escape(x.key) + '"]'); if (n) n.scrollIntoView({ block: "center" }); } },
       h("span", { class: "nm", text: x.title }),
       h("span", { class: "when", text: dueShort(x, now) + " · " + countdown(x.dueEnd, t) }),
-      h("span", { class: "prep", text: (min ? hoursText(min) + " prep planned" : "no prep planned") + (w ? " · " + fmtMins(w) + " done" : "") }));
+      h("span", { class: "prep" + (min ? "" : " none"), text: (min ? hoursText(min) + " prep planned" : "no prep planned") + (w ? " · " + fmtMins(w) + " done" : "") }));
   }));
 }
 let agendaOffset = 0;   // 0 = today; the arrows page through the week behind and two weeks ahead
-function renderAgenda(now) {
-  const t = now.getTime();
-  const day = new Date(addDays(now, agendaOffset, 12));
-  const items = timedFor(events, day);
-  const label = agendaOffset === 0 ? "Today" : agendaOffset === 1 ? "Tomorrow" : agendaOffset === -1 ? "Yesterday" : day.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-  const card = h("section", { class: "panel today-card", "aria-label": label },
-    h("div", { class: "day-nav" },
-      h("button", { class: "ico-btn", type: "button", "aria-label": "Previous day", disabled: agendaOffset <= -7 ? "" : null, onclick: () => { agendaOffset--; render(); }, text: "‹" }),
-      h("h2", { text: label }),
-      agendaOffset ? h("button", { class: "mini", type: "button", onclick: () => { agendaOffset = 0; render(); }, text: "Today" }) : null,
-      h("button", { class: "ico-btn", type: "button", "aria-label": "Next day", disabled: agendaOffset >= 14 ? "" : null, onclick: () => { agendaOffset++; render(); }, text: "›" }),
-      h("button", { class: "mini", type: "button", title: "New Study block", onclick: () => newBlockAt(agendaOffset === 0 ? t + 15 * 60000 : addDays(now, agendaOffset, 14), 60), text: "+ Block" })));
-  if (!items.length) card.append(h("p", { class: "empty-now", text: "Nothing on the calendar " + (agendaOffset === 0 ? "today" : "that day") + "." }));
-  card.append(h("ul", { class: "agenda" }, items.map((ev) => {
-    const r = ev.src === "study" ? rating(ev) : null;
-    const c = courseOf(ev.title);
-    return h("li", { class: (ev.end <= t ? "past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : ""), style: "--course:" + (ev.src === "study" || ev.src === "classes" ? colorOf(c) : "var(--line)"),
-      tabindex: "0", role: "button", title: ev.src === "study" ? "Edit this block" : "Details", onclick: () => openEvent(ev),
-      onkeydown: (e) => { if (e.key === "Enter") openEvent(ev); } },
-      h("span", { class: "when", text: fmtTime(ev.start) }), h("span", { class: "bar" }),
-      h("span", { class: "what" }, h("b", { text: ev.title }), h("span", { text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") + (ev.src === "classes" ? " · class" : "") + (ev.worked ? " · " + fmtMins(ev.worked) + " worked" : "") })));
-  })));
-  const done = Number(log[dayKey(now)]) || 0;
-  card.append(h("div", { class: "foot", text: (agendaOffset === 0 && done ? done + " focus round" + (done > 1 ? "s" : "") + " so far. " : "") + "Click a block to edit it." }));
-  return card;
-}
 function renderRail(now) {
   return h("aside", { class: "rail", "aria-label": "Today" }, renderCheck(now), renderAgenda(now));
 }
@@ -1522,7 +1625,8 @@ function topBar() {
 function setView(v) { view = v; store("deskboard-view", v); expanded = null; render(); window.scrollTo(0, 0); }
 
 function render() {
-  if (dragging) return;
+  if (dragging || holdRender()) { pendingRender = true; return; }
+  pendingRender = false;
   const app = $("#app");
   if (!cfg) { app.replaceChildren(setupForm()); return; }
   const now = new Date();
@@ -1533,18 +1637,20 @@ function render() {
   if (courseFilter && courseFilter !== "~" && !COURSES[courseFilter]) courseFilter = "";
   const scroll = window.scrollY;
   const focusKey = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute("data-key") : null;
-  // Typing in "Add a deadline" survives a refresh: the draft is kept and the cursor put back.
+  // Typing in the composer survives a refresh: the draft is kept and the cursor put back.
   const ae = document.activeElement, comp = ae && ae.closest ? ae.closest(".composer") : null;
-  const compIdx = comp ? [...comp.querySelectorAll("input")].indexOf(ae) : -1;
+  const compSel = comp && ae.classList.contains("c-inp") ? [ae.selectionStart, ae.selectionEnd] : null;
+  const notesFocus = comp && ae.classList.contains("c-notes");
   const shell = h("div", { class: "shell" }, renderSide(now), view === "classes" ? renderClasses(now) : renderTodo(now), renderRail(now));
   app.replaceChildren(topBar(), shell);
   renderTop(now);
   window.scrollTo(0, scroll);
   if (focusKey) { const n = document.querySelector('[data-key="' + CSS.escape(focusKey) + '"]'); if (n) n.focus({ preventScroll: true }); }
-  if (compIdx >= 0) {
-    const n = document.querySelectorAll(".composer input")[compIdx];
-    if (n) { n.focus({ preventScroll: true }); try { if (n.type === "text") n.setSelectionRange(n.value.length, n.value.length); } catch (e) {} }
-  }
+  if (compSel || composerFocus) {
+    const n = $(".composer .c-inp");
+    if (n) { n.focus({ preventScroll: true }); try { const at = compSel || [n.value.length, n.value.length]; n.setSelectionRange(at[0], at[1]); } catch (e) {} }
+    composerFocus = false;
+  } else if (notesFocus) { const n = $(".composer .c-notes"); if (n) n.focus({ preventScroll: true }); }
 }
 
 function setupForm() {
@@ -1622,7 +1728,7 @@ function openDrawer(title, body, foot) {
   const d = $("#drawer");
   d.replaceChildren(
     h("div", { class: "dr-head" }, h("h2", { id: "dr-h", text: title }), h("button", { class: "dr-x", type: "button", "aria-label": "Close", onclick: closeDrawer, text: "×" })),
-    h("div", { class: "dr-body" }, body), foot ? h("div", { class: "dr-foot" }, foot) : null);
+    h("div", { class: "dr-body" }, body), ...(foot ? [h("div", { class: "dr-foot" }, foot)] : []));
   d.hidden = false; $("#scrim").hidden = false; drawerOpen = true;
 }
 function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; drawerOpen = false; render(); }
@@ -1666,8 +1772,22 @@ function editBlock(ev, seed) {
     const na = a + startMin * 60000, nb = Math.max(na + 15 * 60000, b + endMin * 60000);
     day.value = dayKey(na); from.value = fmtTime(na); to.value = fmtTime(nb); showLen();
   };
-  [day, from, to].forEach((x) => x.addEventListener("input", showLen));
-  showLen();
+  const clashLine = h("p", { class: "hint clash" });
+  const showClash = () => {
+    const { a, b } = times();
+    const c = isNaN(a) || isNaN(b) ? null : timedFor(events, new Date(a)).filter((e) => e !== ev && e.src !== "sleep" && e.start < b && e.end > a)[0];
+    clashLine.textContent = c ? "Overlaps " + c.title + " " + fmtTime(c.start) + "–" + fmtTime(c.end) : "";
+  };
+  [day, from, to].forEach((x) => x.addEventListener("input", () => { showLen(); showClash(); }));
+  showLen(); showClash();
+  let bCourse = courseOf(base.title || "");
+  const courseRow = h("div", { class: "row" });
+  const drawCourse = () => courseRow.replaceChildren(
+    chip(bCourse ? "" : "Class", bCourse || "", (e) => pickCourse(e.currentTarget, bCourse, (k) => { bCourse = k; title.value = withCourse(title.value, k); title.dispatchEvent(new Event("input")); drawCourse(); }),
+      { color: bCourse ? colorOf(bCourse) : null, title: "Class" }),
+    h("span", { class: "durs" }, [30, 60, 90, 120, 180].map((m) => h("button", { type: "button", class: "mini", onclick: () => { const { a } = times(); if (!isNaN(a)) { to.value = fmtTime(a + m * 60000); showLen(); showClash(); } }, text: m < 60 ? m + "m" : m / 60 + "h" }))));
+  title.addEventListener("input", () => { const k = courseOf(title.value); if (k !== bCourse) { bCourse = k; drawCourse(); } });
+  drawCourse();
 
   const place = h("input", { class: "inp", value: base.where == null ? "Library" : base.where, placeholder: "Somewhere else", "aria-label": "Place" });
   const placeBtns = ["Library", "Dorm desk"].map((p) => h("button", { class: "mini", type: "button", onclick: () => { place.value = p; syncPlace(); }, text: p }));
@@ -1707,9 +1827,9 @@ function editBlock(ev, seed) {
   const addStep = (digest) => { st.steps.push({ text: "", done: false, digest }); drawSteps(st.steps.length - 1); };
 
   const body = [
-    h("div", { class: "fld" }, title),
+    h("div", { class: "fld" }, title, courseRow),
     h("div", { class: "fld" }, h("span", { class: "label", text: "When" }),
-      h("div", { class: "row" }, day, from, h("span", { text: "–" }), to, len),
+      h("div", { class: "row" }, day, from, h("span", { text: "–" }), to, len), clashLine,
       h("div", { class: "row" },
         h("button", { class: "mini", type: "button", onclick: () => shift(-15, -15), text: "← 15 min" }),
         h("button", { class: "mini", type: "button", onclick: () => shift(15, 15), text: "15 min →" }),
@@ -1752,23 +1872,19 @@ function editBlock(ev, seed) {
     apiPost(body).then((d) => { closeDrawer(); done(d); load(); }).catch(fail("save"));
   };
   const saveBtn = h("button", { class: "pill-btn primary", type: "button", text: isNew ? "Add block" : "Save",
-    onclick: () => send(payload(), () => say(isNew ? "Added “" + (title.value.trim() || "Work block") + "”." : "Saved.", 5000)) });
+    onclick: () => {
+      const p = payload();
+      if (isNaN(p.start) || isNaN(p.end)) { msg.className = "hint err"; msg.textContent = "Check the day and times (24-hour, like 14:00)."; return; }
+      if (isNew) { closeDrawer(); createBlock(p).catch(() => {}); return; }
+      const before = { title: ev.title, start: ev.start, end: ev.end, where: ev.where, steps: stepsOf(ev), modes: (ev.modes || []).slice() };
+      send(p, (d) => toast("Saved “" + p.title + "”", () => apiPost(Object.assign({ action: "saveBlock", block: { cal: "study", id: d.block.id, start: d.start } }, before)).then(load)));
+    } });
   const foot = [saveBtn];
   if (!isNew) {
-    const delBtn = h("button", { class: "mini danger", type: "button", text: "Delete" });
-    delBtn.addEventListener("click", () => {
-      if (!delBtn.classList.contains("arm")) { delBtn.classList.add("arm"); delBtn.textContent = "Click again to delete"; return; }
-      const copy = payload({ block: null, start: ev.start, end: ev.end });
-      busy(true, "Deleting…");
-      apiPost({ action: "deleteBlock", block: { cal: ev.src, id: ev.id, start: ev.start } }).then(() => {
-        closeDrawer();
-        undoOffer = { text: "Deleted “" + copy.title + "”.", label: "Undo", run: () => apiPost(copy).then(load, () => say("Undo didn't work. The block is gone; add it again with + Block.", 8000)) };
-        load();
-      }).catch(fail("delete"));
-    });
+    const delBtn = h("button", { class: "mini danger", type: "button", title: "Delete (you can undo)", onclick: () => { closeDrawer(); removeBlock(ev); }, text: "Delete" });
     foot.push(
       h("button", { class: "mini", type: "button", title: "Same length, first free slot (keeps the 70% rule)",
-        onclick: () => send(payload({ nextFree: true }), (d) => say("Moved to " + whenText(d.start) + ".", 6000)), text: "Next free slot" }),
+        onclick: () => { const from = { s: ev.start, e: ev.end }; send(payload({ nextFree: true }), (d) => toast("Moved to " + whenText(d.start) + " · “" + ev.title + "”", () => moveBlockById(d, from))); }, text: "Next free slot" }),
       h("button", { class: "mini", type: "button", title: "A copy right after this one (not saved until you add it)",
         onclick: () => { const { a, b } = times(); editBlock(null, { title: title.value, start: b, end: b + (b - a), where: place.value, modes: st.modes, steps: st.steps.map((s) => ({ text: s.text, digest: s.digest })) }); }, text: "Duplicate" }),
       h("span", { class: "grow" }), delBtn,
@@ -1783,57 +1899,935 @@ function newBlockAt(startMs, mins, seed) {
   editBlock(null, Object.assign({ title: "", start: a, end: a + (mins || 60) * 60000, where: "Library", steps: [], modes: [] }, seed || {}));
 }
 
-// Your own deadlines: name, day, optional time. Canvas items are read-only (Canvas would undo a change).
+// A deadline's editor. Your own ones: name, due day and time, class, type and notes.
+// Canvas ones are read-only here (Canvas would undo a change), but you can still plan, start or finish them.
 const refsOf = (x) => x.refs || (x.d && x.d.refs) || [];
-function ownRef(x) { return refsOf(x).find((r) => (r.cal === "personal" || r.cal === "primary") && !r.rec && r.id) || null; }
+function ownRef(x) { return refsOf(x).find((r) => (r.cal === "personal" || r.cal === "primary") && !r.rec && r.id && !String(r.id).startsWith("tmp-")) || null; }
 function editDue(x) {
   const ref = ownRef(x);
+  const now = new Date();
   const canvas = refsOf(x).find((r) => r.cal === "canvas");
   const canvasEv = canvas && events.find((e) => e.src === "canvas" && e.id === canvas.id);
-  const msg = h("p", { class: "hint", role: "status" });
-  const name = growBox({ class: "big", "aria-label": "Name" }, x.title);
-  const day = h("input", { class: "inp", type: "date", value: x.d.day, "aria-label": "Due day" });
-  const time = timeBox(x.d.dueAt ? fmtTime(x.d.dueAt) : "", "Due time, optional", true);
-  const body = [];
-  if (ref) {
-    body.push(h("div", { class: "fld" }, name),
-      h("div", { class: "fld" }, h("span", { class: "label", text: "Due" }), h("div", { class: "row" }, day, time,
-        h("button", { class: "mini", type: "button", onclick: () => { time.value = ""; }, text: "No time" }))),
-      h("p", { class: "hint", text: "Lives on your " + CAL_NAMES[ref.cal] + " as “name due HH:MM”, which every board and the evening email read." }));
-  } else {
-    body.push(h("div", { class: "ro" }, h("b", { text: x.title }), h("span", { text: "Due " + dueText(x, new Date()) })),
-      h("p", { class: "hint", text: canvas ? "This comes from Canvas, so its name and date change there. Here you can mark it done, star it, or plan time for it."
-        : "This is part of a repeating event or another calendar. Change it in Google Calendar." }));
+  const actions = [];
+  if (!x.done && !x.past) actions.push(
+    h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); startOn(x); } }, "Start timer"),
+    h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); findTime(x, sittingMinutes(x)); }, text: "Plan " + hoursText(sittingMinutes(x)) }),
+    h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); newBlockAt(nextQuarter(Date.now()), sittingMinutes(x), { title: x.title }); }, text: "Plan at a time…" }));
+  if (!ref) {
+    openDrawer("Deadline", [
+      h("div", { class: "ro" }, h("b", { text: x.title }), h("span", { text: "Due " + dueText(x, now) + (x.course ? " · " + nameOf(x.course) : "") })),
+      h("p", { class: "hint", text: canvas ? "This comes from Canvas, so its name and date change there. Here you can plan time for it, start the timer, star it or mark it done."
+        : "This is part of a repeating event or another calendar. Change it in Google Calendar." }),
+      actions.length ? h("div", { class: "row" }, actions) : null
+    ], [h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); toggleDone(x); }, text: x.done ? "Mark not done" : "Mark done" }), h("span", { class: "grow" }),
+      canvasEv && canvasEv.url ? h("a", { class: "gcal", href: canvasEv.url, target: "_blank", rel: "noopener", text: "Canvas ↗" })
+        : refsOf(x)[0] ? h("a", { class: "gcal", href: gcalLink({ src: refsOf(x)[0].cal, id: refsOf(x)[0].id, start: refsOf(x)[0].start, rec: refsOf(x)[0].rec }), target: "_blank", rel: "noopener", text: "Calendar ↗" }) : null]);
+    return;
   }
-  body.push(msg);
-  const fail = (what) => (err) => { msg.className = "hint err"; msg.textContent = "Didn't " + what + ": " + errText(err) + "."; };
+  const ev = evOf(ref);
+  const name0 = dueName(ev ? ev.title : x.title);
+  const st = { day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : null, course: courseOf(name0) || null, type: typeOf(name0) };
+  const name = growBox({ class: "big", "aria-label": "Name" }, name0);
+  const notes = h("textarea", { class: "inp", rows: "4", placeholder: "Notes: pages, links, what the prof said…", "aria-label": "Notes" });
+  notes.value = ev ? ev.notes || "" : "";
+  const chips = h("div", { class: "row" });
+  const draw = () => chips.replaceChildren(
+    chip("Due", dayLabel(st.day, now), (e) => pickDay(e.currentTarget, st.day, (k) => { st.day = k; draw(); }, { title: "Due" })),
+    chip("Time", st.time || "", (e) => pickTime(e.currentTarget, st.time, (t) => { st.time = t; draw(); }, { classAt: classStart(st.course, st.day), title: "Due time" }), { cls: st.time ? "" : "soft" }),
+    chip(st.course ? "" : "Class", st.course || "", (e) => pickCourse(e.currentTarget, st.course, (k) => { st.course = k; draw(); }), { color: st.course ? colorOf(st.course) : null, title: "Class" }),
+    chip("Type", st.type ? typeLabel(st.type) : "", (e) => pickType(e.currentTarget, st.type, (k) => { st.type = k; draw(); }), { cls: st.type ? "" : "soft" }));
+  draw();
   const save = () => {
-    const tv = normTime(time.value);
-    if (tv === null) { msg.className = "hint err"; msg.textContent = "Times are 24-hour, like 18:00."; return; }
-    msg.className = "hint"; msg.textContent = "Saving…";
-    apiPost({ action: "saveDue", ref: { cal: ref.cal, id: ref.id, start: ref.start }, title: name.value, day: day.value, time: tv })
-      .then(() => { closeDrawer(); say("Saved.", 4000); load(); }).catch(fail("save"));
+    const title = withType(withCourse(name.value.trim() || name0, st.course), st.type);
+    closeDrawer();
+    updateDue(x, { title, day: st.day, time: st.time, notes: notes.value });
   };
-  const foot = [];
-  if (ref) foot.push(h("button", { class: "pill-btn primary", type: "button", onclick: save, text: "Save" }));
-  foot.push(h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); newBlockAt(Date.now() + 15 * 60000, 60, { title: x.title }); }, text: "Plan a block…" }),
-    h("span", { class: "grow" }));
-  if (ref) {
-    const del = h("button", { class: "mini danger", type: "button", text: "Delete" });
-    del.addEventListener("click", () => {
-      if (!del.classList.contains("arm")) { del.classList.add("arm"); del.textContent = "Click again to delete"; return; }
-      const copy = { action: "saveDue", title: x.title, day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "" };
-      apiPost({ action: "deleteDue", ref: { cal: ref.cal, id: ref.id, start: ref.start } }).then(() => {
-        closeDrawer(); undoOffer = { text: "Deleted “" + x.title + "”.", label: "Undo", run: () => apiPost(copy).then(load) }; load();
-      }).catch(fail("delete"));
+  openDrawer("Edit task", [
+    h("div", { class: "fld" }, name),
+    h("div", { class: "fld" }, chips),
+    h("div", { class: "fld" }, h("span", { class: "label", text: "Notes" }), notes),
+    actions.length ? h("div", { class: "fld" }, h("span", { class: "label", text: "Get it done" }), h("div", { class: "row" }, actions)) : null,
+    h("p", { class: "hint", text: "Lives on your " + CAL_NAMES[ref.cal] + " as “name due HH:MM”, which every board, the widget and the evening email read." })
+  ], [
+    h("button", { class: "pill-btn primary", type: "button", onclick: save, text: "Save" }),
+    h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); toggleDone(x); }, text: x.done ? "Mark not done" : "Mark done" }),
+    h("span", { class: "grow" }),
+    h("button", { class: "mini danger", type: "button", onclick: () => { closeDrawer(); deleteDue(x); }, text: "Delete" }),
+    h("a", { class: "gcal", href: gcalLink({ src: ref.cal, id: ref.id, start: ref.start }), target: "_blank", rel: "noopener", text: "Calendar ↗" })
+  ]);
+  name.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+  name.focus({ preventScroll: true });
+}
+
+/* ---------- Adding and editing ----------
+   Everything you add or change saves right away, shows up before the calendar confirms it,
+   and says what happened in a toast at the bottom, usually with Undo (Ctrl/Cmd+Z works too). */
+
+// ---- Toasts
+let toastSeq = 0, toastList = [];
+function toast(text, undo, ms) {
+  const id = ++toastSeq;
+  toastList = toastList.slice(-1).concat([{ id, text, undo }]);
+  drawToasts();
+  setTimeout(() => { toastList = toastList.filter((x) => x.id !== id); drawToasts(); }, ms || (undo ? 10000 : 5000));
+  return id;
+}
+function drawToasts() {
+  const box = $("#toasts");
+  if (!box) return;
+  box.replaceChildren(...toastList.map((x) => h("div", { class: "toast" + (/^(Didn't|Couldn't|Undo didn't)/.test(x.text) ? " err" : "") },
+    h("span", { text: x.text }),
+    x.undo ? h("button", { class: "undo", type: "button", onclick: () => runUndo(x), text: "Undo" }) : null,
+    h("button", { class: "x", type: "button", "aria-label": "Dismiss", onclick: () => { toastList = toastList.filter((y) => y !== x); drawToasts(); }, text: "×" }))));
+}
+function runUndo(x) {
+  toastList = toastList.filter((y) => y !== x); drawToasts();
+  Promise.resolve().then(x.undo).then(() => toast("Undone."), (err) => { toast("Undo didn't work: " + errText(err) + "."); load(); });
+}
+function lastUndo() { for (let i = toastList.length - 1; i >= 0; i--) if (toastList[i].undo) return toastList[i]; return null; }
+
+// ---- Popovers and menus (they live outside the page, so a refresh doesn't close them)
+let pop = null, pendingRender = false;
+function openPop(anchor, content, opts) {
+  opts = opts || {};
+  closePop();
+  const el = h("div", { class: "pop" + (opts.cls ? " " + opts.cls : ""), role: opts.role || "dialog" }, content);
+  document.body.append(el);
+  const r = anchor ? anchor.getBoundingClientRect() : { left: opts.at.x, right: opts.at.x, top: opts.at.y, bottom: opts.at.y };
+  const w = el.offsetWidth, hh = el.offsetHeight;
+  let x = opts.at ? opts.at.x : r.left, y = opts.at ? opts.at.y : r.bottom + 6;
+  if (x + w > innerWidth - 10) x = Math.max(10, (opts.at ? x : r.right) - w);
+  if (y + hh > innerHeight - 10) y = Math.max(10, (opts.at ? y : r.top - 6) - hh);
+  el.style.left = Math.max(10, x) + "px"; el.style.top = Math.max(10, y) + "px";
+  pop = { el, anchor, onClose: opts.onClose };
+  setTimeout(() => document.addEventListener("pointerdown", popOutside, true));
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closePop(); if (anchor && anchor.focus && document.contains(anchor)) anchor.focus(); }
+    else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && el.getAttribute("role") === "menu") {
+      e.preventDefault();
+      const items = [...el.querySelectorAll(".mi:not([disabled])")], i = items.indexOf(document.activeElement);
+      const n = items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length];
+      if (n) n.focus();
+    }
+  });
+  if (!opts.noFocus) { const f = el.querySelector(opts.focus || "input, textarea, .mi, button"); if (f) f.focus({ preventScroll: true }); }
+  return el;
+}
+function popOutside(e) { if (pop && !pop.el.contains(e.target) && !(pop.anchor && pop.anchor.contains && pop.anchor.contains(e.target))) closePop(); }
+function closePop() {
+  if (!pop) return;
+  const p = pop; pop = null;
+  document.removeEventListener("pointerdown", popOutside, true);
+  p.el.remove();
+  if (p.onClose) p.onClose();
+  if (pendingRender) { pendingRender = false; render(); }
+}
+// A menu: [{ label, kbd, run, danger, disabled, sub: () => items }] or "-" for a line.
+function menu(anchor, items, at) {
+  const list = items.filter(Boolean).map((it) => it === "-" ? h("div", { class: "msep", role: "separator" })
+    : h("button", { class: "mi" + (it.danger ? " danger" : ""), type: "button", role: "menuitem", disabled: it.disabled ? "" : null,
+      onclick: (e) => { if (it.keep) { it.run(e); return; } closePop(); it.run(e); } },
+      h("span", { class: "ml", text: it.label }), it.kbd ? h("span", { class: "kbd", text: it.kbd }) : it.more ? h("span", { class: "more", text: "›" }) : null));
+  return openPop(anchor, list, { role: "menu", cls: "menu", at });
+}
+
+// Don't redraw the page under someone who's typing in place, dragging on the timeline, or in a menu.
+function holdRender() {
+  const ae = document.activeElement;
+  return !!(pop || tl.drag || (ae && ae.classList && ae.classList.contains("inline-edit")));
+}
+
+// ---- Understanding what you type: "Econ PS7 fri 18:00", "lit hum essay tmr", "chinese quiz wed before class"
+const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+function courseByTag(tag) {
+  const t = tag.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const keys = shownCourses().concat(COURSE_LIST.map((c) => c[0]));
+  return keys.find((k) => k.toLowerCase().replace(/[^a-z0-9]/g, "") === t)
+    || keys.find((k) => k.toLowerCase().replace(/[^a-z0-9]/g, "").startsWith(t) || COURSES[k].name.toLowerCase().replace(/[^a-z0-9]/g, "").startsWith(t)) || null;
+}
+function parseQuick(text, now) {
+  let s = " " + String(text || "") + " ";
+  const out = { day: null, time: null, course: null, mins: null, star: false, beforeClass: false, hits: [] };
+  const take = (rx, fn) => {
+    s = s.replace(rx, function () {
+      const m = [].slice.call(arguments, 0, -2);
+      if (fn(m) === false) return m[0];
+      out.hits.push(m[0].trim());
+      return " ";
     });
-    foot.push(del);
+  };
+  const at = (n) => dayKey(addDays(now, n, 12));
+  take(/\s#([a-z][a-z0-9-]*)(?=\s)/i, (m) => { const k = courseByTag(m[1]); if (!k) return false; out.course = k; });
+  take(/\s!{1,3}(?=\s)/, () => { out.star = true; });
+  take(/\s(?:for\s+)?(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hours?)(?:\s*(\d+)\s*m(?:in)?)?(?=\s)/i, (m) => { const v = Math.round(parseFloat(m[1]) * 60 + (m[2] ? +m[2] : 0)); if (!v || v > 600) return false; out.mins = v; });
+  take(/\s(?:for\s+)?(\d{2,3})\s*(?:m|min|mins|minutes)(?=\s)/i, (m) => { if (+m[1] > 600) return false; out.mins = +m[1]; });
+  take(/\s(?:at\s+|by\s+|@)?(\d{1,2}):(\d{2})\s*(am|pm)?(?=\s)/i, (m) => {
+    let hh = +m[1]; const mm = +m[2];
+    if (m[3]) hh = (hh % 12) + (/pm/i.test(m[3]) ? 12 : 0);
+    if (hh > 23 || mm > 59) return false;
+    out.time = pad(hh) + ":" + pad(mm);
+  });
+  take(/\s(?:at\s+|by\s+|@)?(\d{1,2})\s*(am|pm)(?=\s)/i, (m) => { const hh = (+m[1] % 12) + (/pm/i.test(m[2]) ? 12 : 0); if (+m[1] > 12) return false; out.time = pad(hh) + ":00"; });
+  take(/\s(?:at|by)\s+(\d{1,2})(?=\s)/i, (m) => { if (+m[1] > 23) return false; out.time = pad(+m[1]) + ":00"; });
+  take(/\s(?:at\s+|by\s+)?noon(?=\s)/i, () => { out.time = "12:00"; });
+  take(/\s(?:at\s+|by\s+)?(?:midnight|eod|end of (?:the )?day)(?=\s)/i, () => { out.time = "23:59"; });
+  take(/\s(?:due\s+)?before class(?=\s)/i, () => { out.beforeClass = true; });
+  take(/\s(?:due\s+)?(today|tonight)(?=\s)/i, (m) => { out.day = at(0); if (/tonight/i.test(m[1]) && !out.time) out.time = "23:59"; });
+  take(/\s(?:due\s+)?(?:tomorrow|tmrw?|tmw)(?=\s)/i, () => { out.day = at(1); });
+  take(/\s(?:due\s+)?(?:on\s+)?(next\s+)?(sun|mon|tue|wed|thu|fri|sat)(?:s|day|sday|nesday|rsday|urday|r|rs|rsday)?(?=\s)/i, (m) => {
+    const idx = WEEKDAYS.indexOf(m[2].toLowerCase());
+    let diff = (idx - now.getDay() + 7) % 7;
+    if (m[1]) diff += 7;
+    out.day = at(diff);
+  });
+  take(/\sin\s+(\d{1,2})\s+(days?|weeks?)(?=\s)/i, (m) => { out.day = at(+m[1] * (/week/i.test(m[2]) ? 7 : 1)); });
+  take(/\snext week(?=\s)/i, () => { out.day = at(((8 - now.getDay()) % 7) || 7); });
+  const md = (mo, d) => {
+    if (mo < 0 || mo > 11 || d < 1 || d > 31) return false;
+    let y = now.getFullYear();
+    if (new Date(y, mo, d).getTime() < startOfDay(now).getTime() - 60 * DAY) y++;
+    out.day = dayKey(new Date(y, mo, d, 12));
+  };
+  take(/\s(?:on\s+)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?=\s)/i, (m) => md(MONTHS.indexOf(m[1].toLowerCase()), +m[2]));
+  take(/\s(?:on\s+)?(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*(?=\s)/i, (m) => md(MONTHS.indexOf(m[2].toLowerCase()), +m[1]));
+  take(/\s(?:on\s+)?(\d{1,2})\/(\d{1,2})(?=\s)/, (m) => md(+m[1] - 1, +m[2]));
+  out.title = s.replace(/\s+/g, " ").trim().replace(/\s+(due|by|at|on|for)$/i, "").replace(/^(due|by)\s+/i, "");
+  return out;
+}
+
+// The kinds of work, for the Type picker. Picking one adds its word to the name if it isn't there,
+// which is how every board tells an exam from a reading.
+const TYPES = [
+  { k: "", label: "Assignment", word: "" },
+  { k: "pset", label: "Problem set", word: "problem set", rx: /\b(pset|problem set|hw|homework)\b/i },
+  { k: "essay", label: "Essay or paper", word: "essay", rx: /\b(essay|paper|draft)\b/i },
+  { k: "reading", label: "Reading", word: "reading", rx: /\b(reading|rdg|wr\s*\d)\b/i },
+  { k: "report", label: "Lab report", word: "lab report", rx: /\b(lab report|report)\b/i },
+  { k: "project", label: "Project", word: "project", rx: /\b(project|presentation)\b/i },
+  { k: "quiz", label: "Quiz", word: "quiz", rx: /\bquiz\b/i },
+  { k: "exam", label: "Exam or test", word: "exam", rx: /\b(exam|test|midterm|final)\b/i }
+];
+const typeOf = (title) => (TYPES.slice(1).reverse().find((T) => T.rx.test(title)) || TYPES[0]).k;
+const typeLabel = (k) => (TYPES.find((T) => T.k === k) || TYPES[0]).label;
+function withType(title, k) {
+  const T = TYPES.find((x) => x.k === k);
+  return !T || !T.word || T.rx.test(title) ? title : title + " " + T.word;
+}
+// The course goes at the front of the name ("Econ PS7"), which is how every board, the widget and
+// the evening email know the class. Changing it swaps the old one out.
+function withCourse(title, k) {
+  let t = String(title || "").trim();
+  const was = courseOf(t);
+  if (was && was !== k) t = t.replace(new RegExp("^" + was.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b[\\s:·-]*", "i"), "");
+  if (!k || courseOf(t) === k) return t;
+  return k + " " + t;
+}
+// When a course's next class meets on a given day (for "before class").
+function classStart(course, day) {
+  if (!course || !day) return null;
+  const a = localDate(day), b = a + DAY;
+  const c = events.filter((e) => e.src === "classes" && !e.allDay && e.start >= a && e.start < b && courseOf(e.title) === course).sort((x, y) => x.start - y.start)[0];
+  return c ? c.start : null;
+}
+function dayLabel(day, now) {
+  const n = Math.round((localDate(day) - startOfDay(now).getTime()) / DAY);
+  const d = new Date(localDate(day) + 12 * 3600000);
+  if (n === 0) return "Today";
+  if (n === 1) return "Tomorrow";
+  if (n === -1) return "Yesterday";
+  if (n > 1 && n < 7) return d.toLocaleDateString("en-US", { weekday: "long" });
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+// ---- Pickers used by the composer, the editors and the menus
+function monthGrid(selected, onPick, now) {
+  const sel = selected ? new Date(localDate(selected) + 12 * 3600000) : now;
+  let view = new Date(sel.getFullYear(), sel.getMonth(), 1);
+  const wrap = h("div", { class: "cal" });
+  const draw = () => {
+    const first = new Date(view.getFullYear(), view.getMonth(), 1), lead = first.getDay();
+    const days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+    const today = dayKey(now);
+    const cells = [];
+    for (let i = 0; i < lead; i++) cells.push(h("span"));
+    for (let d = 1; d <= days; d++) {
+      const k = dayKey(new Date(view.getFullYear(), view.getMonth(), d, 12));
+      cells.push(h("button", { type: "button", class: "cd" + (k === selected ? " sel" : "") + (k === today ? " today" : "") + (k < today ? " past" : ""),
+        "aria-label": new Date(localDate(k) + 43200000).toDateString(), onclick: () => onPick(k), text: String(d) }));
+    }
+    wrap.replaceChildren(
+      h("div", { class: "cal-head" },
+        h("button", { type: "button", class: "ico-btn", "aria-label": "Previous month", onclick: () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); draw(); }, text: "‹" }),
+        h("b", { text: view.toLocaleDateString("en-US", { month: "long", year: "numeric" }) }),
+        h("button", { type: "button", class: "ico-btn", "aria-label": "Next month", onclick: () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); draw(); }, text: "›" })),
+      h("div", { class: "cal-grid" }, "SMTWTFS".split("").map((c) => h("span", { class: "dow", text: c })), cells));
+  };
+  draw();
+  return wrap;
+}
+function pickDay(anchor, current, onPick, opts) {
+  const now = new Date();
+  const choose = (k) => { closePop(); onPick(k); };
+  const quick = [["Today", 0], ["Tomorrow", 1]];
+  for (let i = 2; i < 7; i++) quick.push([addDaysLabel(now, i), i]);
+  quick.push(["Next week", ((8 - now.getDay()) % 7) || 7]);
+  openPop(anchor, [
+    opts && opts.title ? h("div", { class: "pop-h", text: opts.title }) : null,
+    h("div", { class: "quick" }, quick.map(([l, n]) => {
+      const k = dayKey(addDays(now, n, 12));
+      return h("button", { type: "button", class: "mi" + (k === current ? " sel" : ""), onclick: () => choose(k) },
+        h("span", { class: "ml", text: l }), h("span", { class: "kbd", text: new Date(localDate(k) + 43200000).toLocaleDateString("en-US", { month: "short", day: "numeric" }) }));
+    })),
+    monthGrid(current, choose, now)
+  ], { cls: "daypop" });
+}
+function addDaysLabel(now, n) { return new Date(addDays(now, n, 12)).toLocaleDateString("en-US", { weekday: "long" }); }
+function pickTime(anchor, current, onPick, opts) {
+  opts = opts || {};
+  const choose = (v) => { closePop(); onPick(v); };
+  const box = timeBox(current || "", "Time", true);
+  box.classList.add("pop-time");
+  box.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); const v = normTime(box.value); if (v != null) choose(v || null); else box.classList.add("bad"); } });
+  const presets = opts.presets || [["09:00"], ["12:00"], ["17:00"], ["18:00"], ["23:59", "End of day"]];
+  openPop(anchor, [
+    opts.title ? h("div", { class: "pop-h", text: opts.title }) : null,
+    h("div", { class: "row pad" }, box, h("span", { class: "hint", text: "24-hour, Enter" })),
+    opts.classAt ? h("button", { type: "button", class: "mi", onclick: () => choose(fmtTime(opts.classAt)) },
+      h("span", { class: "ml", text: "Before class" }), h("span", { class: "kbd", text: fmtTime(opts.classAt) })) : null,
+    presets.map(([v, l]) => h("button", { type: "button", class: "mi" + (v === current ? " sel" : ""), onclick: () => choose(v) },
+      h("span", { class: "ml", text: l || v }), l ? h("span", { class: "kbd", text: v }) : null)),
+    opts.none === false ? null : h("button", { type: "button", class: "mi", onclick: () => choose(null) }, h("span", { class: "ml", text: opts.noneLabel || "No time (end of day)" }))
+  ], { cls: "timepop", focus: "input" });
+}
+function pickCourse(anchor, current, onPick) {
+  const choose = (k) => { closePop(); onPick(k); };
+  const mine = shownCourses();
+  const q = h("input", { class: "inp", placeholder: "Find a class", "aria-label": "Find a class", autocomplete: "off" });
+  const list = h("div", { class: "clist" });
+  const draw = () => {
+    const f = q.value.trim().toLowerCase();
+    const keys = (f ? COURSE_LIST.map((c) => c[0]) : mine).filter((k) => !f || k.toLowerCase().includes(f) || COURSES[k].name.toLowerCase().includes(f));
+    list.replaceChildren(...keys.map((k) => h("button", { type: "button", class: "mi" + (k === current ? " sel" : ""), onclick: () => choose(k) },
+      h("i", { class: "dot", style: "background:" + colorOf(k) }), h("span", { class: "ml", text: k }), h("span", { class: "kbd", text: COURSES[k].name }))),
+      h("button", { type: "button", class: "mi" + (!current ? " sel" : ""), onclick: () => choose(null) }, h("i", { class: "dot", style: "background:" + OTHER.color }), h("span", { class: "ml", text: "No class" })));
+  };
+  q.addEventListener("input", draw);
+  q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); const b = list.querySelector(".mi"); if (b) b.click(); } });
+  draw();
+  openPop(anchor, [h("div", { class: "row pad" }, q), list], { cls: "coursepop" });
+}
+function pickType(anchor, current, onPick) {
+  menu(anchor, TYPES.map((T) => ({ label: (T.k === current ? "✓ " : "") + T.label, run: () => onPick(T.k) })));
+}
+// A chip button: icon-ish label + value, opens a picker.
+function chip(label, value, onclick, o) {
+  o = o || {};
+  return h("button", { type: "button", class: "chip-btn" + (value ? " set" : "") + (o.cls ? " " + o.cls : ""), title: o.title || label, onclick,
+    style: o.color ? "--course:" + o.color : null },
+    o.color ? h("i", { class: "dot", style: "background:" + o.color }) : null,
+    h("span", { class: "cl", text: label }), value ? h("span", { class: "cv", text: value }) : null);
+}
+
+// ---- Saving, optimistically: the change shows at once, the calendar confirms, a failure puts it back.
+let tmpSeq = 0;
+const tmpId = () => "tmp-" + (++tmpSeq);
+const dueName = (title) => String(title || "").replace(/\s+due\b.*$/i, "").trim();
+const evOf = (ref) => ref && events.find((e) => e.src === ref.cal && e.id === ref.id && e.start === Number(ref.start));
+function removeEv(ev) { const i = events.indexOf(ev); if (i >= 0) events.splice(i, 1); }
+const itemFor = (ev) => currentItems.find((x) => refsOf(x).some((r) => r.id === ev.id && r.cal === ev.src));
+function keepState(oldKey, ev) {
+  // A renamed or moved deadline gets a new key: carry its star, order and done mark over.
+  const x = itemFor(ev);
+  if (!x || x.key === oldKey) return;
+  if (layout[oldKey]) { layout[x.key] = layout[oldKey]; delete layout[oldKey]; saveLayout(); }
+}
+function createDue(o, quiet) {
+  const ev = { id: tmpId(), src: "personal", title: dueName(o.title) + " due" + (o.time ? " " + o.time : ""), allDay: true,
+    start: localDate(o.day), end: localDate(o.day) + DAY, where: "", notes: o.notes || "", steps: [], modes: [], pending: true };
+  events.push(ev); render();
+  return apiPost({ action: "saveDue", title: o.title, day: o.day, time: o.time || "", notes: o.notes || "" }).then((d) => {
+    ev.pending = false;
+    if (d.ref) { ev.id = d.ref.id; ev.src = d.ref.cal; ev.start = Number(d.ref.start); }
+    render();
+    if (o.star) { const x = itemFor(ev); if (x) setStar(x, true, new Date()); }
+    if (!quiet) toast("Added “" + dueName(o.title) + "” · due " + dayLabel(o.day, new Date()) + (o.time ? " " + o.time : ""),
+      d.ref ? () => { removeEv(ev); render(); return apiPost({ action: "deleteDue", ref: d.ref }).then(load); } : null);
+    load();
+    return d;
+  }).catch((err) => { removeEv(ev); render(); toast("Didn't add “" + dueName(o.title) + "”: " + errText(err) + "."); throw err; });
+}
+// o: any of { title, day, time (null = none), notes }
+function updateDue(x, o, quiet) {
+  const ref = ownRef(x), ev = evOf(ref);
+  if (!ref) { toast("That one comes from " + (refsOf(x).some((r) => r.cal === "canvas") ? "Canvas" : "Google Calendar") + ", so it changes there."); return Promise.resolve(); }
+  const old = { title: dueName(ev ? ev.title : x.title), day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes || "" : "" };
+  const next = { title: o.title != null ? o.title : old.title, day: o.day || old.day, time: o.time !== undefined ? o.time || "" : old.time, notes: o.notes != null ? o.notes : old.notes };
+  if (ev) { ev.title = dueName(next.title) + " due" + (next.time ? " " + next.time : ""); ev.start = localDate(next.day); ev.end = ev.start + DAY; ev.notes = next.notes; ev.pending = true; }
+  const oldKey = x.key;
+  render();
+  return apiPost({ action: "saveDue", ref, title: next.title, day: next.day, time: next.time, notes: next.notes }).then((d) => {
+    if (ev) { ev.pending = false; if (d.ref) ev.start = Number(d.ref.start); keepState(oldKey, ev); }
+    const nref = d.ref || ref;
+    if (!quiet) {
+      const what = o.day && o.day !== old.day ? "Moved to " + dayLabel(next.day, new Date()) : o.title != null && o.title !== old.title ? "Renamed" : "Saved";
+      toast(what + " · “" + dueName(next.title) + "”", () => apiPost({ action: "saveDue", ref: nref, title: old.title, day: old.day, time: old.time, notes: old.notes }).then(load));
+    }
+    load();
+  }).catch((err) => { toast("Didn't save: " + errText(err) + "."); load(); });
+}
+function deleteDue(x) {
+  const ref = ownRef(x);
+  if (!ref) { toast("That one comes from " + (refsOf(x).some((r) => r.cal === "canvas") ? "Canvas" : "another calendar") + ". Mark it done (D) to clear it."); return; }
+  const ev = evOf(ref);
+  const copy = { title: dueName(ev ? ev.title : x.title), day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes || "" : "" };
+  if (ev) removeEv(ev);
+  if (expanded === x.key) expanded = null;
+  render();
+  apiPost({ action: "deleteDue", ref }).then(() => {
+    toast("Deleted “" + copy.title + "”", () => createDue(copy, true));
+    load();
+  }).catch((err) => { if (ev) events.push(ev); render(); toast("Didn't delete: " + errText(err) + "."); });
+}
+const stepsOf = (ev) => (ev.steps || []).map((s) => ({ text: s.show || s.text, done: stepDone(ev, s), digest: !!s.digest }));
+function createBlock(p, quiet) {
+  const ev = { id: tmpId(), src: "study", title: p.title || "Work block", allDay: false, start: p.start, end: p.end, where: p.where || "",
+    steps: (p.steps || []).map((s) => ({ text: s.text, done: !!s.done, digest: !!s.digest })), modes: p.modes || [], pending: true };
+  events.push(ev); render();
+  return apiPost({ action: "saveBlock", block: null, title: ev.title, start: p.start, end: p.end, where: ev.where, steps: p.steps || [], modes: p.modes || [] }).then((d) => {
+    ev.pending = false; ev.id = d.block.id; ev.start = Number(d.start); ev.end = Number(d.end);
+    render();
+    if (!quiet) toast("Added “" + ev.title + "” · " + whenText(ev.start) + "–" + fmtTime(ev.end), () => {
+      removeEv(ev); render(); return apiPost({ action: "deleteBlock", block: { cal: "study", id: ev.id, start: ev.start } }).then(load);
+    });
+    load();
+    return d;
+  }).catch((err) => { removeEv(ev); render(); toast("Didn't add the block: " + errText(err) + "."); throw err; });
+}
+function moveBlock(ev, start, end, quiet) {
+  if (ev.src !== "study") return;
+  const from = { start: ev.start, end: ev.end };
+  if (from.start === start && from.end === end) return;
+  ev.start = start; ev.end = end; ev.pending = true; render();
+  apiPost({ action: "saveBlock", block: { cal: "study", id: ev.id, start: from.start }, start, end }).then((d) => {
+    ev.pending = false; ev.start = Number(d.start); ev.end = Number(d.end); render();
+    if (!quiet) {
+      const sameDay = dayKey(from.start) === dayKey(start);
+      toast((end - start !== from.end - from.start && from.start === start ? "Now " + fmtDur(end - start) : "Moved to " + (sameDay ? fmtTime(start) : whenText(start))) + " · “" + ev.title + "”",
+        () => moveBlock(ev, from.start, from.end, true));
+    }
+    load();
+  }).catch((err) => { ev.start = from.start; ev.end = from.end; ev.pending = false; render(); toast("Didn't move it: " + errText(err) + "."); });
+}
+function renameBlock(ev, title) {
+  const old = ev.title;
+  title = String(title || "").trim();
+  if (!title || title === old) return;
+  ev.title = title; ev.pending = true; render();
+  apiPost({ action: "saveBlock", block: { cal: "study", id: ev.id, start: ev.start }, title }).then(() => {
+    ev.pending = false; toast("Renamed to “" + title + "”", () => renameBlock(ev, old)); load();
+  }).catch((err) => { ev.title = old; ev.pending = false; render(); toast("Didn't rename: " + errText(err) + "."); });
+}
+function removeBlock(ev) {
+  if (ev.src !== "study") return;
+  const copy = { title: ev.title, start: ev.start, end: ev.end, where: ev.where, steps: stepsOf(ev), modes: (ev.modes || []).slice() };
+  removeEv(ev); render();
+  apiPost({ action: "deleteBlock", block: { cal: "study", id: ev.id, start: ev.start } }).then(() => {
+    toast("Deleted “" + copy.title + "” · " + whenText(copy.start), () => createBlock(copy, true));
+    load();
+  }).catch((err) => { events.push(ev); render(); toast("Didn't delete: " + errText(err) + "."); });
+}
+
+// ---- The composer: one box for tasks and blocks, Notion / Todoist style
+let cd = null, composerOpen = false, composerFocus = false;
+function resetDraft(mode) { cd = { text: "", mode: mode || (cd && cd.mode) || "task", day: null, time: undefined, course: undefined, type: undefined, notes: null, star: false, start: null, mins: null, where: null }; }
+resetDraft("task");
+function nextQuarter(ms) { const q = 15 * 60000; return Math.ceil((ms + 5 * 60000) / q) * q; }
+function draftValues(now) {
+  const p = parseQuick(cd.text, now);
+  const autoCourse = p.course || (courseFilter && COURSES[courseFilter] ? courseFilter : null) || courseOf(p.title);
+  const course = cd.course !== undefined ? cd.course : autoCourse;
+  const out = { p, title: p.title, course, autoCourse: cd.course === undefined };
+  if (cd.mode === "task") {
+    out.day = cd.day || p.day || dayKey(addDays(now, 1, 12));
+    out.classAt = classStart(course, out.day);
+    out.time = cd.time !== undefined ? cd.time : p.beforeClass && out.classAt ? fmtTime(out.classAt) : p.time;
+    out.type = cd.type !== undefined ? cd.type : typeOf(p.title);
+    out.star = cd.star || p.star;
+  } else {
+    const day = cd.day || p.day || dayKey(now);
+    const time = cd.start != null ? fmtTime(cd.start) : p.time;
+    let start = time ? atTime(day, time) : day === dayKey(now) ? nextQuarter(now.getTime()) : atTime(day, "14:00");
+    out.start = start;
+    out.mins = cd.mins || p.mins || 60;
+    out.end = start + out.mins * 60000;
+    out.where = cd.where || "Library";
+    out.day = day;
+    const clash = timedFor(events, new Date(start)).filter((e) => e.src !== "sleep" && e.start < out.end && e.end > start);
+    out.clash = clash[0] || null;
   }
-  const first = refsOf(x)[0];
-  if (canvasEv && canvasEv.url) foot.push(h("a", { class: "gcal", href: canvasEv.url, target: "_blank", rel: "noopener", text: "Canvas ↗" }));
-  else if (first && first.cal !== "canvas") foot.push(h("a", { class: "gcal", href: gcalLink({ src: first.cal, id: first.id, start: first.start, rec: first.rec }), target: "_blank", rel: "noopener", text: "Calendar ↗" }));
-  openDrawer(ref ? "Edit deadline" : "Deadline", body, foot);
-  if (ref) name.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+  return out;
+}
+function focusComposer(mode, preset) {
+  if (view !== "todo") { view = "todo"; store("deskboard-view", view); }
+  if (mode && mode !== cd.mode) { const t = cd.text; resetDraft(mode); cd.text = t; }
+  Object.assign(cd, preset || {});
+  composerOpen = true; composerFocus = true;
+  render();
+  const inp = $(".composer .c-inp");
+  if (inp) { inp.scrollIntoView({ block: "center", behavior: "smooth" }); }
+}
+function composer() {
+  const now = new Date();
+  const box = h("form", { class: "composer" + (composerOpen || cd.text ? " open" : "") + " mode-" + cd.mode, autocomplete: "off" });
+  const inp = h("input", { class: "inp c-inp", value: cd.text, "aria-label": cd.mode === "task" ? "New task" : "New block",
+    placeholder: cd.mode === "task" ? "Add a task… try “Econ PS7 fri 18:00” or “lit hum essay tmr”" : "Plan a block… try “Econ PS7 tomorrow 14:00 for 90m”" });
+  const chips = h("div", { class: "c-chips" });
+  const notes = h("textarea", { class: "inp c-notes", rows: "2", placeholder: "Notes: pages, links, what the prof said…", "aria-label": "Notes" });
+  notes.value = cd.notes || "";
+  notes.addEventListener("input", () => { cd.notes = notes.value; });
+  const seg = h("div", { class: "seg", role: "tablist", "aria-label": "Add a" },
+    ["task", "block"].map((m) => h("button", { type: "button", role: "tab", "aria-selected": cd.mode === m ? "true" : "false",
+      title: m === "task" ? "Something due (N)" : "Time on your Study calendar (B)",
+      onclick: () => { const t = cd.text; resetDraft(m); cd.text = t; composerOpen = true; composerFocus = true; render(); }, text: m === "task" ? "Task" : "Block" })));
+  const addBtn = h("button", { class: "pill-btn primary c-add", type: "submit", text: "Add" });
+  const draw = () => {
+    const v = draftValues(new Date());
+    const parts = [];
+    if (cd.mode === "task") {
+      parts.push(
+        chip("Due", dayLabel(v.day, now), (e) => pickDay(e.currentTarget, v.day, (k) => { cd.day = k; upd(); }, { title: "Due" }), { cls: cd.day || v.p.day ? "" : "soft" }),
+        chip("Time", v.time || "", (e) => pickTime(e.currentTarget, v.time, (t) => { cd.time = t; upd(); }, { classAt: v.classAt, title: "Due time" }), { cls: v.time ? "" : "soft" }),
+        chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
+        chip("Type", v.type ? typeLabel(v.type) : "", (e) => pickType(e.currentTarget, v.type, (k) => { cd.type = k; upd(); }), { cls: v.type ? "" : "soft" }),
+        h("button", { type: "button", class: "chip-btn star-chip" + (v.star ? " set" : ""), "aria-pressed": v.star ? "true" : "false", title: "Star it (or add !)",
+          onclick: () => { cd.star = !v.star; upd(); } }, ico("star"), h("span", { class: "cl", text: v.star ? "Starred" : "Star" })),
+        h("button", { type: "button", class: "chip-btn" + (cd.notes != null ? " set" : " soft"), onclick: () => { cd.notes = cd.notes == null ? "" : cd.notes; notes.hidden = false; notes.focus(); draw(); } },
+          h("span", { class: "cl", text: "Notes" })));
+    } else {
+      const dur = [30, 60, 90, 120, 180];
+      parts.push(
+        chip("Day", dayLabel(v.day, now), (e) => pickDay(e.currentTarget, v.day, (k) => { cd.day = k; upd(); }, { title: "Day" })),
+        chip("Start", fmtTime(v.start), (e) => pickTime(e.currentTarget, fmtTime(v.start), (t) => { if (t) cd.start = atTime(v.day, t); upd(); },
+          { title: "Starts at", none: false, presets: [[fmtTime(nextQuarter(Date.now())), "Soon"], ["09:00"], ["12:00"], ["14:00"], ["16:00"], ["19:00"], ["21:00"]] })),
+        h("span", { class: "durs", role: "group", "aria-label": "Length" }, dur.map((m) => h("button", { type: "button", class: "mini", "aria-pressed": v.mins === m ? "true" : "false",
+          onclick: () => { cd.mins = m; upd(); }, text: m < 60 ? m + "m" : m / 60 + "h" }))),
+        chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
+        chip("At", v.where, (e) => menu(e.currentTarget, ["Library", "Dorm desk", "Butler", "Lerner"].map((w) => ({ label: w, run: () => { cd.where = w; upd(); } })))),
+        chip("For", "", (e) => pickDeadline(e.currentTarget, (x) => { cd.text = x.title + (cd.text ? " " + parseQuick(cd.text, now).hits.join(" ") : ""); cd.course = x.course || null; inp.value = cd.text; upd(); }), { cls: "soft", title: "Plan time for a deadline" }));
+      if (v.clash) parts.push(h("span", { class: "clash", text: "Overlaps " + v.clash.title + " " + fmtTime(v.clash.start) + "–" + fmtTime(v.clash.end) }));
+    }
+    chips.replaceChildren(h("div", { class: "cc" }, parts), h("div", { class: "ca" }, h("span", { class: "hint keys", text: "Enter to add · Esc to close" }), addBtn));
+    notes.hidden = cd.mode !== "task" || cd.notes == null;
+  };
+  const upd = () => { composerFocus = true; render(); };
+  inp.addEventListener("focus", () => { if (!composerOpen) { composerOpen = true; box.classList.add("open"); } });
+  inp.addEventListener("input", () => { cd.text = inp.value; draw(); });
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { e.preventDefault(); resetDraft(); composerOpen = false; inp.blur(); render(); }
+  });
+  box.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = draftValues(new Date());
+    if (!v.title && cd.mode === "task") { inp.classList.add("shake"); setTimeout(() => inp.classList.remove("shake"), 400); inp.focus(); return; }
+    if (cd.mode === "task") {
+      const title = withType(withCourse(v.title, v.course), v.type);
+      createDue({ title, day: v.day, time: v.time || "", notes: cd.notes || "", star: v.star }).catch(() => {});
+    } else {
+      if (isNaN(v.start)) { toast("Check the start time (24-hour, like 14:00)."); return; }
+      createBlock({ title: withCourse(v.title || "Work block", v.course), start: v.start, end: v.end, where: v.where, steps: [], modes: [] }).catch(() => {});
+    }
+    resetDraft(); composerOpen = true; composerFocus = true; render();
+  });
+  draw();
+  box.append(h("div", { class: "c-row" }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }), inp, seg), chips, notes);
+  return box;
+}
+function pickDeadline(anchor, onPick) {
+  const now = new Date();
+  const open = currentItems.filter((x) => !x.done && !x.past).sort((a, b) => a.dueEnd - b.dueEnd).slice(0, 12);
+  menu(anchor, open.length ? open.map((x) => ({ label: x.title + " · " + dueShort(x, now), run: () => onPick(x) })) : [{ label: "Nothing due soon", disabled: true, run: () => {} }]);
+}
+function addRow(G) {
+  const at = (n) => dayKey(addDays(new Date(), n, 12));
+  const preset = G.id === "today" ? { day: at(0) } : G.id === "tomorrow" ? { day: at(1) } : G.id === "week" ? { day: at(Math.min(6, Math.max(2, 5 - new Date().getDay()))) } : G.id === "star" ? { star: true } : { day: at(8) };
+  return h("li", { class: "add-row" }, h("button", { type: "button", onclick: () => focusComposer("task", preset) },
+    h("span", { class: "plus", text: "+" }), "Add a task" + (G.id === "today" ? " for today" : G.id === "tomorrow" ? " for tomorrow" : G.id === "star" ? " (starred)" : "")));
+}
+
+// ---- Right-click (or ⋯) on a task
+const rowOf = (x) => document.querySelector('.task[data-key="' + CSS.escape(x.key) + '"]');
+function taskMenu(x, anchor, at) {
+  const own = !!ownRef(x), now = new Date(), star = isStarred(x);
+  const canvas = refsOf(x).find((r) => r.cal === "canvas");
+  const canvasEv = canvas && events.find((e) => e.src === "canvas" && e.id === canvas.id);
+  const anchorFor = () => { const r = rowOf(x); return (r && (r.querySelector(".due-pill") || r)) || anchor; };
+  const name = dueName(x.title);
+  menu(anchor, [
+    { label: own ? "Edit…" : "Details", kbd: "E", run: () => editDue(x) },
+    !x.done && !x.past && { label: "Start timer on it", kbd: "G", run: () => startOn(x) },
+    !x.done && !x.past && { label: "Plan " + hoursText(sittingMinutes(x)) + " in the next free slot", kbd: "P", run: () => findTime(x, sittingMinutes(x)) },
+    !x.done && !x.past && { label: "Plan a block at a time…", run: () => newBlockAt(nextQuarter(Date.now()), sittingMinutes(x), { title: x.title }) },
+    "-",
+    own && { label: "Rename", kbd: "R", run: () => renameInline(x) },
+    own && { label: "Change date…", kbd: "T", run: () => pickDay(anchorFor(), x.d.day, (k) => updateDue(x, { day: k }), { title: "Move to" }) },
+    own && dayKey(addDays(now, 1, 12)) !== x.d.day && { label: "Move to tomorrow", run: () => updateDue(x, { day: dayKey(addDays(now, 1, 12)) }) },
+    own && { label: "Change time…", run: () => pickTime(anchorFor(), x.d.dueAt ? fmtTime(x.d.dueAt) : null, (tv) => updateDue(x, { time: tv }), { classAt: classStart(x.course, x.d.day), title: "Due time" }) },
+    own && { label: "Change class…", run: () => pickCourse(anchorFor(), x.course, (k) => updateDue(x, { title: withCourse(name, k) })) },
+    own && { label: "Change type…", run: () => pickType(anchorFor(), typeOf(name), (k) => updateDue(x, { title: withType(name, k) })) },
+    !x.done && { label: star ? "Unstar" : "Star", kbd: "S", run: () => setStar(x, !star, now) },
+    own && { label: "Duplicate", run: () => { const ev = evOf(ownRef(x)); createDue({ title: name + " (copy)", day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes : "" }); } },
+    !x.auto && { label: x.done ? "Mark not done" : "Mark done", kbd: "D", run: () => toggleDone(x) },
+    "-",
+    own ? { label: "Delete", kbd: "Del", danger: true, run: () => deleteDue(x) }
+      : canvasEv && canvasEv.url ? { label: "Open in Canvas ↗", run: () => window.open(canvasEv.url, "_blank", "noopener") }
+      : { label: "Open in Google Calendar ↗", run: () => { const f = refsOf(x)[0]; if (f) window.open(gcalLink({ src: f.cal, id: f.id, start: f.start, rec: f.rec }), "_blank", "noopener"); } },
+    !own && { label: canvas ? "From Canvas: rename or delete it there" : "From another calendar: change it there", disabled: true, run: () => {} }
+  ], at);
+}
+function renameInline(x) {
+  const row = rowOf(x);
+  if (!row || !ownRef(x)) { if (!ownRef(x)) toast("That one comes from Canvas, so its name changes there."); return; }
+  const tEl = row.querySelector(".task-title");
+  const ev = evOf(ownRef(x));
+  const old = dueName(ev ? ev.title : x.title);
+  const inp = h("input", { class: "inp inline-edit", value: old, "aria-label": "Rename" });
+  let done = false;
+  const finish = (save) => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    inp.blur();
+    if (save && v && v !== old) updateDue(x, { title: v }); else render();
+    const r = rowOf(x); if (r) r.focus({ preventScroll: true });
+  };
+  inp.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); finish(true); } else if (e.key === "Escape") { e.preventDefault(); finish(false); } });
+  inp.addEventListener("click", (e) => e.stopPropagation());
+  inp.addEventListener("blur", () => finish(true));
+  tEl.replaceWith(inp);
+  inp.focus(); inp.select();
+}
+
+// ---- Right-click (or ⋯) on a block
+function blockMenu(ev, anchor, at) {
+  const study = ev.src === "study" && !ev.pending;
+  const now = new Date(), len = ev.end - ev.start;
+  if (!study) return menu(anchor, [{ label: "Details", run: () => openEvent(ev) }, { label: "Open in Google Calendar ↗", run: () => window.open(gcalLink(ev), "_blank", "noopener") }], at);
+  menu(anchor, [
+    { label: "Edit…", kbd: "Enter", run: () => editBlock(ev) },
+    ev.start <= now.getTime() + 30 * 60000 && ev.end > now.getTime() && { label: timerRunning(pomo) ? "Pause timer" : "Start timer", run: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); } },
+    { label: "Rename…", run: () => quickRename(ev, anchor, at) },
+    { label: "Change class…", run: () => pickCourse(anchor || document.body, courseOf(ev.title), (k) => renameBlock(ev, withCourse(ev.title, k))) },
+    "-",
+    { label: "15 min later", kbd: "Alt ↓", run: () => moveBlock(ev, ev.start + 15 * 60000, ev.end + 15 * 60000) },
+    { label: "15 min earlier", kbd: "Alt ↑", run: () => moveBlock(ev, ev.start - 15 * 60000, ev.end - 15 * 60000) },
+    { label: "Move to tomorrow", run: () => moveBlock(ev, ev.start + DAY, ev.end + DAY) },
+    { label: "Next free slot", run: () => apiPost({ action: "saveBlock", block: { cal: "study", id: ev.id, start: ev.start }, nextFree: true })
+      .then((d) => { const from = { s: ev.start, e: ev.end }; toast("Moved to " + whenText(d.start) + " · “" + ev.title + "”", () => moveBlockById(d, from)); load(); }, (err) => toast("Didn't move it: " + errText(err) + ".")) },
+    { label: "Duplicate right after", run: () => createBlock({ title: ev.title, start: ev.end, end: ev.end + len, where: ev.where, steps: stepsOf(ev).map((s) => ({ text: s.text, digest: s.digest })), modes: ev.modes }) },
+    { label: "Duplicate tomorrow", run: () => createBlock({ title: ev.title, start: ev.start + DAY, end: ev.end + DAY, where: ev.where, steps: stepsOf(ev).map((s) => ({ text: s.text, digest: s.digest })), modes: ev.modes }) },
+    ev.end <= now.getTime() && checkable(ev) && "-",
+    ev.end <= now.getTime() && checkable(ev) && { label: "Went: Done", run: () => rateBlock(ev, "done") },
+    ev.end <= now.getTime() && checkable(ev) && { label: "Went: Partly", run: () => rateBlock(ev, "partly") },
+    ev.end <= now.getTime() && checkable(ev) && { label: "Went: Missed", run: () => rateBlock(ev, "missed") },
+    "-",
+    { label: "Delete", kbd: "Del", danger: true, run: () => removeBlock(ev) },
+    { label: "Open in Google Calendar ↗", run: () => window.open(gcalLink(ev), "_blank", "noopener") }
+  ], at);
+}
+function moveBlockById(d, from) {
+  const ev = events.find((e) => e.src === "study" && e.id === d.block.id);
+  if (ev) moveBlock(ev, from.s, from.e, true);
+  else return apiPost({ action: "saveBlock", block: d.block, start: from.s, end: from.e }).then(load);
+}
+function quickRename(ev, anchor, at) {
+  const inp = h("input", { class: "inp", value: ev.title, "aria-label": "Block name" });
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); closePop(); renameBlock(ev, inp.value); } });
+  openPop(anchor, [h("div", { class: "pop-h", text: "Rename block" }), h("div", { class: "row pad" }, inp, h("button", { class: "pill-btn primary", type: "button", onclick: () => { closePop(); renameBlock(ev, inp.value); }, text: "Save" }))], { at, cls: "renamepop" });
+  inp.select();
+}
+
+// ---- The day on the right, as a timeline: drag on empty time to make a block, drag a block to move it,
+// drag its bottom edge to change its length, drop a to-do on it to plan time for it, right-click for more.
+const tl = { drag: null, scroll: null, scrollDay: null, px: 46 };
+const Q = 15 * 60000;
+function layoutCols(items) {
+  const sorted = items.slice().sort((a, b) => a.start - b.start || b.end - a.end);
+  const out = new Map();
+  let cluster = [], end = -Infinity;
+  const flush = () => {
+    const cols = [];
+    cluster.forEach((ev) => {
+      let c = cols.findIndex((last) => last <= ev.start);
+      if (c < 0) { c = cols.length; cols.push(0); }
+      cols[c] = ev.end;
+      out.set(ev, { col: c });
+    });
+    cluster.forEach((ev) => { out.get(ev).n = cols.length; });
+  };
+  sorted.forEach((ev) => { if (ev.start >= end && cluster.length) { flush(); cluster = []; end = -Infinity; } cluster.push(ev); end = Math.max(end, ev.end); });
+  if (cluster.length) flush();
+  return out;
+}
+function renderAgenda(now) {
+  const t = now.getTime();
+  const day = new Date(addDays(now, agendaOffset, 12));
+  const d0 = startOfDay(day).getTime();
+  const items = timedFor(events, day).filter((e) => !e.allDay && e.src !== "sleep");
+  const label = agendaOffset === 0 ? "Today" : agendaOffset === 1 ? "Tomorrow" : agendaOffset === -1 ? "Yesterday" : day.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const card = h("section", { class: "panel today-card", "aria-label": label },
+    h("div", { class: "day-nav" },
+      h("button", { class: "ico-btn", type: "button", "aria-label": "Previous day", disabled: agendaOffset <= -7 ? "" : null, onclick: () => { agendaOffset--; tl.scroll = null; render(); }, text: "‹" }),
+      h("h2", { text: label }),
+      agendaOffset ? h("button", { class: "mini", type: "button", onclick: () => { agendaOffset = 0; tl.scroll = null; render(); }, text: "Today" }) : null,
+      h("button", { class: "ico-btn", type: "button", "aria-label": "Next day", disabled: agendaOffset >= 14 ? "" : null, onclick: () => { agendaOffset++; tl.scroll = null; render(); }, text: "›" }),
+      h("button", { class: "mini", type: "button", title: "New Study block (B)", onclick: (e) => {
+        const s = agendaOffset === 0 ? nextQuarter(t) : d0 + 14 * 3600000; quickCreate(s, s + 60 * 60000, e.currentTarget); }, text: "+ Block" })));
+  let h0 = 8, h1 = 23;
+  items.forEach((e) => { h0 = Math.min(h0, Math.floor((Math.max(e.start, d0) - d0) / 3600000)); h1 = Math.max(h1, Math.ceil((Math.min(e.end, d0 + DAY) - d0) / 3600000)); });
+  h0 = Math.max(0, h0); h1 = Math.min(24, Math.max(h1, h0 + 4));
+  const PX = tl.px, top0 = d0 + h0 * 3600000, bottom = d0 + h1 * 3600000;
+  const y = (ms) => (Math.min(Math.max(ms, top0), bottom) - top0) / 3600000 * PX;
+  const scroller = h("div", { class: "tl-scroll" });
+  const grid = h("div", { class: "tl", style: "height:" + (h1 - h0) * PX + "px" });
+  for (let hh = h0; hh < h1; hh++) grid.append(h("div", { class: "tl-hour", style: "top:" + (hh - h0) * PX + "px" }, h("span", { text: pad(hh) + ":00" })));
+  const lane = h("div", { class: "tl-lane" });
+  const cols = layoutCols(items);
+  const evEls = new Map();
+  items.forEach((ev) => {
+    const c = cols.get(ev) || { col: 0, n: 1 };
+    const r = ev.src === "study" ? rating(ev) : null;
+    const course = courseOf(ev.title);
+    const study = ev.src === "study";
+    const top = y(ev.start), hgt = Math.max(16, y(ev.end) - top - 2);
+    const el = h("div", { class: "tl-ev src-" + ev.src + (study ? " study" : "") + (ev.end <= t ? " past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : "") + (ev.pending ? " pending" : "") + (hgt < 34 ? " short" : hgt >= 80 ? " tall" : ""),
+      style: "top:" + top + "px;height:" + hgt + "px;left:" + (c.col / c.n * 100) + "%;width:calc(" + (100 / c.n) + "% - 3px);--course:" + (study || ev.src === "classes" ? colorOf(course) : "var(--ink-3)"),
+      tabindex: "0", role: "button", "aria-label": ev.title + ", " + fmtTime(ev.start) + " to " + fmtTime(ev.end) + (study ? ". Drag to move, Enter to edit." : ""),
+      title: ev.title + " · " + fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") },
+      h("b", { text: ev.title }), h("span", { class: "tm", text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where && hgt >= 50 ? " · " + ev.where : "") + (ev.worked && hgt >= 50 ? " · " + fmtMins(ev.worked) + " worked" : "") }),
+      study && !ev.pending ? h("span", { class: "tl-rs", "aria-hidden": "true" }) : null);
+    el._ev = ev;
+    if (!study) el.addEventListener("click", () => openEvent(ev));
+    el.addEventListener("contextmenu", (e) => { e.preventDefault(); blockMenu(ev, el, { x: e.clientX, y: e.clientY }); });
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); openEvent(ev); }
+      else if (!study || ev.pending) return;
+      else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); removeBlock(ev); }
+      else if (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const d = e.key === "ArrowDown" ? Q : -Q; moveBlock(ev, ev.start + d, ev.end + d); }
+      else if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) { e.preventDefault(); blockMenu(ev, el); }
+    });
+    evEls.set(ev, el);
+    lane.append(el);
+  });
+  if (agendaOffset === 0 && t > top0 && t < bottom) lane.append(h("div", { class: "tl-now", style: "top:" + y(t) + "px" }));
+  const ghost = h("div", { class: "tl-ghost", hidden: "" });
+  lane.append(ghost);
+  grid.append(lane);
+  scroller.append(grid);
+
+  const msAt = (clientY) => top0 + (clientY - lane.getBoundingClientRect().top) / PX * 3600000;
+  const snap = (ms) => Math.round(ms / Q) * Q;
+  const showGhost = (a, b, text) => { ghost.hidden = false; ghost.style.top = y(a) + "px"; ghost.style.height = Math.max(14, y(b) - y(a) - 2) + "px"; ghost.textContent = text || fmtTime(a) + "–" + fmtTime(b); };
+  lane.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || pop) return;
+    const evEl = e.target.closest(".tl-ev");
+    if (evEl) {
+      const ev = evEl._ev;
+      if (!ev || ev.src !== "study" || ev.pending) return;
+      tl.drag = { kind: e.target.classList.contains("tl-rs") ? "resize" : "move", ev, el: evEl, y0: e.clientY, s: ev.start, e: ev.end, moved: false };
+    } else {
+      const a = Math.floor(msAt(e.clientY) / Q) * Q;
+      tl.drag = { kind: "new", y0: e.clientY, a0: a, a, b: a + 60 * 60000, moved: false };
+    }
+    lane.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  lane.addEventListener("pointermove", (e) => {
+    const d = tl.drag;
+    if (!d) return;
+    const dy = e.clientY - d.y0;
+    if (Math.abs(dy) > 4) d.moved = true;
+    if (!d.moved) return;
+    if (d.kind === "new") {
+      const cur = snap(msAt(e.clientY));
+      d.a = Math.min(d.a0, cur); d.b = Math.max(d.a + Q, Math.max(d.a0 + Q, cur));
+      showGhost(d.a, d.b);
+    } else {
+      const delta = snap(dy / PX * 3600000);
+      const ns = d.kind === "move" ? d.ev.start + delta : d.ev.start;
+      const ne = d.kind === "move" ? d.ev.end + delta : Math.max(d.ev.start + Q, snap(d.ev.end + dy / PX * 3600000));
+      d.s = ns; d.e = ne;
+      d.el.classList.add("dragging");
+      d.el.style.top = y(ns) + "px"; d.el.style.height = Math.max(16, y(ne) - y(ns) - 2) + "px";
+      const tm = d.el.querySelector(".tm"); if (tm) tm.textContent = fmtTime(ns) + "–" + fmtTime(ne) + " · " + fmtDur(ne - ns);
+    }
+  });
+  const end = (e) => {
+    const d = tl.drag;
+    if (!d) return;
+    tl.drag = null;
+    if (d.kind === "new") {
+      showGhost(d.a, d.b);
+      quickCreate(d.a, d.b, ghost, () => { ghost.hidden = true; });
+    } else if (!d.moved) { pendingRender = false; openEvent(d.ev); }
+    else moveBlock(d.ev, d.s, d.e);
+    if (pendingRender && !pop) { pendingRender = false; render(); }
+  };
+  lane.addEventListener("pointerup", end);
+  lane.addEventListener("pointercancel", () => { tl.drag = null; render(); });
+  // Drop a to-do from the list to plan time for it there.
+  lane.addEventListener("dragover", (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    const a = Math.floor(msAt(e.clientY) / Q) * Q;
+    showGhost(a, a + sittingMinutes(dragging) * 60000, "Plan " + dragging.title + " · " + fmtTime(a));
+  });
+  lane.addEventListener("dragleave", (e) => { if (!lane.contains(e.relatedTarget)) ghost.hidden = true; });
+  lane.addEventListener("drop", (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const x = dragging; dragging = null;
+    const a = Math.floor(msAt(e.clientY) / Q) * Q;
+    createBlock({ title: x.title, start: a, end: a + sittingMinutes(x) * 60000, where: "Library", steps: [], modes: [] }).catch(() => {});
+  });
+
+  card.append(scroller);
+  // Keep the scroll position across refreshes; on a new day start an hour before now (or at the first thing).
+  const key = dayKey(day);
+  requestAnimationFrame(() => {
+    if (tl.scroll != null && tl.scrollDay === key) scroller.scrollTop = tl.scroll;
+    else {
+      const first = agendaOffset === 0 ? t - 3600000 : items.length ? items[0].start - 1800000 : top0 + 6 * 3600000;
+      scroller.scrollTop = Math.max(0, y(first));
+    }
+    tl.scrollDay = key;
+  });
+  scroller.addEventListener("scroll", () => { tl.scroll = scroller.scrollTop; tl.scrollDay = key; });
+  if (!items.length) card.append(h("p", { class: "empty-now", text: "Nothing on the calendar " + (agendaOffset === 0 ? "today" : "that day") + "." }));
+  const done = Number(log[dayKey(now)]) || 0;
+  card.append(h("div", { class: "foot", text: (agendaOffset === 0 && done ? done + " focus round" + (done > 1 ? "s" : "") + " so far. " : "") + "Drag on empty time to add a block, drag a block to move it, or drop a to-do here." }));
+  return card;
+}
+// The little "new block" box Google Calendar shows when you click or drag on empty time.
+function quickCreate(a, b, anchor, onClose) {
+  const st = { a, b, course: undefined };
+  const inp = h("input", { class: "inp big", placeholder: "Add a title", "aria-label": "Block title" });
+  const when = h("div", { class: "qc-when" });
+  const chipsRow = h("div", { class: "row" });
+  const sugg = h("div", { class: "qc-sugg" });
+  const draw = () => {
+    const course = st.course !== undefined ? st.course : courseOf(inp.value);
+    const clash = timedFor(events, new Date(st.a)).filter((e) => e.src !== "sleep" && e.start < st.b && e.end > st.a)[0];
+    when.replaceChildren(h("b", { text: whenText(st.a) + "–" + fmtTime(st.b) }), h("span", { text: " · " + fmtDur(st.b - st.a) }),
+      ...(clash ? [h("div", { class: "clash", text: "Overlaps " + clash.title })] : []));
+    chipsRow.replaceChildren(
+      ...[30, 60, 90, 120].map((m) => h("button", { type: "button", class: "mini", "aria-pressed": st.b - st.a === m * 60000 ? "true" : "false", onclick: () => { st.b = st.a + m * 60000; draw(); inp.focus(); }, text: m < 60 ? m + "m" : m / 60 + "h" })),
+      chip(course ? "" : "Class", course || "", (e) => { e.stopPropagation(); const cs = shownCourses(); const i = cs.indexOf(course); st.course = cs[(i + 1) % (cs.length + 1)] || null; draw(); inp.focus(); },
+        { color: course ? colorOf(course) : null, title: "Click to cycle through your classes" }));
+  };
+  const open = currentItems.filter((x) => !x.done && !x.past && x.dueEnd > a).sort((p, q) => p.dueEnd - q.dueEnd).slice(0, 4);
+  sugg.replaceChildren(...(open.length ? [h("span", { class: "hint", text: "For:" })] : []), ...open.map((x) => h("button", { type: "button", class: "mini sugg", style: "--course:" + colorOf(x.course),
+    onclick: () => { inp.value = x.title; st.course = x.course || null; draw(); inp.focus(); }, text: x.title })));
+  inp.addEventListener("input", draw);
+  const add = () => {
+    const title = withCourse(inp.value.trim() || "Work block", st.course !== undefined ? st.course : courseOf(inp.value));
+    closePop();
+    createBlock({ title, start: st.a, end: st.b, where: "Library", steps: [], modes: [] }).catch(() => {});
+  };
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } });
+  draw();
+  openPop(anchor, [
+    inp, when, chipsRow, sugg,
+    h("div", { class: "row end" },
+      h("button", { type: "button", class: "mini", onclick: () => { closePop(); editBlock(null, { title: inp.value, start: st.a, end: st.b, where: "Library", steps: [], modes: [] }); }, text: "More options" }),
+      h("button", { type: "button", class: "pill-btn primary", onclick: add, text: "Add" }))
+  ], { cls: "qc", onClose, focus: "input" });
+}
+
+// ---- Command bar (Ctrl/Cmd+K): search everything, or type a task and add it from anywhere.
+let palOpen = false;
+function openPalette(seed) {
+  if (palOpen) return;
+  palOpen = true;
+  const wrap = h("div", { class: "pal-wrap", onclick: (e) => { if (e.target === wrap) closePal(); } });
+  const inp = h("input", { class: "pal-inp", placeholder: "Search, or type a task like “econ ps7 fri 18:00”", "aria-label": "Command bar", autocomplete: "off" });
+  const list = h("div", { class: "pal-list", role: "listbox" });
+  let sel = 0, rows = [];
+  const closePal = () => { palOpen = false; wrap.remove(); if (pendingRender) { pendingRender = false; render(); } };
+  const go = (r) => { closePal(); r.run(); };
+  const draw = () => {
+    const q = inp.value.trim(), ql = q.toLowerCase(), now = new Date();
+    rows = [];
+    if (q) {
+      const p = parseQuick(q, now);
+      const course = p.course || courseOf(p.title);
+      const day = p.day || dayKey(addDays(now, 1, 12));
+      const time = p.beforeClass && classStart(course, day) ? fmtTime(classStart(course, day)) : p.time;
+      if (p.title) rows.push({ group: "Add", label: "Add task “" + withCourse(p.title, course) + "”", meta: "due " + dayLabel(day, now) + (time ? " " + time : "") + (course ? " · " + course : ""),
+        run: () => createDue({ title: withType(withCourse(p.title, course), typeOf(p.title)), day, time: time || "", star: p.star }).catch(() => {}) });
+      const bday = p.day || dayKey(now), bs = p.time ? atTime(bday, p.time) : bday === dayKey(now) ? nextQuarter(now.getTime()) : atTime(bday, "14:00");
+      if (p.title) rows.push({ group: "Add", label: "Add block “" + withCourse(p.title, course) + "”", meta: whenText(bs) + " · " + fmtDur((p.mins || 60) * 60000),
+        run: () => createBlock({ title: withCourse(p.title, course), start: bs, end: bs + (p.mins || 60) * 60000, where: "Library", steps: [], modes: [] }).catch(() => {}) });
+    }
+    const words = ql.split(/\s+/).filter(Boolean);
+    const match = (s) => words.every((w) => s.toLowerCase().includes(w));
+    currentItems.filter((x) => !x.done && (!q || match(x.title + " " + (x.course || "")))).slice(0, q ? 6 : 5).forEach((x) =>
+      rows.push({ group: "To do", label: x.title, meta: dueShort(x, now), color: colorOf(x.course), run: () => openTask(x) }));
+    events.filter((e) => e.src === "study" && e.end > now.getTime() - DAY && e.start < now.getTime() + 14 * DAY && q && match(e.title)).slice(0, 4).forEach((e) =>
+      rows.push({ group: "Blocks", label: e.title, meta: whenText(e.start), color: colorOf(courseOf(e.title)), run: () => editBlock(e) }));
+    shownCourses().filter((k) => !q || match(k + " " + COURSES[k].name)).slice(0, q ? 3 : 0).forEach((k) =>
+      rows.push({ group: "Classes", label: nameOf(k), meta: "show its work", color: colorOf(k), run: () => setFilter(k) }));
+    [["New task", "N", () => focusComposer("task")], ["New block", "B", () => focusComposer("block")], ["Start or pause the timer", "", () => toggleTimer()],
+      ["Full-screen timer", "F", () => setFs(true)], ["Show To do", "", () => setView("todo")], ["Show Classes", "", () => setView("classes")], ["Keyboard shortcuts", "?", () => showKeys()]]
+      .filter(([l]) => !q || match(l)).forEach(([l, k, run]) => rows.push({ group: "Actions", label: l, meta: k, run }));
+    sel = Math.min(sel, Math.max(0, rows.length - 1));
+    let lastGroup = "";
+    list.replaceChildren(...rows.flatMap((r, i) => {
+      const out = [];
+      if (r.group !== lastGroup) { out.push(h("div", { class: "pal-g", text: r.group })); lastGroup = r.group; }
+      out.push(h("button", { type: "button", class: "pal-row" + (i === sel ? " sel" : ""), role: "option", "aria-selected": i === sel ? "true" : "false",
+        onmousemove: () => { if (sel !== i) { sel = i; draw(); } }, onclick: () => go(r) },
+        r.color ? h("i", { class: "dot", style: "background:" + r.color }) : h("i", { class: "dot none" }),
+        h("span", { class: "ml", text: r.label }), r.meta ? h("span", { class: "kbd", text: r.meta }) : null));
+      return out;
+    }));
+    const s = list.querySelector(".sel"); if (s) s.scrollIntoView({ block: "nearest" });
+  };
+  inp.addEventListener("input", () => { sel = 0; draw(); });
+  inp.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { e.preventDefault(); closePal(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(rows.length - 1, sel + 1); draw(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); draw(); }
+    else if (e.key === "Enter") { e.preventDefault(); if (rows[sel]) go(rows[sel]); }
+  });
+  wrap.append(h("div", { class: "pal", role: "dialog", "aria-label": "Command bar" }, inp, list,
+    h("div", { class: "pal-foot", text: "↑↓ to choose · Enter · Esc to close" })));
+  document.body.append(wrap);
+  inp.value = seed || "";
+  draw();
+  inp.focus();
+}
+function openTask(x) {
+  if (view !== "todo") { view = "todo"; store("deskboard-view", view); }
+  if (courseFilter && x.course !== courseFilter) courseFilter = "";
+  expanded = x.key; collapsed[groupOf(x, new Date())] = false;
+  render();
+  const r = rowOf(x); if (r) { r.scrollIntoView({ block: "center", behavior: "smooth" }); r.focus({ preventScroll: true }); }
+}
+function showKeys() {
+  const rows = [["N", "New task"], ["B", "New block"], ["Ctrl/⌘ K", "Command bar: search or add anything"], ["Ctrl/⌘ Z", "Undo the last change"],
+    ["↑ ↓ or J K", "Move between tasks"], ["Enter", "Open a task"], ["E", "Edit"], ["R", "Rename"], ["T", "Change the date"], ["D", "Done"], ["S", "Star"],
+    ["G", "Start the timer on it"], ["P", "Plan time for it"], ["Delete", "Delete (your own tasks and blocks)"], ["Right-click or M", "All actions"],
+    ["Alt ↑ ↓", "Move a block 15 min (on the timeline)"], ["F", "Full-screen timer"]];
+  openDrawer("Keyboard shortcuts", h("dl", { class: "keys-list" }, rows.flatMap(([k, v]) => [h("dt", null, h("span", { class: "kbd", text: k })), h("dd", { text: v })])));
+}
+function newMenu(anchor) {
+  menu(anchor, [
+    { label: "Task", kbd: "N", run: () => focusComposer("task") },
+    { label: "Block", kbd: "B", run: () => focusComposer("block") },
+    "-",
+    { label: "Search or add anything…", kbd: (navigator.platform || "").includes("Mac") ? "⌘K" : "Ctrl K", run: () => openPalette() }
+  ]);
 }
 
 /* ---------- Full-screen focus ---------- */
@@ -1891,11 +2885,20 @@ $("#fs-mode").addEventListener("click", switchMode);
 // Esc in browser full screen leaves full screen first; take the overlay down with it.
 document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && fsOpen) setFs(false); });
 document.addEventListener("keydown", (e) => {
+  const typing = e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (drawerOpen) closeDrawer(); closePop(); openPalette(); return; }
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z" && !typing && !palOpen) { const u = lastUndo(); if (u) { e.preventDefault(); runUndo(u); } return; }
+  if (pop || palOpen) return;
   if (drawerOpen && e.key === "Escape") { e.preventDefault(); closeDrawer(); return; }
   if (drawerOpen) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if (typing) return;
   const k = e.key.toLowerCase();
+  if (fsOpen && k !== "f" && k !== "escape" && k !== " ") return;
+  if ((k === "n" || k === "c") && !fsOpen) { e.preventDefault(); focusComposer("task"); return; }
+  if (k === "b" && !fsOpen) { e.preventDefault(); focusComposer("block"); return; }
+  if (k === "/" && !fsOpen) { e.preventDefault(); openPalette(); return; }
+  if (k === "?") { e.preventDefault(); showKeys(); return; }
   if (k === "f") { e.preventDefault(); setFs(!fsOpen); }
   else if (k === "escape" && fsOpen) { e.preventDefault(); setFs(false); }
   else if (k === " " && fsOpen && (e.target === document.body || e.target === $("#fs"))) { e.preventDefault(); toggleTimer(); renderFs(new Date()); }

@@ -240,7 +240,7 @@ function events_() {
       // Steps, check-ins and modes live in your own blocks; other calendars only need a short note.
       // (Keeps the whole answer small enough to cache, so the boards load fast.)
       if (c.key === 'study') item.desc = String(ev.getDescription() || '').slice(0, 2000);
-      else if (c.key !== 'canvas') item.desc = String(ev.getDescription() || '').slice(0, 300);
+      else if (c.key !== 'canvas') item.desc = String(ev.getDescription() || '').slice(0, c.key === 'personal' || c.key === 'primary' ? 1000 : 300);
       out.push(item); n++;
     });
     if (!sources[c.key]) sources[c.key] = { ok: true, n: n };
@@ -733,7 +733,7 @@ function saveDue_(body) {
   if (!name) return { ok: false, error: 'give it a name' };
   var time = /^([01]\d|2[0-3]):([0-5]\d)$/.test(String(body.time || '')) ? body.time : '';
   var title = name + ' due' + (time ? ' ' + time : '');
-  var ev;
+  var ev, calKey = body.ref ? body.ref.cal : null;
   if (body.ref) {
     if (body.ref.cal === 'canvas') return { ok: false, error: 'Canvas items change in Canvas' };
     if (body.ref.cal !== 'personal' && body.ref.cal !== 'primary') return { ok: false, error: 'edit this one in Google Calendar' };
@@ -744,12 +744,16 @@ function saveDue_(body) {
     else { var len = ev.getEndTime() - ev.getStartTime(); var at = time ? time.split(':') : [23, 59];
       var st = new Date(day.getFullYear(), day.getMonth(), day.getDate(), Number(at[0]), Number(at[1])); ev.setTime(st, new Date(st.getTime() + len)); }
   } else {
-    var cal = calendarFor_('personal') || calendarFor_('primary');
+    var cal = calendarFor_('personal');
+    calKey = 'personal';
+    if (!cal) { cal = calendarFor_('primary'); calKey = 'primary'; }
     if (!cal) return { ok: false, error: 'no personal calendar found' };
     ev = cal.createAllDayEvent(title, day);
   }
+  // Notes: anything you want to remember about it (links, which pages), kept in the event description.
+  if (body.notes != null) ev.setDescription(String(body.notes).slice(0, 2000));
   CacheService.getScriptCache().remove('events');
-  return { ok: true };
+  return { ok: true, ref: { cal: calKey, id: ev.getId(), start: ev.getStartTime().getTime() } };
 }
 
 function deleteDue_(body) {
