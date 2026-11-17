@@ -4,9 +4,9 @@ A full-screen desk display for a spare iPhone: clock, the calendar block you're 
 
 ```
 apps-script/Code.gs   the script that reads your calendars (runs on a personal Gmail account)
-apps-script/Rules.gs  the deadline rules for the script (generated from rules.js)
-index.html, desk.html the site (GitHub Pages serves this folder): one address, index.html on phones and
-                      desk.html on bigger screens, plus rules.js (deadline rules shared by everything), shorten.js and icons
+apps-script/Rules.gs  the deadline rules for the script (generated from site/rules.js)
+site/                 the site you host: one address, index.html on phones and desk.html on bigger screens,
+                      plus rules.js (deadline rules shared by everything), shorten.js and icons
 widget/               the Scriptable widget for iPhone and Mac
 ```
 
@@ -28,7 +28,7 @@ Your calendars stay on your school account and are shared with the personal acco
 
 ## 3. Page
 
-Upload the files in the site files to your GitHub Pages repo, replacing the old ones. Open the page, paste the URL and key, press **Connect**, then press **Copy phone link**.
+Upload the files in `site/` to your GitHub Pages repo, replacing the old ones. Open the page, paste the URL and key, press **Connect**, then press **Copy phone link**.
 
 ## 4. iPhone
 
@@ -105,6 +105,8 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Right-click anything** (or the ⋯ on a row, or M): rename, change date, time, class or type, move to tomorrow, plan time, start the timer, duplicate, done, delete. Double-click a name to rename it in place; click a due date to move it. Delete removes your own tasks and blocks (Canvas items change in Canvas).
 - **Timeline:** today on the right is a real day view. Drag on empty time to make a block (a small box asks for the title, length and class), drag a block to move it, drag its bottom edge to change its length, drop a to-do on it to plan time for it, Alt ↑/↓ nudges a selected block 15 minutes.
 - **Undo:** every change shows up right away with a toast at the bottom; most have **Undo**, and Ctrl/⌘ Z undoes the last one.
+- **Open an event:** click a block or class on the timeline and a small card opens right next to it (time, class, steps, Start/Edit/Delete). Editors open as a centered window.
+- **Duplicates:** when two tasks or two overlapping blocks look like the same work, a bar above the list offers **Review & merge** (or **Not the same**). Merging keeps the earliest due time, combines notes and checklists, and can be undone. Right-click a task or block for **Merge with…**.
 - **Repeating tasks:** add `every mon`, `every tue and thu`, `weekly`, `daily` or `weekdays`, plus `x6`, `for 6 weeks` or `until dec 10` (or use the **Repeat** chip). Each one is its own event, so each can be moved or ticked off; Undo removes the whole set.
 - **Paste a list:** paste several lines (a syllabus, an email) into the box and it offers to add each line as a task, reading dates and classes from each line.
 - **Checklists and notes:** open a task and type steps under it; the row shows ☑ 2/5. Links in the notes become clickable, and the row gets a ↗ link to the first one.
@@ -127,7 +129,7 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 
 ## Deadlines you can rely on
 
-The deadline rules live in one file, `rules.js`, used by the phone board, the desktop board, the widget and the calendar script, so every screen agrees.
+The deadline rules live in one file, `site/rules.js`, used by the phone board, the desktop board, the widget and the calendar script, so every screen agrees.
 
 - **What counts:** everything in Canvas; calendar events with "due", "deadline" or "submit" in the title (any length, "Study guide due" included); exams and quizzes, but not "review" or "prep" sessions; and all-day events like "Pset 6" or "Essay 3". Study blocks never count. It errs toward showing too much.
 - **When it's due:** the start of a timed event (the earliest it could mean), or a time written in an all-day title ("due 6 PM", "due at 11:59pm", "due 18:00"). An all-day deadline with no time is shown on its day from midnight.
@@ -143,7 +145,7 @@ Limits: a deadline that's only in an email or a syllabus, and nowhere in Canvas 
 
 ## Building
 
-`desk.html` and `index.html` are edited directly. After changing `rules.js`, `shorten.js` or `widget/widget.src.js`, run `sh build.sh` to rebuild `widget/Desk Board.js` and `apps-script/Rules.gs`.
+`desk.html` and `index.html` are edited directly. After changing `site/rules.js`, `site/shorten.js` or `widget/widget.src.js`, run `sh build.sh` to rebuild `widget/Desk Board.js` and `apps-script/Rules.gs`.
 
 ## Keeping it light
 

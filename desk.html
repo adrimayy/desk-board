@@ -270,7 +270,7 @@ a.gcal:hover { text-decoration: underline; }
 .task-detail { margin: 0 20px 10px 60px; padding: 14px 16px; border-radius: 12px; background: var(--card-2); display: flex; flex-direction: column; gap: 10px; border-left: 4px solid var(--course); }
 .task-detail .line { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; font-size: 0.88rem; color: var(--ink-2); }
 .task-detail .line b { color: var(--ink); font-weight: 600; }
-.task-detail .find { display: inline-flex; gap: 6px; }
+.task-detail .find { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .task-detail .find button, .task-detail .act { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; font-weight: 600; }
 .task-detail .find button:hover, .task-detail .act:hover { border-color: var(--sage-deep); }
 .task-detail .note { font-size: 0.82rem; color: var(--ok); font-weight: 600; }
@@ -549,6 +549,7 @@ button.due-pill:hover { box-shadow: inset 0 0 0 1px var(--sage-deep); }
 .tl-ev b { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-weight: 700; overflow: hidden; overflow-wrap: anywhere; }
 .tl-ev.tall b { -webkit-line-clamp: 4; }
 .tl-ev.short b { display: block; white-space: nowrap; text-overflow: ellipsis; }
+.tl-ev.narrow:not(.tall) b { -webkit-line-clamp: 1; }
 .tl-ev .tm { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-variant-numeric: tabular-nums; }
 .tl-ev.short { padding-top: 1px; display: flex; gap: 6px; align-items: baseline; }
 .tl-ev.short b { flex: 0 1 auto; min-width: 0; }
@@ -578,7 +579,7 @@ button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight
 .chip-btn, .composer .durs .mini, .composer .ca .pill-btn { height: 30px; box-sizing: border-box; }
 .composer .durs .mini { display: inline-flex; align-items: center; }
 .composer .ca .pill-btn { display: inline-flex; align-items: center; padding: 0 18px; }
-.list-head { display: flex; align-items: flex-end; gap: 12px; }
+.list-head { display: flex; align-items: center; gap: 12px; }
 .list-head .plan-week { flex: none; }
 .tl-hour span { top: -7px; line-height: 14px; }
 .tl-hour:first-child span { top: 3px; }
@@ -638,6 +639,49 @@ button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight
 .load .lb i { display: block; height: 100%; background: var(--sage); border-radius: 3px; }
 .load.over { color: var(--alert); font-weight: 600; }
 .load.over .lb i { background: var(--alert); }
+/* ---------- Editors open as a centred dialog ---------- */
+.drawer { position: fixed; top: 50%; left: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); z-index: 41; width: min(600px, calc(100vw - 32px)); max-height: min(86vh, 820px);
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-lift); display: flex; flex-direction: column; overflow: hidden; animation: dlgIn 0.16s ease-out; }
+@keyframes dlgIn { from { opacity: 0; transform: translate(-50%, calc(-50% + 10px)) scale(0.985); } }
+.dr-head { padding: 16px 18px 12px 22px; }
+.dr-body { padding: 16px 22px 20px; }
+.dr-foot { padding: 12px 18px 16px 22px; background: var(--card); }
+/* ---------- "+" drawn as an icon ---------- */
+.plus { display: inline-grid !important; place-items: center; flex: none; }
+.plus .ico { width: 100%; height: 100%; display: grid; place-items: center; }
+.plus .ico svg { width: 70%; height: 70%; stroke-width: 2.4; }
+.composer .plus { width: 24px; height: 24px; padding: 0; }
+.new-btn .plus .ico svg { stroke: var(--card); }
+.add-row .plus { width: 26px; height: 18px; }
+.add-row .plus .ico svg { width: 16px; height: 16px; }
+/* ---------- Event card ---------- */
+.ecard { width: 360px; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+.ec-head { display: grid; grid-template-columns: 12px minmax(0, 1fr) 28px; gap: 10px; align-items: start; }
+.ec-sw { width: 12px; height: 12px; border-radius: 4px; background: var(--course); margin-top: 5px; }
+.ec-t b { display: block; font-size: 1.05rem; line-height: 1.3; overflow-wrap: anywhere; }
+.ec-t span { display: block; font-size: 0.84rem; color: var(--ink-2); margin-top: 2px; }
+.ec-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding-left: 22px; font-size: 0.8rem; color: var(--ink-2); }
+.ec-meta .ok { color: var(--ok); font-weight: 600; }
+.ec-src { color: var(--ink-3); }
+.ec-steps { margin: 0 0 0 22px; }
+.ecard .notes-text { padding-left: 22px; }
+.ec-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--line); }
+.ec-acts .grow { flex: 1; }
+.ec-acts .hint { font-size: 0.78rem; color: var(--ink-3); }
+/* ---------- Duplicates ---------- */
+.dup-line { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px; border-radius: 14px; background: var(--warn-bg, #f6ecd5); color: var(--ink); font-size: 0.86rem; flex-wrap: wrap; }
+.dup-line .dl-i { font-size: 18px; color: var(--warn, #9a6b16); }
+.dup-line .dl-t { flex: 1; min-width: 200px; line-height: 1.4; }
+.merge-list { display: flex; flex-direction: column; gap: 8px; }
+.merge-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; box-shadow: inset 3px 0 0 var(--course); }
+.merge-row.keep { border-color: var(--sage-deep); background: var(--mint); }
+.mr-t b { display: block; font-size: 0.92rem; overflow-wrap: anywhere; }
+.mr-t span { display: block; font-size: 0.78rem; color: var(--ink-3); margin-top: 2px; }
+.mr-tag { font-size: 0.74rem; font-weight: 700; color: var(--ink-3); white-space: nowrap; }
+.merge-row.keep .mr-tag { color: var(--ok); }
+.check-opt { display: flex; gap: 8px; align-items: center; font-size: 0.86rem; }
+input[type=radio], input[type=checkbox] { accent-color: var(--sage-deep); }
+.day-chip { height: 40px; padding: 0 14px; }
 </style>
 </head>
 <body>
@@ -1101,7 +1145,8 @@ const ICONS = {
   star: '<path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
   chev: '<path d="m7 10 5 5 5-5"/>',
   expand: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
-  play: '<path d="M8 5.5v13l10.5-6.5z"/>'
+  play: '<path d="M8 5.5v13l10.5-6.5z"/>',
+  plus: '<path d="M12 6.5v11M6.5 12h11"/>'
 };
 function ico(name) { const s = h("span", { class: "ico", "aria-hidden": "true" }); s.innerHTML = '<svg viewBox="0 0 24 24">' + ICONS[name] + "</svg>"; return s; }
 
@@ -1196,7 +1241,7 @@ function stepButton(ev, s, opts) {
   return h("li", null, h("button", {
     class: "step" + (done ? " done" : "") + (s.digest ? " digest" : "") + (opts && opts.first ? " first" : ""),
     type: "button", "aria-pressed": done ? "true" : "false",
-    onclick: (e) => { e.stopPropagation(); toggleStep(ev, s); }
+    onclick: (e) => { e.stopPropagation(); const b = e.currentTarget; toggleStep(ev, s); const d = stepDone(ev, s); b.classList.toggle("done", d); b.setAttribute("aria-pressed", d ? "true" : "false"); }
   }, h("span", { class: "box", "aria-hidden": "true" }), h("span", { class: "t", text: s.show }), s.digest ? h("span", { class: "tag", text: "digest" }) : null));
 }
 
@@ -1316,7 +1361,7 @@ function taskDetail(x, now) {
   const clb = checklistBox(x);
   if (clb) box.append(clb);
   box.append(h("div", { class: "line" }, h("button", { class: "edit-link", type: "button", onclick: (e) => { e.stopPropagation(); editDue(x); },
-    text: ownRef(x) ? "Edit name or date" : "Details" })));
+    text: ownRef(x) ? "Edit…" : "Details" })));
   return box;
 }
 
@@ -1375,7 +1420,7 @@ function renderTodo(now) {
         h("p", { text: !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : listFilter !== "all" ? "Nothing matches this filter." : "Nothing due in the next 6 weeks." })),
       conn.ok ? planBtn : null));
   }
-  if (conn.ok) wrap.append(filterBar());
+  if (conn.ok) { wrap.append(filterBar()); const dl = dupLine(); if (dl) wrap.append(dl); }
   const alert = dueAlert(now);
   if (alert) wrap.append(h("div", { class: "warn-line", role: "alert", text: alert }));
   if (!courseFilter && conn.ok) {
@@ -1454,7 +1499,7 @@ function renderSide(now) {
   const openAll = currentItems.filter((x) => !x.done);
   const side = h("nav", { class: "side", "aria-label": "Views" },
     h("div", { class: "new-wrap" },
-      h("button", { class: "new-btn", type: "button", title: "New task (N)", onclick: () => focusComposer("task") }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }), "New task"),
+      h("button", { class: "new-btn", type: "button", title: "New task (N)", onclick: () => focusComposer("task") }, h("span", { class: "plus", "aria-hidden": "true" }, ico("plus")), "New task"),
       h("button", { class: "new-more", type: "button", title: "More: new block, search", "aria-label": "More ways to add", onclick: (e) => newMenu(e.currentTarget) }, ico("chev"))),
     h("button", { class: "search-btn", type: "button", title: "Search tasks, blocks and classes, or add anything", onclick: () => openPalette() }, h("span", { text: "Search or add" }), h("span", { class: "kbd", text: (navigator.platform || "").includes("Mac") ? "⌘K" : "Ctrl K" })),
     h("button", { class: "nav-item", type: "button", "aria-current": view === "todo" && !courseFilter ? "true" : "false", onclick: () => setFilter("") },
@@ -1728,6 +1773,7 @@ function render() {
   const ae = document.activeElement, comp = ae && ae.closest ? ae.closest(".composer") : null;
   const compSel = comp && ae.classList.contains("c-inp") ? [ae.selectionStart, ae.selectionEnd] : null;
   const notesFocus = comp && ae.classList.contains("c-notes");
+  const keepFocus = ae && ae.dataset && ae.dataset.keep ? { k: ae.dataset.keep, v: ae.value } : null;
   const shell = h("div", { class: "shell" }, renderSide(now), view === "classes" ? renderClasses(now) : renderTodo(now), renderRail(now));
   app.replaceChildren(topBar(), shell);
   renderTop(now);
@@ -1739,6 +1785,7 @@ function render() {
     if (n) { n.focus({ preventScroll: true }); try { const at = compSel || [n.value.length, n.value.length]; n.setSelectionRange(at[0], at[1]); } catch (e) {} }
     composerFocus = false;
   } else if (notesFocus) { const n = $(".composer .c-notes"); if (n) n.focus({ preventScroll: true }); }
+  else if (keepFocus) { const n = document.querySelector('[data-keep="' + CSS.escape(keepFocus.k) + '"]'); if (n) { if (keepFocus.v && !n.value) n.value = keepFocus.v; n.focus({ preventScroll: true }); } }
 }
 
 function setupForm() {
@@ -1823,7 +1870,8 @@ function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; 
 $("#scrim").addEventListener("click", closeDrawer);
 
 // Any event: Study blocks open the editor, everything else a short card with a link.
-function openEvent(ev) {
+function openEvent(ev, anchor) {
+  if (anchor && document.contains(anchor)) return eventCard(ev, anchor);
   if (ev.src === "study") return editBlock(ev);
   const when = ev.allDay ? new Date(ev.start).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })
     : whenText(ev.start) + "–" + fmtTime(ev.end);
@@ -1849,7 +1897,11 @@ function editBlock(ev, seed) {
   };
   const msg = h("p", { class: "hint", role: "status" });
   const title = growBox({ class: "big", placeholder: "What's this block for? (e.g. Econ PS7)", "aria-label": "Title" }, base.title || "");
-  const day = h("input", { class: "inp", type: "date", value: dayKey(base.start), "aria-label": "Day" });
+  const day = h("button", { type: "button", class: "chip-btn set day-chip", "aria-label": "Day" });
+  day.value = dayKey(base.start);
+  const drawDay = () => day.replaceChildren(h("span", { class: "cl", text: "Day" }), h("span", { class: "cv", text: dayLabel(day.value, new Date()) }));
+  drawDay();
+  day.addEventListener("click", () => pickDay(day, day.value, (k) => { day.value = k; drawDay(); day.dispatchEvent(new Event("input")); }, { title: "Day" }));
   const from = timeBox(fmtTime(base.start), "Start"), to = timeBox(fmtTime(base.end), "End");
   const len = h("span", { class: "hint" });
   const times = () => { const a = atTime(day.value, from.value); let b = atTime(day.value, to.value); if (b <= a) b += DAY; return { a, b }; };
@@ -1858,7 +1910,7 @@ function editBlock(ev, seed) {
     const { a, b } = times();
     if (isNaN(a) || isNaN(b)) return;
     const na = a + startMin * 60000, nb = Math.max(na + 15 * 60000, b + endMin * 60000);
-    day.value = dayKey(na); from.value = fmtTime(na); to.value = fmtTime(nb); showLen();
+    day.value = dayKey(na); drawDay(); from.value = fmtTime(na); to.value = fmtTime(nb); showLen(); showClash();
   };
   const clashLine = h("p", { class: "hint clash" });
   const showClash = () => {
@@ -2122,7 +2174,10 @@ function menu(anchor, items, at) {
 // Don't redraw the page under someone who's typing in place, dragging on the timeline, or in a menu.
 function holdRender() {
   const ae = document.activeElement;
-  return !!(pop || tl.drag || (ae && ae.classList && ae.classList.contains("inline-edit")));
+  if (pop || tl.drag || palOpen) return true;
+  if (!ae || !ae.closest || !ae.closest("#app") || !/^(INPUT|TEXTAREA)$/.test(ae.tagName)) return false;
+  // The composer and checklist boxes are rebuilt with the cursor put back; other fields wait.
+  return !ae.closest(".composer") && !ae.dataset.keep;
 }
 
 // ---- Understanding what you type: "Econ PS7 fri 18:00", "lit hum essay tmr", "chinese quiz wed before class"
@@ -2189,7 +2244,7 @@ function parseQuick(text, now) {
 // which is how every board tells an exam from a reading.
 const TYPES = [
   { k: "", label: "Assignment", word: "" },
-  { k: "pset", label: "Problem set", word: "problem set", rx: /\b(pset|problem set|hw|homework)\b/i },
+  { k: "pset", label: "Problem set", word: "problem set", rx: /\b(pset|problem set|hw|homework|ps\s?\d+)\b/i },
   { k: "essay", label: "Essay or paper", word: "essay", rx: /\b(essay|paper|draft)\b/i },
   { k: "reading", label: "Reading", word: "reading", rx: /\b(reading|rdg|wr\s*\d)\b/i },
   { k: "report", label: "Lab report", word: "lab report", rx: /\b(lab report|report)\b/i },
@@ -2544,7 +2599,7 @@ function composer() {
     resetDraft(); composerOpen = true; composerFocus = true; render();
   });
   draw();
-  box.append(h("div", { class: "c-row" }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }), inp, seg), chips, notes);
+  box.append(h("div", { class: "c-row" }, h("span", { class: "plus", "aria-hidden": "true" }, ico("plus")), inp, seg), chips, notes);
   return box;
 }
 function pickDeadline(anchor, onPick) {
@@ -2556,7 +2611,7 @@ function addRow(G) {
   const at = (n) => dayKey(addDays(new Date(), n, 12));
   const preset = G.id === "today" ? { day: at(0) } : G.id === "tomorrow" ? { day: at(1) } : G.id === "week" ? { day: at(Math.min(6, Math.max(2, 5 - new Date().getDay()))) } : G.id === "star" ? { star: true } : { day: at(8) };
   return h("li", { class: "add-row" }, h("button", { type: "button", onclick: () => focusComposer("task", preset) },
-    h("span", { class: "plus", text: "+" }), "Add a task" + (G.id === "today" ? " for today" : G.id === "tomorrow" ? " for tomorrow" : G.id === "star" ? " (starred)" : "")));
+    h("span", { class: "plus", "aria-hidden": "true" }, ico("plus")), "Add a task" + (G.id === "today" ? " for today" : G.id === "tomorrow" ? " for tomorrow" : G.id === "star" ? " (starred)" : "")));
 }
 
 // ---- Right-click (or ⋯) on a task
@@ -2580,6 +2635,7 @@ function taskMenu(x, anchor, at) {
     own && { label: "Change class…", run: () => pickCourse(anchorFor(), x.course, (k) => updateDue(x, { title: withCourse(name, k) })) },
     own && { label: "Change type…", run: () => pickType(anchorFor(), typeOf(name), (k) => updateDue(x, { title: withType(name, k) })) },
     !x.done && { label: star ? "Unstar" : "Star", kbd: "S", run: () => setStar(x, !star, now) },
+    !x.done && { label: "Merge with…", run: () => pickMergeTarget(x, anchorFor()) },
     own && { label: "Duplicate", run: () => { const ev = evOf(ownRef(x)); createDue({ title: name + " (copy)", day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes : "" }); } },
     !x.auto && { label: x.done ? "Mark not done" : "Mark done", kbd: "D", run: () => toggleDone(x) },
     "-",
@@ -2615,9 +2671,10 @@ function renameInline(x) {
 function blockMenu(ev, anchor, at) {
   const study = ev.src === "study" && !ev.pending;
   const now = new Date(), len = ev.end - ev.start;
-  if (!study) return menu(anchor, [{ label: "Details", run: () => openEvent(ev) }, { label: "Open in Google Calendar ↗", run: () => window.open(gcalLink(ev), "_blank", "noopener") }], at);
+  if (!study) return menu(anchor, [{ label: "Details", run: () => openEvent(ev, anchor) }, { label: "Open in Google Calendar ↗", run: () => window.open(gcalLink(ev), "_blank", "noopener") }], at);
   menu(anchor, [
     { label: "Edit…", kbd: "Enter", run: () => editBlock(ev) },
+    similarBlocks(ev).length && { label: "Merge with the overlapping one…", run: () => openMerge([ev].concat(similarBlocks(ev)), "blocks") },
     ev.start <= now.getTime() + 30 * 60000 && ev.end > now.getTime() && { label: timerRunning(pomo) ? "Pause timer" : "Start timer", run: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); } },
     { label: "Rename…", run: () => quickRename(ev, anchor, at) },
     { label: "Change class…", run: () => pickCourse(anchor || document.body, courseOf(ev.title), (k) => renameBlock(ev, withCourse(ev.title, k))) },
@@ -2654,6 +2711,16 @@ function quickRename(ev, anchor, at) {
 // drag its bottom edge to change its length, drop a to-do on it to plan time for it, right-click for more.
 const tl = { drag: null, scroll: null, scrollDay: null, px: 46 };
 const Q = 15 * 60000;
+// The first quarter-hour from `from` with an hour clear of everything else on the timeline.
+function freeHour(items, from, until) {
+  const busy = items.filter((e) => !e.allDay).map((e) => [e.start, e.end]).sort((a, b) => a[0] - b[0]);
+  for (let s = from; s + 3600000 <= until; s += Q) {
+    const clash = busy.find((b) => b[0] < s + 3600000 && b[1] > s);
+    if (!clash) return s;
+    s = Math.max(s, Math.ceil(clash[1] / Q) * Q - Q);
+  }
+  return from;
+}
 function layoutCols(items) {
   const sorted = items.slice().sort((a, b) => a.start - b.start || b.end - a.end);
   const out = new Map();
@@ -2685,7 +2752,7 @@ function renderAgenda(now) {
       agendaOffset ? h("button", { class: "mini", type: "button", onclick: () => { agendaOffset = 0; tl.scroll = null; render(); }, text: "Today" }) : null,
       h("button", { class: "ico-btn", type: "button", "aria-label": "Next day", disabled: agendaOffset >= 14 ? "" : null, onclick: () => { agendaOffset++; tl.scroll = null; render(); }, text: "›" }),
       h("button", { class: "mini", type: "button", title: "New Study block (B)", onclick: (e) => {
-        const s = agendaOffset === 0 ? nextQuarter(t) : d0 + 14 * 3600000; quickCreate(s, s + 60 * 60000, e.currentTarget); }, text: "+ Block" })));
+        const s = freeHour(items, agendaOffset === 0 ? nextQuarter(t) : d0 + 9 * 3600000, d0 + 23 * 3600000); quickCreate(s, s + 60 * 60000, e.currentTarget); }, text: "+ Block" })));
   let h0 = 8, h1 = 23;
   items.forEach((e) => { h0 = Math.min(h0, Math.floor((Math.max(e.start, d0) - d0) / 3600000)); h1 = Math.max(h1, Math.ceil((Math.min(e.end, d0 + DAY) - d0) / 3600000)); });
   h0 = Math.max(0, h0); h1 = Math.min(24, Math.max(h1, h0 + 4));
@@ -2703,17 +2770,17 @@ function renderAgenda(now) {
     const course = courseOf(ev.title);
     const study = ev.src === "study";
     const top = y(ev.start), hgt = Math.max(16, y(ev.end) - top - 2);
-    const el = h("div", { class: "tl-ev src-" + ev.src + (study ? " study" : "") + (ev.end <= t ? " past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : "") + (ev.pending ? " pending" : "") + (hgt < 34 ? " short" : hgt >= 80 ? " tall" : ""),
+    const el = h("div", { class: "tl-ev src-" + ev.src + (study ? " study" : "") + (ev.end <= t ? " past" : "") + (ev.start <= t && ev.end > t ? " live" : "") + (r ? " rated-" + r : "") + (ev.pending ? " pending" : "") + (hgt < 34 ? " short" : hgt >= 80 ? " tall" : "") + (c.n > 1 ? " narrow" : ""),
       style: "top:" + top + "px;height:" + hgt + "px;left:" + (c.col / c.n * 100) + "%;width:calc(" + (100 / c.n) + "% - 3px);--course:" + (study || ev.src === "classes" ? colorOf(course) : "var(--ink-3)"),
       tabindex: "0", role: "button", "aria-label": ev.title + ", " + fmtTime(ev.start) + " to " + fmtTime(ev.end) + (study ? ". Drag to move, Enter to edit." : ""),
       title: ev.title + " · " + fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") },
       h("b", { text: ev.title }), h("span", { class: "tm", text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where && hgt >= 50 ? " · " + ev.where : "") + (ev.worked && hgt >= 50 ? " · " + fmtMins(ev.worked) + " worked" : "") }),
       study && !ev.pending ? h("span", { class: "tl-rs", "aria-hidden": "true" }) : null);
     el._ev = ev;
-    if (!study) el.addEventListener("click", () => openEvent(ev));
+    if (!study) el.addEventListener("click", () => openEvent(ev, el));
     el.addEventListener("contextmenu", (e) => { e.preventDefault(); blockMenu(ev, el, { x: e.clientX, y: e.clientY }); });
     el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); openEvent(ev); }
+      if (e.key === "Enter") { e.preventDefault(); openEvent(ev, el); }
       else if (!study || ev.pending) return;
       else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); removeBlock(ev); }
       else if (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const d = e.key === "ArrowDown" ? Q : -Q; moveBlock(ev, ev.start + d, ev.end + d); }
@@ -2772,7 +2839,7 @@ function renderAgenda(now) {
     if (d.kind === "new") {
       showGhost(d.a, d.b);
       quickCreate(d.a, d.b, ghost, () => { ghost.hidden = true; });
-    } else if (!d.moved) { pendingRender = false; openEvent(d.ev); }
+    } else if (!d.moved) { pendingRender = false; openEvent(d.ev, d.el); }
     else moveBlock(d.ev, d.s, d.e);
     if (pendingRender && !pop) { pendingRender = false; render(); }
   };
@@ -2974,10 +3041,11 @@ function checklistBox(x) {
       onclick: (e) => { e.stopPropagation(); const n = items.map((y) => Object.assign({}, y)); n[i].done = !n[i].done; setChecklist(x, n, rest); } }),
     h("span", { class: "cl-t", text: it.text }),
     h("button", { type: "button", class: "ico-btn", "aria-label": "Remove " + it.text, onclick: (e) => { e.stopPropagation(); setChecklist(x, items.filter((_, j) => j !== i), rest); }, text: "×" })))));
-  const add = h("input", { class: "inp cl-add", placeholder: items.length ? "Add a step" : "Break it into steps: type one and press Enter", "aria-label": "Add a step", autocomplete: "off" });
+  const add = h("input", { class: "inp cl-add", "data-keep": "cl:" + x.key, placeholder: items.length ? "Add a step" : "Break it into steps: type one and press Enter", "aria-label": "Add a step", autocomplete: "off" });
   add.addEventListener("click", (e) => e.stopPropagation());
   add.addEventListener("keydown", (e) => {
     e.stopPropagation();
+    if (e.key === "Escape") { add.value = ""; add.blur(); return; }
     if (e.key === "Enter" && add.value.trim()) { e.preventDefault(); const v = add.value.trim(); add.value = ""; setChecklist(x, items.concat([{ text: v, done: false }]), rest); }
   });
   box.append(add);
@@ -2988,7 +3056,7 @@ function checklistBox(x) {
 // with "until dec 10", "for 6 weeks" or "x6". Each one is its own event, so each can be moved or done.
 function parseRepeat(s, out, now) {
   const at = (n) => dayKey(addDays(now, n, 12));
-  s = s.replace(/\s(?:x|×)\s?(\d{1,2})(?=\s)|\s(?:for\s+)?(\d{1,2})\s+(?:times|weeks)(?=\s)/i, (m, a, b) => { out.count = Math.min(30, +(a || b)); out.hits.push(m.trim()); return " "; });
+  s = s.replace(/\s(?:x|×)\s?(\d{1,2})(?=\s)|\s(?:for\s+(\d{1,2})\s+weeks|(\d{1,2})\s+times)(?=\s)/i, (m, a, b, c) => { out.count = Math.min(30, +(a || b || c)); out.hits.push(m.trim()); return " "; });
   s = s.replace(/\suntil\s+(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})|(\d{1,2})\/(\d{1,2}))(?=\s)/i, (m, mo, d, mm, dd) => {
     const month = mo ? MONTHS.indexOf(mo.toLowerCase()) : +mm - 1, day = +(d || dd);
     let y = now.getFullYear(); if (new Date(y, month, day) < startOfDay(now)) y++;
@@ -3107,7 +3175,7 @@ function drawBulk() {
     h("b", { text: items.length + " selected" }),
     h("button", { type: "button", class: "mini", onclick: () => { items.forEach((x) => { if (!x.auto && !x.done) toggleDone(x); }); toast("Marked " + items.length + " done"); clearSel(); }, text: "Done" }),
     h("button", { type: "button", class: "mini", onclick: (e) => pickDay(e.currentTarget, null, (k) => bulkSave(own, (x) => ({ day: k }), "Moved " + own.length + " to " + dayLabel(k, new Date()) + skipNote(own.length))), text: "Move to…" }),
-    h("button", { type: "button", class: "mini", onclick: (e) => pickCourse(e.currentTarget, null, (k) => bulkSave(own, (x) => ({ title: withCourse(dueName(evOf(ownRef(x)).title), k) }), "Changed the class on " + own.length + skipNote(own.length))), text: "Class…" }),
+    h("button", { type: "button", class: "mini", onclick: (e) => pickCourse(e.currentTarget, null, (k) => bulkSave(own, (x) => { const ev = evOf(ownRef(x)); return { title: withCourse(dueName(ev ? ev.title : x.title), k) }; }, "Changed the class on " + own.length + skipNote(own.length))), text: "Class…" }),
     h("button", { type: "button", class: "mini", onclick: () => { const now = new Date(); const on = !items.every(isStarred); items.forEach((x) => { if (!x.done) setStar(x, on, now); }); clearSel(); }, text: items.every(isStarred) ? "Unstar" : "Star" }),
     h("button", { type: "button", class: "mini", onclick: () => planMany(items.filter((x) => !x.done && !x.past && !x.planned.min)), text: "Plan time" }),
     h("button", { type: "button", class: "mini danger", disabled: own.length ? null : "", onclick: () => bulkDelete(own, skipNote(own.length)), text: "Delete" }),
@@ -3196,7 +3264,7 @@ function planWeek(anchor) {
 // ---- Block templates: the usual shapes of a work session, with their length, learning modes and steps.
 const TEMPLATES = [
   { name: "Reading", mins: 60, modes: ["C", "E"], steps: ["Skim the headings and questions", "Read; one line per section", "Digest: three takeaways in your own words"], rx: /\b(reading|rdg|read|wr\s*\d)\b/i },
-  { name: "Problem set", mins: 90, modes: ["P"], steps: ["Do every problem you can", "Mark the ones you're stuck on", "Digest: what made the hard ones hard"], rx: /\b(pset|problem set|hw|homework|exercise)/i },
+  { name: "Problem set", mins: 90, modes: ["P"], steps: ["Do every problem you can", "Mark the ones you're stuck on", "Digest: what made the hard ones hard"], rx: /\b(pset|problem set|hw|homework|exercise|ps\s?\d)/i },
   { name: "Essay", mins: 90, modes: ["A", "E"], steps: ["Outline the next section", "Draft it without editing", "Digest: one fix for next time"], rx: /\b(essay|paper|draft)\b/i },
   { name: "Lab report", mins: 90, modes: ["E"], steps: ["Data and figures", "Analysis and error", "Check against the rubric"], rx: /\b(lab report|report)\b/i },
   { name: "Exam review", mins: 120, modes: ["P", "R"], steps: ["Timed practice problems", "Grade them", "Digest: miss list"], rx: /\b(exam|quiz|test|midterm|final|review)\b/i },
@@ -3250,6 +3318,199 @@ function passesFilter(x) {
 function filterBar() {
   return h("div", { class: "filters", role: "group", "aria-label": "Show" }, FILTERS.map(([k, l]) => h("button", { type: "button", class: "fchip", "aria-pressed": listFilter === k ? "true" : "false",
     onclick: () => { listFilter = k; store("deskboard-filter", k); render(); }, text: l })));
+}
+
+
+/* ---------- Opening an event: a card next to it, like Google Calendar ---------- */
+let lastInputKbd = false;
+addEventListener("keydown", () => { lastInputKbd = true; }, true);
+addEventListener("pointerdown", () => { lastInputKbd = false; }, true);
+function eventCard(ev, anchor) {
+  const now = Date.now(), study = ev.src === "study" && !ev.pending;
+  const course = courseOf(ev.title);
+  const day = new Date(ev.start).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const head = h("div", { class: "ec-head", style: "--course:" + (study || ev.src === "classes" ? colorOf(course) : "var(--ink-3)") },
+    h("i", { class: "ec-sw" }),
+    h("div", { class: "ec-t" }, h("b", { text: ev.title }),
+      h("span", { text: ev.allDay ? day : day + " · " + fmtTime(ev.start) + "–" + fmtTime(ev.end) + " (" + fmtDur(ev.end - ev.start) + ")" })),
+    h("button", { class: "ico-btn", type: "button", "aria-label": "Close", onclick: closePop, text: "×" }));
+  const meta = h("div", { class: "ec-meta" },
+    course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null,
+    ev.where ? h("span", { text: "📍 " + ev.where }) : null,
+    h("span", { class: "ec-src", text: CAL_NAMES[ev.src] || ev.src }),
+    ev.rec ? h("span", { class: "ec-src", text: "repeats" }) : null,
+    ev.worked ? h("span", { class: "ok", text: fmtMins(ev.worked) + " worked" }) : null,
+    (ev.modes || []).map((k) => h("span", { class: "chip", title: PACER[k].verb }, h("span", { class: "mode-k", text: k }), PACER[k].short)));
+  const body = [head, meta];
+  if (ev.steps && ev.steps.length) {
+    const first = ev.steps.find((s) => !stepDone(ev, s));
+    body.push(h("ul", { class: "mini-steps ec-steps" }, ev.steps.map((s) => stepButton(ev, s, { first: s === first }))));
+  }
+  if (ev.notes && !study) body.push(h("p", { class: "notes-text" }, ...linkify(ev.notes.slice(0, 400))));
+  const live = ev.start <= now + 30 * 60000 && ev.end > now;
+  const acts = h("div", { class: "ec-acts" });
+  if (study) {
+    if (live) acts.append(h("button", { class: "pill-btn primary", type: "button", onclick: () => { closePop(); toggleTimer(); if (timerRunning(pomo)) setFs(true); }, text: timerRunning(pomo) ? "Pause timer" : "Start timer" }));
+    acts.append(h("button", { class: "pill-btn" + (live ? "" : " primary"), type: "button", onclick: () => { closePop(); editBlock(ev); }, text: "Edit" }),
+      h("button", { class: "mini", type: "button", onclick: () => { closePop(); createBlock({ title: ev.title, start: ev.end, end: ev.end + (ev.end - ev.start), where: ev.where, steps: stepsOf(ev).map((s) => ({ text: s.text, digest: s.digest })), modes: ev.modes }); }, text: "Duplicate" }));
+    const twin = similarBlocks(ev);
+    if (twin.length) acts.append(h("button", { class: "mini", type: "button", onclick: () => { closePop(); openMerge([ev].concat(twin), "blocks"); }, text: "Merge…" }));
+    acts.append(h("span", { class: "grow" }),
+      h("button", { class: "mini danger", type: "button", onclick: () => { closePop(); removeBlock(ev); }, text: "Delete" }));
+  } else {
+    acts.append(h("span", { class: "hint", text: ev.pending ? "Saving… you can edit it in a moment." : ev.src === "canvas" ? "From Canvas: it changes there." : "Change it in Google Calendar." }), h("span", { class: "grow" }));
+  }
+  if (!ev.pending) acts.append(ev.url ? h("a", { class: "gcal", href: ev.url, target: "_blank", rel: "noopener", text: "Canvas ↗" })
+    : h("a", { class: "gcal", href: gcalLink(ev), target: "_blank", rel: "noopener", text: "Calendar ↗" }));
+  body.push(acts);
+  openPop(anchor, body, lastInputKbd ? { cls: "ecard", focus: ".pill-btn, .gcal" } : { cls: "ecard", noFocus: true });
+}
+
+/* ---------- Duplicates: spot them, and merge them into one ---------- */
+const DUP_STOP = { due: 1, the: 1, a: 1, an: 1, of: 1, for: 1, and: 1, to: 1, in: 1, on: 1, at: 1, by: 1, part: 1, week: 1, my: 1, do: 1, work: 1, block: 1 };
+function dupWords(t) { return new Set(String(t || "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/\bdue\b.*$/, "").split(/[^a-z0-9]+/).filter((w) => w && (w.length > 1 || /\d/.test(w)) && !DUP_STOP[w])); }
+function titleSim(a, b) {
+  const A = dupWords(a), B = dupWords(b);
+  if (!A.size || !B.size) return 0;
+  const na = [...A].filter((w) => /^\d+$/.test(w)), nb = [...B].filter((w) => /^\d+$/.test(w));
+  if (na.length && nb.length && !na.some((w) => B.has(w))) return 0;     // "PS6" and "PS7" are different work
+  let n = 0; A.forEach((w) => { if (B.has(w)) n++; });
+  return n / Math.min(A.size, B.size);
+}
+function sameTask(x, y) {
+  if (x === y || x.done || y.done) return false;
+  if (x.course && y.course && x.course !== y.course) return false;
+  if (Math.abs(dayGap(x.d.day, y.d.day)) > 2) return false;
+  return titleSim(x.title, y.title) >= 0.75;
+}
+function similarBlocks(ev) {
+  return events.filter((e) => e !== ev && e.src === "study" && !e.allDay && !e.pending && dayKey(e.start) === dayKey(ev.start)
+    && e.start <= ev.end + 30 * 60000 && e.end >= ev.start - 30 * 60000 && (e.title === ev.title || titleSim(e.title, ev.title) >= 0.75));
+}
+let notDup = store("deskboard-notdup") || {};
+const dupKey = (list) => list.map((x) => x.key || x.src + "|" + x.id + "|" + x.start).sort().join("~");
+function findDuplicates() {
+  const t = Date.now(), out = [], used = new Set();
+  const open = currentItems.filter((x) => !x.done && !x.past);
+  open.forEach((x) => {
+    if (used.has(x)) return;
+    const group = [x].concat(open.filter((y) => !used.has(y) && sameTask(x, y)));
+    if (group.length > 1 && !notDup[dupKey(group)]) { group.forEach((g) => used.add(g)); out.push({ kind: "tasks", list: group }); }
+  });
+  const seen = new Set();
+  events.filter((e) => e.src === "study" && !e.allDay && !e.pending && e.end > t && e.start < t + 14 * DAY).sort((a, b) => a.start - b.start).forEach((e) => {
+    if (seen.has(e)) return;
+    const group = [e].concat(similarBlocks(e).filter((x) => !seen.has(x)));
+    if (group.length > 1 && !notDup[dupKey(group)]) { group.forEach((g) => seen.add(g)); out.push({ kind: "blocks", list: group }); }
+  });
+  return out;
+}
+function dupLine() {
+  const d = findDuplicates();
+  if (!d.length) return null;
+  const g = d[0];
+  const names = g.kind === "tasks" ? g.list.map((x) => "“" + x.title + "”") : g.list.map((e) => "“" + e.title + "” " + fmtTime(e.start));
+  return h("div", { class: "dup-line", role: "status" },
+    h("span", { class: "dl-i", "aria-hidden": "true", text: "⧉" }),
+    h("span", { class: "dl-t" }, h("b", { text: g.kind === "tasks" ? "Looks like the same task: " : "Overlapping blocks for the same work: " }), names.join(" and ") + (d.length > 1 ? " · " + (d.length - 1) + " more to review" : "")),
+    h("button", { class: "pill-btn primary", type: "button", onclick: () => openMerge(g.list, g.kind), text: "Review & merge" }),
+    h("button", { class: "mini", type: "button", onclick: () => { notDup[dupKey(g.list)] = 1; store("deskboard-notdup", notDup); render(); }, text: "Not the same" }));
+}
+function pickMergeTarget(x, anchor) {
+  const others = currentItems.filter((y) => y !== x && !y.done && !y.past).sort((a, b) => titleSim(x.title, b.title) - titleSim(x.title, a.title) || a.dueEnd - b.dueEnd).slice(0, 10);
+  menu(anchor, [{ label: "Merge “" + x.title + "” with…", disabled: true, run: () => {} }].concat(others.map((y) => ({ label: y.title + " · " + dueShort(y, new Date()), run: () => openMerge([x, y], "tasks") }))));
+}
+// The merge dialog: pick the one to keep; the rest are folded into it.
+function openMerge(list, kind) {
+  const now = new Date();
+  let keep = 0;
+  if (kind === "tasks") {
+    // Keep a Canvas one if there is one (it can't be deleted), otherwise the one with more in it.
+    const ci = list.findIndex((x) => refsOf(x).some((r) => r.cal === "canvas"));
+    keep = ci >= 0 ? ci : list.reduce((b, x, i) => (x.dueEnd < list[b].dueEnd || (x.dueEnd === list[b].dueEnd && notesOf(x).length > notesOf(list[b]).length) ? i : b), 0);
+  }
+  const opts = { span: true, notes: true };
+  const rows = h("div", { class: "merge-list" });
+  const summary = h("p", { class: "hint" });
+  const draw = () => {
+    rows.replaceChildren(...list.map((x, i) => {
+      const isTask = kind === "tasks";
+      const own = isTask ? !!ownRef(x) : true;
+      const cl = isTask && own ? checklistOf(notesOf(x)) : null;
+      const info = isTask
+        ? [dueText(x, now), refsOf(x).some((r) => r.cal === "canvas") ? "from Canvas" : "added by you", x.planned.min ? hoursText(x.planned.min) + " planned" : "", cl && cl.items.length ? plural(cl.items.length, "step") : "", cl && cl.rest ? "has notes" : ""].filter(Boolean).join(" · ")
+        : [fmtTime(x.start) + "–" + fmtTime(x.end), x.where, (x.steps || []).length ? plural(x.steps.length, "step") : "", x.worked ? fmtMins(x.worked) + " worked" : ""].filter(Boolean).join(" · ");
+      return h("label", { class: "merge-row" + (i === keep ? " keep" : ""), style: "--course:" + colorOf(isTask ? x.course : courseOf(x.title)) },
+        h("input", { type: "radio", name: "keep", checked: i === keep ? "" : null, onchange: () => { keep = i; draw(); } }),
+        h("span", { class: "mr-t" }, h("b", { text: x.title }), h("span", { text: info })),
+        h("span", { class: "mr-tag", text: i === keep ? "Keep" : isTask && !own ? "Hide (mark done)" : "Remove" }));
+    }));
+    const k = list[keep];
+    summary.textContent = kind === "tasks"
+      ? (ownRef(k) ? "The others' notes and checklist steps are added to the one you keep. " : "Canvas items can't take notes, so the others' notes are dropped. ") + "Canvas items you don't keep are marked done instead of deleted. You can undo."
+      : "The block you keep " + (opts.span ? "stretches to cover all of them (" + fmtTime(Math.min(...list.map((e) => e.start))) + "–" + fmtTime(Math.max(...list.map((e) => e.end))) + ")" : "keeps its own time") + " and gets every step. The others are deleted. You can undo.";
+  };
+  draw();
+  const extra = kind === "blocks" ? h("label", { class: "row check-opt" }, h("input", { type: "checkbox", checked: "", onchange: (e) => { opts.span = e.target.checked; draw(); } }), "Cover all their time") : null;
+  openDrawer(kind === "tasks" ? "Merge tasks" : "Merge blocks", [h("p", { class: "hint", text: "Pick the one to keep." }), rows, extra, summary], [
+    h("button", { class: "pill-btn primary", type: "button", onclick: () => { closeDrawer(); (kind === "tasks" ? mergeTasks : mergeBlocks)(list, keep, opts); }, text: "Merge " + list.length }),
+    h("button", { class: "mini", type: "button", onclick: () => { notDup[dupKey(list)] = 1; store("deskboard-notdup", notDup); closeDrawer(); }, text: "They're different" }),
+    h("span", { class: "grow" }),
+    h("button", { class: "mini", type: "button", onclick: closeDrawer, text: "Cancel" })]);
+}
+function mergeTasks(list, keepIdx) {
+  const k = list[keepIdx], kref = ownRef(k), kev = evOf(kref);
+  const others = list.filter((_, i) => i !== keepIdx);
+  const ops = [], undo = [], doneMarked = [];
+  // The merged task is due at the earliest of their due times, so nothing ends up later than it was.
+  const first = list.reduce((a, x) => (x.dueEnd < a.dueEnd ? x : a), k);
+  const due = { day: first.d.day, time: first.d.dueAt ? fmtTime(first.d.dueAt) : "" };
+  if (kref && kev) {
+    const base = checklistOf(kev.notes || "");
+    let items = base.items.slice(), rest = base.rest;
+    others.forEach((x) => {
+      const c = checklistOf(notesOf(x));
+      c.items.forEach((it) => { if (!items.some((y) => y.text.toLowerCase() === it.text.toLowerCase())) items.push(it); });
+      if (c.rest && !rest.includes(c.rest)) rest = (rest ? rest + "\n" : "") + c.rest;
+    });
+    const notes = joinNotes(items, rest);
+    if (notes !== (kev.notes || "") || first !== k) {
+      ops.push({ action: "saveDue", ref: kref, title: dueName(kev.title), day: due.day, time: due.time, notes });
+      undo.push({ action: "saveDue", ref: kref, title: dueName(kev.title), day: k.d.day, time: k.d.dueAt ? fmtTime(k.d.dueAt) : "", notes: kev.notes || "" });
+      kev.notes = notes;
+    }
+  }
+  others.forEach((x) => {
+    const r = ownRef(x);
+    if (r) {
+      const ev = evOf(r);
+      ops.push({ action: "deleteDue", ref: r });
+      undo.push({ action: "saveDue", title: dueName(ev ? ev.title : x.title), day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes || "" : "" });
+      if (ev) removeEv(ev);
+    } else if (!x.done) { toggleDone(x); doneMarked.push(x); }
+    if (isStarred(x) && !isStarred(k)) setStar(k, true, new Date());
+  });
+  render();
+  const finish = () => toast("Merged into “" + k.title + "”", () => { doneMarked.forEach((x) => toggleDone(x)); return undo.length ? batchPost(undo).then(load) : load(); });
+  if (!ops.length) { finish(); return; }
+  batchPost(ops).then(() => { finish(); load(); }).catch((err) => { toast("Didn't merge: " + errText(err) + "."); load(); });
+}
+function mergeBlocks(list, keepIdx, opts) {
+  const k = list[keepIdx], others = list.filter((_, i) => i !== keepIdx);
+  const before = { title: k.title, start: k.start, end: k.end, where: k.where, steps: stepsOf(k), modes: (k.modes || []).slice() };
+  const steps = stepsOf(k);
+  others.forEach((e) => stepsOf(e).forEach((s) => { if (!steps.some((y) => y.text.toLowerCase() === s.text.toLowerCase())) steps.push(s); }));
+  const modes = [...new Set([].concat(...list.map((e) => e.modes || [])))].sort((a, b) => "PACER".indexOf(a) - "PACER".indexOf(b));
+  const start = opts.span ? Math.min(...list.map((e) => e.start)) : k.start, end = opts.span ? Math.max(...list.map((e) => e.end)) : k.end;
+  const copies = others.map((e) => ({ action: "saveBlock", block: null, title: e.title, start: e.start, end: e.end, where: e.where, steps: stepsOf(e), modes: (e.modes || []).slice() }));
+  const ops = [{ action: "saveBlock", block: { cal: "study", id: k.id, start: k.start }, title: k.title, start, end, where: k.where, steps, modes }]
+    .concat(others.map((e) => ({ action: "deleteBlock", block: { cal: "study", id: e.id, start: e.start } })));
+  others.forEach(removeEv); k.start = start; k.end = end; render();
+  batchPost(ops).then((d) => {
+    const r0 = d.results[0];
+    toast("Merged " + list.length + " blocks into “" + k.title + "”", () => batchPost([Object.assign({ action: "saveBlock", block: r0 && r0.block ? r0.block : { cal: "study", id: k.id, start } }, before)].concat(copies)).then(load));
+    load();
+  }).catch((err) => { toast("Didn't merge: " + errText(err) + "."); load(); });
 }
 
 /* ---------- Full-screen focus ---------- */
