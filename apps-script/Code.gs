@@ -109,6 +109,7 @@ function route_(body) {
     if (body.action === 'deleteDue') return deleteDue_(body);
     if (body.action === 'reset') return reset_(body);
     if (body.action === 'active') return { ok: true };
+    if (body.action === 'batch') return batch_(body);
     return { ok: false, error: 'unknown action' };
   }
 }
@@ -643,9 +644,24 @@ function plan_(body) {
   var slot = freeSlot_(mins * 60000, before);
   if (!slot) return { ok: false, error: 'no free slot before it is due' };
   var title = String(body.title || 'Work block').slice(0, 80);
-  study.createEvent(title, slot.start, slot.end, { location: String(body.where || 'Library').slice(0, 60) });
+  var desc = body.steps || body.modes ? blockDesc_('', cleanSteps_(body.steps || []), (body.modes || []).filter(function (k) { return /^[PACER]$/.test(k); })) : '';
+  var ev = study.createEvent(title, slot.start, slot.end, { location: String(body.where || 'Library').slice(0, 60), description: desc });
   CacheService.getScriptCache().remove('events');
-  return { ok: true, start: slot.start.getTime(), end: slot.end.getTime() };
+  return { ok: true, start: slot.start.getTime(), end: slot.end.getTime(), block: { cal: 'study', id: ev.getId(), start: slot.start.getTime() } };
+}
+
+/** Several changes in one request (a pasted list, a repeating task, "plan my week", bulk edits,
+    and undoing any of those). Each op is one of the single actions below; results come back in order. */
+var BATCH_OK = { saveDue: saveDue_, deleteDue: deleteDue_, saveBlock: saveBlock_, deleteBlock: deleteBlock_, plan: plan_ };
+function batch_(body) {
+  var ops = Array.isArray(body.ops) ? body.ops.slice(0, 40) : [];
+  var results = ops.map(function (op) {
+    var fn = op && BATCH_OK[op.action];
+    if (!fn) return { ok: false, error: 'not allowed in a batch' };
+    try { return fn(op); } catch (e) { return { ok: false, error: String(e && e.message || e) }; }
+  });
+  CacheService.getScriptCache().remove('events');
+  return { ok: true, results: results, failed: results.filter(function (r) { return !r.ok; }).length };
 }
 
 /* ---------- Editing from the desktop board ----------

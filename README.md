@@ -105,6 +105,14 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Right-click anything** (or the ⋯ on a row, or M): rename, change date, time, class or type, move to tomorrow, plan time, start the timer, duplicate, done, delete. Double-click a name to rename it in place; click a due date to move it. Delete removes your own tasks and blocks (Canvas items change in Canvas).
 - **Timeline:** today on the right is a real day view. Drag on empty time to make a block (a small box asks for the title, length and class), drag a block to move it, drag its bottom edge to change its length, drop a to-do on it to plan time for it, Alt ↑/↓ nudges a selected block 15 minutes.
 - **Undo:** every change shows up right away with a toast at the bottom; most have **Undo**, and Ctrl/⌘ Z undoes the last one.
+- **Repeating tasks:** add `every mon`, `every tue and thu`, `weekly`, `daily` or `weekdays`, plus `x6`, `for 6 weeks` or `until dec 10` (or use the **Repeat** chip). Each one is its own event, so each can be moved or ticked off; Undo removes the whole set.
+- **Paste a list:** paste several lines (a syllabus, an email) into the box and it offers to add each line as a task, reading dates and classes from each line.
+- **Checklists and notes:** open a task and type steps under it; the row shows ☑ 2/5. Links in the notes become clickable, and the row gets a ↗ link to the first one.
+- **Select several:** ⌘/Ctrl-click or Shift-click rows (or X) to mark them done, move them to a day, change their class, star, plan time or delete them all at once.
+- **Plan my week:** next to the title. Lists everything due in the next 7 days with no time planned; untick or change lengths, and it puts each in the first free slot before it's due (one Undo for all).
+- **Templates:** blocks for readings, problem sets, essays, lab reports, exam review and flashcards come with a length, learning modes and steps. The block box picks one from the title; change it with the **Template** or **Kind** buttons.
+- **Week strip and load:** above the timeline, each day shows how much study is planned (red past the 6-hour cap) and dots for what's due; click a day to see it. "3h 30m study planned of 6h" is the selected day.
+- **Filters:** All, Not planned, Exams & quizzes, Added by me, From Canvas.
 - **Class and type** are saved as part of the name ("Econ PS7", "… exam"), because that's what every board, the widget and the evening email read. **Notes** go in the calendar event's description.
 - **Keys:** ↑ ↓ (or J K) move between tasks, Enter opens, D done, S star, G start the timer on it, F full-screen timer (Esc leaves it, Space starts or pauses). The list is folded under **Keyboard shortcuts** in the sidebar.
 

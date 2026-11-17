@@ -409,9 +409,12 @@ a.gcal:hover { text-decoration: underline; }
 @media (max-width: 820px) {
   .top { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 10px 14px; }
   .shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: "side" "main" "rail"; padding: 14px 16px 40px; gap: 16px; }
-  .side { position: static; flex-direction: row; overflow-x: auto; max-height: none; gap: 6px; padding-bottom: 4px; }
+  .side { position: static; flex-direction: row; flex-wrap: wrap; overflow: visible; max-height: none; gap: 6px; padding-bottom: 4px; }
   .nav-item, .course-item { margin-left: 0; width: auto; padding: 8px 14px; border-radius: 999px; white-space: nowrap; flex: none; }
   .side-label, .side-foot { display: none; }
+  .side > .new-wrap, .side > .search-btn { flex: none; width: auto; margin: 0; }
+  .new-btn { padding: 8px 12px; }
+  .search-btn .kbd { display: none; }
   .task-row { grid-template-columns: 26px minmax(0, 1fr) 32px; padding-left: 14px; }
   .task-row .star { grid-column: 3; grid-row: 1; opacity: 1; }
   .due-pill { grid-column: 2; grid-row: 2; justify-self: start; }
@@ -460,7 +463,6 @@ a.gcal:hover { text-decoration: underline; }
 .more-btn { width: 28px; height: 28px; border: 0; background: transparent; color: var(--ink-3); border-radius: 8px; font-size: 18px; line-height: 1; opacity: 0; }
 .task-row:hover .more-btn, .task:focus-within .more-btn { opacity: 1; }
 .more-btn:hover { background: var(--card-2); color: var(--ink); }
-button.due-pill { border: 0; cursor: pointer; font: inherit; }
 button.due-pill:hover { box-shadow: inset 0 0 0 1px var(--sage-deep); }
 .inline-edit { font: inherit; font-weight: 600; width: 100%; padding: 3px 6px; margin: -4px 0; }
 /* Sidebar: New + search */
@@ -563,11 +565,85 @@ button.due-pill:hover { box-shadow: inset 0 0 0 1px var(--sage-deep); }
 .tl-now { position: absolute; left: -6px; right: 0; height: 0; border-top: 2px solid var(--alert); z-index: 4; pointer-events: none; }
 .tl-now::before { content: ""; position: absolute; left: -4px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--alert); }
 .tl-ghost { position: absolute; left: 0; right: 0; border-radius: 7px; background: color-mix(in srgb, var(--sage-deep) 22%, transparent); border: 2px dashed var(--sage-deep); color: var(--ink); font-size: 0.76rem; font-weight: 700; padding: 3px 7px; z-index: 6; pointer-events: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box; }
+/* ---------- Alignment fixes ---------- */
+.due-pill { background: transparent; line-height: 1.25; }
+button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight: 600; }
+.task-sub > * { line-height: 18px; }
+.plan-it { display: inline-flex; align-items: center; height: 20px; line-height: 1; padding: 0 9px; }
+.tl-ev.live { box-shadow: none; outline: 2px solid var(--ok); outline-offset: -2px; }
+.add-row button { padding: 9px 20px 9px 20px; gap: 14px; }
+.add-row .plus { width: 26px; }
+.composer .c-row { padding-left: 2px; }
+.composer .plus { margin-right: 6px; }
+.chip-btn, .composer .durs .mini, .composer .ca .pill-btn { height: 30px; box-sizing: border-box; }
+.composer .durs .mini { display: inline-flex; align-items: center; }
+.composer .ca .pill-btn { display: inline-flex; align-items: center; padding: 0 18px; }
+.list-head { display: flex; align-items: flex-end; gap: 12px; }
+.list-head .plan-week { flex: none; }
+.tl-hour span { top: -7px; line-height: 14px; }
+.tl-hour:first-child span { top: 3px; }
+/* ---------- Checklists, notes, links ---------- */
+.cl-n { font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.cl-n.all { color: var(--ok); }
+.link-chip { color: var(--sage-deep); font-weight: 600; text-decoration: none; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-chip:hover { text-decoration: underline; }
+.has-notes { color: var(--ink-3); }
+.has-notes::before { content: "✎ "; }
+.checklist { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 2px; }
+.notes-text { margin: 0; white-space: pre-wrap; font-size: 0.86rem; color: var(--ink-2); line-height: 1.45; }
+.notes-text a { color: var(--sage-deep); font-weight: 600; }
+.cl-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.cl-items li { display: grid; grid-template-columns: 22px minmax(0, 1fr) 28px; align-items: center; gap: 8px; font-size: 0.88rem; }
+.cl-items li.done .cl-t { text-decoration: line-through; color: var(--ink-3); }
+.cl-box { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--ink-3); background: transparent; padding: 0; position: relative; }
+.cl-box[aria-pressed="true"] { background: var(--sage-deep); border-color: var(--sage-deep); }
+.cl-box[aria-pressed="true"]::after { content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid var(--card); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.cl-add { border-style: dashed; font-size: 0.86rem; padding: 5px 8px; max-width: 420px; }
+/* ---------- Selection ---------- */
+.task.sel > .task-row { background: var(--mint); box-shadow: inset 3px 0 0 var(--sage-deep); }
+.bulk { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 65; display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lift); max-width: calc(100vw - 32px); flex-wrap: wrap; }
+.bulk b { font-size: 0.88rem; margin-right: 4px; }
+.mini.danger { color: var(--alert); }
+/* ---------- Paste / plan previews ---------- */
+.pastepop { width: 460px; padding: 10px; }
+.pastepop .hint.pad { padding: 4px 8px; margin: 0; font-size: 0.78rem; }
+.paste-list { max-height: 320px; overflow: auto; display: flex; flex-direction: column; }
+.paste-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; font-size: 0.88rem; cursor: pointer; }
+.paste-row:hover { background: var(--card-2); }
+.paste-row.off .ml { color: var(--ink-3); text-decoration: line-through; }
+.paste-row .ml { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.paste-row .kbd { flex: none; }
+.paste-row .mini { flex: none; padding: 2px 8px; }
+/* ---------- Filters ---------- */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin: -4px 0 0; }
+.fchip { border: 1px solid var(--line); background: transparent; color: var(--ink-2); border-radius: 999px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; }
+.fchip:hover { border-color: var(--sage-deep); }
+.fchip[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
+/* ---------- Week strip and load ---------- */
+.wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+.wk-d { display: grid; grid-template-rows: 14px 24px 22px 8px; align-items: center; justify-items: center; gap: 2px; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 5px 0 4px; color: var(--ink-2); }
+.wk-d:hover { background: var(--card-2); }
+.wk-d.sel { background: var(--mint); border-color: var(--sage-deep); }
+.wk-d.today .wn { color: var(--card); background: var(--sage-deep); border-radius: 50%; }
+.wk-d .wl { font-size: 0.66rem; font-weight: 700; color: var(--ink-3); }
+.wk-d .wn { font-size: 0.86rem; font-weight: 700; font-variant-numeric: tabular-nums; width: 24px; height: 24px; display: grid; place-items: center; }
+.wk-d .wb { width: 8px; height: 22px; border-radius: 3px; background: var(--card-2); display: flex; align-items: flex-end; overflow: hidden; }
+.wk-d .wb i { display: block; width: 100%; background: var(--sage); }
+.wk-d.over .wb i { background: var(--alert); }
+.wk-d .wdots { display: flex; gap: 2px; height: 6px; }
+.wk-d .wdots i { width: 6px; height: 6px; border-radius: 50%; }
+.wk-d .wdots i.ex { border-radius: 1px; transform: rotate(45deg) scale(0.9); }
+.load { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.76rem; color: var(--ink-3); }
+.load .lb { height: 5px; border-radius: 3px; background: var(--card-2); overflow: hidden; }
+.load .lb i { display: block; height: 100%; background: var(--sage); border-radius: 3px; }
+.load.over { color: var(--alert); font-weight: 600; }
+.load.over .lb i { background: var(--alert); }
 </style>
 </head>
 <body>
 <div id="app"></div>
 <!-- Editor: opens from any block, the day list, a deadline, or "+ Block". -->
+<div class="bulk" id="bulk" role="toolbar" aria-label="Selected tasks" hidden></div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-h" hidden></aside>
@@ -1130,11 +1206,16 @@ function renderTask(x, now) {
   const hrsLeft = (x.dueEnd - t) / 3600000;
   const pill = x.done ? "" : x.past ? " passed" : hrsLeft < 24 ? " alert" : "";
   const li = h("li", {
-    class: "task" + (x.done ? " is-done" : "") + (x.past && !x.done ? " is-passed" : "") + (open ? " open" : "") + (active ? " is-active" : ""), tabindex: "0", draggable: "true", "data-key": x.key,
+    class: "task" + (x.done ? " is-done" : "") + (x.past && !x.done ? " is-passed" : "") + (open ? " open" : "") + (active ? " is-active" : "") + (selected.has(x.key) ? " sel" : ""), tabindex: "0", draggable: "true", "data-key": x.key,
     style: "--course:" + colorOf(x.course), "aria-label": x.title + ", due " + dueText(x, now) + (x.done ? ", completed" : ""), "aria-expanded": open ? "true" : "false"
   });
   const sub = h("div", { class: "task-sub" });
   if (x.course && courseFilter !== x.course) sub.append(h("span", { class: "crs", text: x.course }));
+  const nt = ownRef(x) ? notesOf(x) : "", cl = checklistOf(nt).items;
+  if (cl.length) sub.append(h("span", { class: "cl-n" + (cl.every((i) => i.done) ? " all" : ""), title: "Checklist", text: "☑ " + cl.filter((i) => i.done).length + "/" + cl.length }));
+  const link = (nt.match(URL_RX) || [])[0];
+  if (link) sub.append(h("a", { class: "link-chip", href: link, target: "_blank", rel: "noopener", title: link, onclick: (e) => e.stopPropagation(), text: "↗ " + link.replace(/^https?:\/\/(www\.)?/, "").split("/")[0] }));
+  else if (checklistOf(nt).rest) sub.append(h("span", { class: "has-notes", title: checklistOf(nt).rest.slice(0, 200), text: "Notes" }));
   if (!x.done) {
     if (x.planned.min) sub.append(h("span", { class: "ok", text: hoursText(x.planned.min) + " planned" }));
     else if (!x.past && x.dueEnd - t < 14 * DAY) {
@@ -1152,7 +1233,7 @@ function renderTask(x, now) {
     const w = Number(srv.dueWorked && srv.dueWorked[x.key]) || 0;
     if (w) sub.append(h("span", { text: fmtMins(w) + " worked" }));
   }
-  li.append(h("div", { class: "task-row", onclick: () => { expanded = open ? null : x.key; render(); } },
+  li.append(h("div", { class: "task-row", onclick: (e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || selected.size) { toggleSel(x, e.shiftKey); return; } expanded = open ? null : x.key; render(); } },
     x.auto ? h("span", { class: "check", title: "Due time passed: counted as handed in", "aria-label": "Due time passed" })
       : h("button", { class: "check", type: "button", title: x.done ? "Mark not done" : "Mark done", "aria-label": x.done ? "Mark not done" : "Mark done",
         onclick: (e) => { e.stopPropagation(); toggleDone(x); } }),
@@ -1185,6 +1266,7 @@ function renderTask(x, now) {
     else if (k === "s" && !x.done) { e.preventDefault(); setStar(x, !star, now); }
     else if (k === "g" && !x.done && !x.past) { e.preventDefault(); startOn(x); }
     else if (k === "e") { e.preventDefault(); editDue(x); }
+    else if (k === "x") { e.preventDefault(); toggleSel(x, e.shiftKey); const n = rowOf(x); if (n) n.focus({ preventScroll: true }); }
     else if ((k === "r" || k === "f2") && ownRef(x)) { e.preventDefault(); renameInline(x); }
     else if (k === "t" && ownRef(x)) { e.preventDefault(); pickDay(li.querySelector(".due-pill") || li, x.d.day, (d) => updateDue(x, { day: d }), { title: "Move to" }); }
     else if (k === "p" && !x.done && !x.past) { e.preventDefault(); findTime(x, sittingMinutes(x)); }
@@ -1231,6 +1313,8 @@ function taskDetail(x, now) {
     const note = cardNotes[x.key];
     if (note) box.append(h("div", { class: "note" + (note.err ? " err" : ""), text: note.text }));
   }
+  const clb = checklistBox(x);
+  if (clb) box.append(clb);
   box.append(h("div", { class: "line" }, h("button", { class: "edit-link", type: "button", onclick: (e) => { e.stopPropagation(); editDue(x); },
     text: ownRef(x) ? "Edit name or date" : "Details" })));
   return box;
@@ -1272,23 +1356,26 @@ function renderGroup(G, items, now) {
 
 function renderTodo(now) {
   const t = now.getTime();
-  const items = filtered(currentItems);
+  const items = filtered(currentItems).filter(passesFilter);
   const open = items.filter((x) => !x.done && !x.past);
   const wrap = h("div", { class: "list-wrap" });
+  const planBtn = h("button", { class: "pill-btn plan-week", type: "button", title: "One block for everything due this week with no time yet", onclick: (e) => planWeek(e.currentTarget) }, "Plan my week");
   const k = courseFilter && courseFilter !== "~" ? courseFilter : null;
   if (courseFilter) {
     const nextClass = k ? events.filter((e) => e.src === "classes" && !e.allDay && e.start > t && courseOf(e.title) === k).sort((a, b) => a.start - b.start)[0] : null;
     wrap.append(h("header", { class: "list-head course", style: "--course:" + colorOf(k) },
       h("div", { class: "grow" }, h("h1", { text: courseFilter === "~" ? "Other work" : nameOf(k) }),
         h("p", { text: open.length + " to do" + (nextClass ? " · next class " + whenText(nextClass.start) + (nextClass.where ? " · " + nextClass.where : "") : "") })),
-      h("button", { class: "pill-btn", type: "button", onclick: () => setFilter(""), text: "Show all" })));
+      planBtn, h("button", { class: "pill-btn", type: "button", onclick: () => setFilter(""), text: "Show all" })));
   } else {
     const today = open.filter((x) => dayDiff(x.dueEnd, now) <= 0).length;
     const week = open.filter((x) => x.dueEnd - t < 7 * DAY).length;
     wrap.append(h("header", { class: "list-head" },
       h("div", { class: "grow" }, h("h1", { text: "To do" }),
-        h("p", { text: !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : "Nothing due in the next 6 weeks." }))));
+        h("p", { text: !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : listFilter !== "all" ? "Nothing matches this filter." : "Nothing due in the next 6 weeks." })),
+      conn.ok ? planBtn : null));
   }
+  if (conn.ok) wrap.append(filterBar());
   const alert = dueAlert(now);
   if (alert) wrap.append(h("div", { class: "warn-line", role: "alert", text: alert }));
   if (!courseFilter && conn.ok) {
@@ -1369,7 +1456,7 @@ function renderSide(now) {
     h("div", { class: "new-wrap" },
       h("button", { class: "new-btn", type: "button", title: "New task (N)", onclick: () => focusComposer("task") }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }), "New task"),
       h("button", { class: "new-more", type: "button", title: "More: new block, search", "aria-label": "More ways to add", onclick: (e) => newMenu(e.currentTarget) }, ico("chev"))),
-    h("button", { class: "search-btn", type: "button", onclick: () => openPalette() }, "Search or add anything", h("span", { class: "kbd", text: (navigator.platform || "").includes("Mac") ? "⌘K" : "Ctrl K" })),
+    h("button", { class: "search-btn", type: "button", title: "Search tasks, blocks and classes, or add anything", onclick: () => openPalette() }, h("span", { text: "Search or add" }), h("span", { class: "kbd", text: (navigator.platform || "").includes("Mac") ? "⌘K" : "Ctrl K" })),
     h("button", { class: "nav-item", type: "button", "aria-current": view === "todo" && !courseFilter ? "true" : "false", onclick: () => setFilter("") },
       ico("check"), "To do", h("span", { class: "n", text: String(openAll.length) })),
     h("button", { class: "nav-item", type: "button", "aria-current": view === "classes" ? "true" : "false", onclick: () => setView("classes") },
@@ -1644,6 +1731,7 @@ function render() {
   const shell = h("div", { class: "shell" }, renderSide(now), view === "classes" ? renderClasses(now) : renderTodo(now), renderRail(now));
   app.replaceChildren(topBar(), shell);
   renderTop(now);
+  drawBulk();
   window.scrollTo(0, scroll);
   if (focusKey) { const n = document.querySelector('[data-key="' + CSS.escape(focusKey) + '"]'); if (n) n.focus({ preventScroll: true }); }
   if (compSel || composerFocus) {
@@ -2048,7 +2136,7 @@ function courseByTag(tag) {
 }
 function parseQuick(text, now) {
   let s = " " + String(text || "") + " ";
-  const out = { day: null, time: null, course: null, mins: null, star: false, beforeClass: false, hits: [] };
+  const out = { day: null, time: null, course: null, mins: null, star: false, beforeClass: false, hits: [], repeat: null, count: null, until: null };
   const take = (rx, fn) => {
     s = s.replace(rx, function () {
       const m = [].slice.call(arguments, 0, -2);
@@ -2058,6 +2146,7 @@ function parseQuick(text, now) {
     });
   };
   const at = (n) => dayKey(addDays(now, n, 12));
+  s = parseRepeat(s, out, now);
   take(/\s#([a-z][a-z0-9-]*)(?=\s)/i, (m) => { const k = courseByTag(m[1]); if (!k) return false; out.course = k; });
   take(/\s!{1,3}(?=\s)/, () => { out.star = true; });
   take(/\s(?:for\s+)?(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hours?)(?:\s*(\d+)\s*m(?:in)?)?(?=\s)/i, (m) => { const v = Math.round(parseFloat(m[1]) * 60 + (m[2] ? +m[2] : 0)); if (!v || v > 600) return false; out.mins = v; });
@@ -2354,12 +2443,16 @@ function draftValues(now) {
     out.time = cd.time !== undefined ? cd.time : p.beforeClass && out.classAt ? fmtTime(out.classAt) : p.time;
     out.type = cd.type !== undefined ? cd.type : typeOf(p.title);
     out.star = cd.star || p.star;
+    out.repeat = cd.repeat !== undefined ? cd.repeat : p.repeat;
+    out.count = cd.count || p.count;
+    out.days = occurrences(out.day, out.repeat, out.count, p.until);
   } else {
     const day = cd.day || p.day || dayKey(now);
     const time = cd.start != null ? fmtTime(cd.start) : p.time;
     let start = time ? atTime(day, time) : day === dayKey(now) ? nextQuarter(now.getTime()) : atTime(day, "14:00");
     out.start = start;
-    out.mins = cd.mins || p.mins || 60;
+    out.tpl = cd.tpl !== undefined ? cd.tpl : templateFor(p.title);
+    out.mins = cd.mins || p.mins || (out.tpl ? out.tpl.mins : 60);
     out.end = start + out.mins * 60000;
     out.where = cd.where || "Library";
     out.day = day;
@@ -2390,7 +2483,7 @@ function composer() {
     ["task", "block"].map((m) => h("button", { type: "button", role: "tab", "aria-selected": cd.mode === m ? "true" : "false",
       title: m === "task" ? "Something due (N)" : "Time on your Study calendar (B)",
       onclick: () => { const t = cd.text; resetDraft(m); cd.text = t; composerOpen = true; composerFocus = true; render(); }, text: m === "task" ? "Task" : "Block" })));
-  const addBtn = h("button", { class: "pill-btn primary c-add", type: "submit", text: "Add" });
+  const addBtn = h("button", { class: "pill-btn primary c-add", type: "submit", title: "Enter to add · Esc to close", text: "Add ↵" });
   const draw = () => {
     const v = draftValues(new Date());
     const parts = [];
@@ -2400,6 +2493,7 @@ function composer() {
         chip("Time", v.time || "", (e) => pickTime(e.currentTarget, v.time, (t) => { cd.time = t; upd(); }, { classAt: v.classAt, title: "Due time" }), { cls: v.time ? "" : "soft" }),
         chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
         chip("Type", v.type ? typeLabel(v.type) : "", (e) => pickType(e.currentTarget, v.type, (k) => { cd.type = k; upd(); }), { cls: v.type ? "" : "soft" }),
+        chip("Repeat", v.repeat ? repeatLabel(v.repeat, v.days.length) : "", (e) => pickRepeat(e.currentTarget, { repeat: v.repeat, count: v.count }, (rep, n) => { cd.repeat = rep; if (n) cd.count = n; upd(); }), { cls: v.repeat ? "" : "soft" }),
         h("button", { type: "button", class: "chip-btn star-chip" + (v.star ? " set" : ""), "aria-pressed": v.star ? "true" : "false", title: "Star it (or add !)",
           onclick: () => { cd.star = !v.star; upd(); } }, ico("star"), h("span", { class: "cl", text: v.star ? "Starred" : "Star" })),
         h("button", { type: "button", class: "chip-btn" + (cd.notes != null ? " set" : " soft"), onclick: () => { cd.notes = cd.notes == null ? "" : cd.notes; notes.hidden = false; notes.focus(); draw(); } },
@@ -2413,16 +2507,25 @@ function composer() {
         h("span", { class: "durs", role: "group", "aria-label": "Length" }, dur.map((m) => h("button", { type: "button", class: "mini", "aria-pressed": v.mins === m ? "true" : "false",
           onclick: () => { cd.mins = m; upd(); }, text: m < 60 ? m + "m" : m / 60 + "h" }))),
         chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
+        chip("Template", v.tpl ? v.tpl.name : "", (e) => menu(e.currentTarget, [{ label: (!v.tpl ? "✓ " : "") + "None", run: () => { cd.tpl = null; upd(); } }].concat(TEMPLATES.map((T) => ({ label: (v.tpl === T ? "✓ " : "") + T.name, kbd: hoursText(T.mins), run: () => { cd.tpl = T; cd.mins = T.mins; upd(); } })))), { cls: v.tpl ? "" : "soft", title: "Length, learning modes and steps for this kind of work" }),
         chip("At", v.where, (e) => menu(e.currentTarget, ["Library", "Dorm desk", "Butler", "Lerner"].map((w) => ({ label: w, run: () => { cd.where = w; upd(); } })))),
         chip("For", "", (e) => pickDeadline(e.currentTarget, (x) => { cd.text = x.title + (cd.text ? " " + parseQuick(cd.text, now).hits.join(" ") : ""); cd.course = x.course || null; inp.value = cd.text; upd(); }), { cls: "soft", title: "Plan time for a deadline" }));
       if (v.clash) parts.push(h("span", { class: "clash", text: "Overlaps " + v.clash.title + " " + fmtTime(v.clash.start) + "–" + fmtTime(v.clash.end) }));
     }
-    chips.replaceChildren(h("div", { class: "cc" }, parts), h("div", { class: "ca" }, h("span", { class: "hint keys", text: "Enter to add · Esc to close" }), addBtn));
+    chips.replaceChildren(h("div", { class: "cc" }, parts), h("div", { class: "ca" }, addBtn));
     notes.hidden = cd.mode !== "task" || cd.notes == null;
   };
   const upd = () => { composerFocus = true; render(); };
   inp.addEventListener("focus", () => { if (!composerOpen) { composerOpen = true; box.classList.add("open"); } });
   inp.addEventListener("input", () => { cd.text = inp.value; draw(); });
+  // Pasting several lines (a syllabus, an email) offers to add each line as a task.
+  inp.addEventListener("paste", (e) => {
+    const txt = (e.clipboardData || window.clipboardData).getData("text");
+    if (cd.mode !== "task" || !txt || !/\n\s*\S/.test(txt.trim())) return;
+    e.preventDefault();
+    const v = draftValues(new Date());
+    pasteList(txt, { day: v.day, course: cd.course !== undefined ? cd.course : courseFilter && COURSES[courseFilter] ? courseFilter : null });
+  });
   inp.addEventListener("keydown", (e) => {
     if (e.key === "Escape") { e.preventDefault(); resetDraft(); composerOpen = false; inp.blur(); render(); }
   });
@@ -2432,10 +2535,11 @@ function composer() {
     if (!v.title && cd.mode === "task") { inp.classList.add("shake"); setTimeout(() => inp.classList.remove("shake"), 400); inp.focus(); return; }
     if (cd.mode === "task") {
       const title = withType(withCourse(v.title, v.course), v.type);
-      createDue({ title, day: v.day, time: v.time || "", notes: cd.notes || "", star: v.star }).catch(() => {});
+      if (v.days.length > 1) createDues(v.days.map((day) => ({ title, day, time: v.time || "", notes: cd.notes || "" })), "Added " + v.days.length + " × “" + dueName(title) + "” (" + repeatLabel(v.repeat, v.days.length).split(" · ")[0].toLowerCase() + ")");
+      else createDue({ title, day: v.day, time: v.time || "", notes: cd.notes || "", star: v.star }).catch(() => {});
     } else {
       if (isNaN(v.start)) { toast("Check the start time (24-hour, like 14:00)."); return; }
-      createBlock({ title: withCourse(v.title || "Work block", v.course), start: v.start, end: v.end, where: v.where, steps: [], modes: [] }).catch(() => {});
+      createBlock({ title: withCourse(v.title || (v.tpl ? v.tpl.name : "Work block"), v.course), start: v.start, end: v.end, where: v.where, steps: v.tpl ? tplSteps(v.tpl) : [], modes: v.tpl ? v.tpl.modes : [] }).catch(() => {});
     }
     resetDraft(); composerOpen = true; composerFocus = true; render();
   });
@@ -2691,7 +2795,7 @@ function renderAgenda(now) {
     createBlock({ title: x.title, start: a, end: a + sittingMinutes(x) * 60000, where: "Library", steps: [], modes: [] }).catch(() => {});
   });
 
-  card.append(scroller);
+  card.append(weekStrip(now), loadLine(day.getTime()), scroller);
   // Keep the scroll position across refreshes; on a new day start an hour before now (or at the first thing).
   const key = dayKey(day);
   requestAnimationFrame(() => {
@@ -2710,12 +2814,17 @@ function renderAgenda(now) {
 }
 // The little "new block" box Google Calendar shows when you click or drag on empty time.
 function quickCreate(a, b, anchor, onClose) {
-  const st = { a, b, course: undefined };
+  const st = { a, b, course: undefined, tpl: undefined };
   const inp = h("input", { class: "inp big", placeholder: "Add a title", "aria-label": "Block title" });
   const when = h("div", { class: "qc-when" });
   const chipsRow = h("div", { class: "row" });
   const sugg = h("div", { class: "qc-sugg" });
+  const tplRow = h("div", { class: "qc-sugg" });
+  const tplNow = () => (st.tpl !== undefined ? st.tpl : templateFor(inp.value));
   const draw = () => {
+    const T = tplNow();
+    tplRow.replaceChildren(h("span", { class: "hint", text: "Kind:" }), ...TEMPLATES.map((X) => h("button", { type: "button", class: "mini", "aria-pressed": T === X ? "true" : "false",
+      title: X.steps.length ? "Steps: " + X.steps.join(" · ") : "", onclick: () => { st.tpl = T === X ? null : X; if (st.tpl) st.b = st.a + X.mins * 60000; draw(); inp.focus(); }, text: X.name })));
     const course = st.course !== undefined ? st.course : courseOf(inp.value);
     const clash = timedFor(events, new Date(st.a)).filter((e) => e.src !== "sleep" && e.start < st.b && e.end > st.a)[0];
     when.replaceChildren(h("b", { text: whenText(st.a) + "–" + fmtTime(st.b) }), h("span", { text: " · " + fmtDur(st.b - st.a) }),
@@ -2730,16 +2839,17 @@ function quickCreate(a, b, anchor, onClose) {
     onclick: () => { inp.value = x.title; st.course = x.course || null; draw(); inp.focus(); }, text: x.title })));
   inp.addEventListener("input", draw);
   const add = () => {
-    const title = withCourse(inp.value.trim() || "Work block", st.course !== undefined ? st.course : courseOf(inp.value));
+    const T = tplNow();
+    const title = withCourse(inp.value.trim() || (T ? T.name : "Work block"), st.course !== undefined ? st.course : courseOf(inp.value));
     closePop();
-    createBlock({ title, start: st.a, end: st.b, where: "Library", steps: [], modes: [] }).catch(() => {});
+    createBlock({ title, start: st.a, end: st.b, where: /\b(oral|speak|aloud|flashcard|vocab|anki)\b/i.test(title) ? "Dorm desk" : "Library", steps: T ? tplSteps(T) : [], modes: T ? T.modes : [] }).catch(() => {});
   };
   inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } });
   draw();
   openPop(anchor, [
-    inp, when, chipsRow, sugg,
+    inp, when, chipsRow, tplRow, sugg,
     h("div", { class: "row end" },
-      h("button", { type: "button", class: "mini", onclick: () => { closePop(); editBlock(null, { title: inp.value, start: st.a, end: st.b, where: "Library", steps: [], modes: [] }); }, text: "More options" }),
+      h("button", { type: "button", class: "mini", onclick: () => { const T = tplNow(); closePop(); editBlock(null, { title: inp.value, start: st.a, end: st.b, where: "Library", steps: T ? tplSteps(T) : [], modes: T ? T.modes : [] }); }, text: "More options" }),
       h("button", { type: "button", class: "pill-btn primary", onclick: add, text: "Add" }))
   ], { cls: "qc", onClose, focus: "input" });
 }
@@ -2817,7 +2927,7 @@ function openTask(x) {
 function showKeys() {
   const rows = [["N", "New task"], ["B", "New block"], ["Ctrl/⌘ K", "Command bar: search or add anything"], ["Ctrl/⌘ Z", "Undo the last change"],
     ["↑ ↓ or J K", "Move between tasks"], ["Enter", "Open a task"], ["E", "Edit"], ["R", "Rename"], ["T", "Change the date"], ["D", "Done"], ["S", "Star"],
-    ["G", "Start the timer on it"], ["P", "Plan time for it"], ["Delete", "Delete (your own tasks and blocks)"], ["Right-click or M", "All actions"],
+    ["X or ⌘/Ctrl-click", "Select several (Shift for a range)"], ["G", "Start the timer on it"], ["P", "Plan time for it"], ["Delete", "Delete (your own tasks and blocks)"], ["Right-click or M", "All actions"],
     ["Alt ↑ ↓", "Move a block 15 min (on the timeline)"], ["F", "Full-screen timer"]];
   openDrawer("Keyboard shortcuts", h("dl", { class: "keys-list" }, rows.flatMap(([k, v]) => [h("dt", null, h("span", { class: "kbd", text: k })), h("dd", { text: v })])));
 }
@@ -2828,6 +2938,318 @@ function newMenu(anchor) {
     "-",
     { label: "Search or add anything…", kbd: (navigator.platform || "").includes("Mac") ? "⌘K" : "Ctrl K", run: () => openPalette() }
   ]);
+}
+
+
+/* ---------- More ways to add and change things ---------- */
+const STUDY_CAP_HOURS = 6;   // matches STUDY_CAP_HOURS in Code.gs: the 70% rule
+function batchPost(ops) { return apiPost({ action: "batch", ops }); }
+
+// ---- Checklists and notes on your own tasks. Notes live in the event description; lines that start
+// with "- [ ]" or "- [x]" are the checklist, everything else is plain notes.
+const CHECK_RX = /^\s*[-*•]\s*\[( |x|X)\]\s+(.*)$/;
+function notesOf(x) { const ev = evOf(ownRef(x)); return ev ? ev.notes || "" : ""; }
+function checklistOf(text) {
+  const items = [], rest = [];
+  String(text || "").split(/\r?\n/).forEach((l) => { const m = CHECK_RX.exec(l); if (m) items.push({ text: m[2].trim(), done: m[1] !== " " }); else rest.push(l); });
+  return { items, rest: rest.join("\n").trim() };
+}
+function joinNotes(items, rest) { return [rest.trim(), items.map((i) => "- [" + (i.done ? "x" : " ") + "] " + i.text).join("\n")].filter(Boolean).join("\n"); }
+const URL_RX = /\bhttps?:\/\/[^\s<>"')]+/gi;
+function linkify(text) {
+  const out = []; let last = 0;
+  String(text).replace(URL_RX, (m, i) => { out.push(text.slice(last, i)); out.push(h("a", { href: m, target: "_blank", rel: "noopener", text: m.replace(/^https?:\/\/(www\.)?/, "").slice(0, 48) + (m.length > 56 ? "…" : "") })); last = i + m.length; return m; });
+  out.push(text.slice(last));
+  return out;
+}
+function setChecklist(x, items, rest) { updateDue(x, { notes: joinNotes(items, rest) }, true); }
+function checklistBox(x) {
+  const own = !!ownRef(x);
+  const { items, rest } = checklistOf(notesOf(x));
+  const box = h("div", { class: "checklist" });
+  if (rest) box.append(h("p", { class: "notes-text" }, ...linkify(rest)));
+  if (!own) return rest ? box : null;
+  box.append(h("ul", { class: "cl-items" }, items.map((it, i) => h("li", { class: it.done ? "done" : "" },
+    h("button", { type: "button", class: "cl-box", "aria-pressed": it.done ? "true" : "false", "aria-label": (it.done ? "Untick " : "Tick ") + it.text,
+      onclick: (e) => { e.stopPropagation(); const n = items.map((y) => Object.assign({}, y)); n[i].done = !n[i].done; setChecklist(x, n, rest); } }),
+    h("span", { class: "cl-t", text: it.text }),
+    h("button", { type: "button", class: "ico-btn", "aria-label": "Remove " + it.text, onclick: (e) => { e.stopPropagation(); setChecklist(x, items.filter((_, j) => j !== i), rest); }, text: "×" })))));
+  const add = h("input", { class: "inp cl-add", placeholder: items.length ? "Add a step" : "Break it into steps: type one and press Enter", "aria-label": "Add a step", autocomplete: "off" });
+  add.addEventListener("click", (e) => e.stopPropagation());
+  add.addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter" && add.value.trim()) { e.preventDefault(); const v = add.value.trim(); add.value = ""; setChecklist(x, items.concat([{ text: v, done: false }]), rest); }
+  });
+  box.append(add);
+  return box;
+}
+
+// ---- Repeating tasks: "every mon", "every tue and thu 18:00", "weekly", "daily", "weekdays",
+// with "until dec 10", "for 6 weeks" or "x6". Each one is its own event, so each can be moved or done.
+function parseRepeat(s, out, now) {
+  const at = (n) => dayKey(addDays(now, n, 12));
+  s = s.replace(/\s(?:x|×)\s?(\d{1,2})(?=\s)|\s(?:for\s+)?(\d{1,2})\s+(?:times|weeks)(?=\s)/i, (m, a, b) => { out.count = Math.min(30, +(a || b)); out.hits.push(m.trim()); return " "; });
+  s = s.replace(/\suntil\s+(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})|(\d{1,2})\/(\d{1,2}))(?=\s)/i, (m, mo, d, mm, dd) => {
+    const month = mo ? MONTHS.indexOf(mo.toLowerCase()) : +mm - 1, day = +(d || dd);
+    let y = now.getFullYear(); if (new Date(y, month, day) < startOfDay(now)) y++;
+    out.until = dayKey(new Date(y, month, day, 12)); out.hits.push(m.trim()); return " ";
+  });
+  s = s.replace(/\s(?:every\s+day|daily)(?=\s)/i, (m) => { out.repeat = { kind: "daily" }; out.hits.push(m.trim()); return " "; });
+  s = s.replace(/\s(?:every\s+weekday|weekdays)(?=\s)/i, (m) => { out.repeat = { kind: "weekdays" }; out.hits.push(m.trim()); return " "; });
+  s = s.replace(/\s(?:every\s+(other|2nd)\s+week|biweekly)(?=\s)/i, (m) => { out.repeat = { kind: "weekly", every: 2 }; out.hits.push(m.trim()); return " "; });
+  s = s.replace(/\s(?:every\s+week|weekly)(?=\s)/i, (m) => { out.repeat = { kind: "weekly", every: 1 }; out.hits.push(m.trim()); return " "; });
+  s = s.replace(/\s(?:every|each)\s+((?:(?:sun|mon|tue|wed|thu|fri|sat)[a-z]*\s*(?:,|and|&)?\s*)+)(?=\s)/i, (m, list) => {
+    const days = [...new Set((list.match(/sun|mon|tue|wed|thu|fri|sat/gi) || []).map((d) => WEEKDAYS.indexOf(d.toLowerCase())))].sort();
+    if (!days.length) return m;
+    out.repeat = { kind: "days", days, every: 1 }; out.hits.push(m.trim());
+    if (!out.day) { let n = 0; while (!days.includes(new Date(addDays(now, n, 12)).getDay()) && n < 7) n++; out.day = at(n); }
+    return " ";
+  });
+  return s;
+}
+function occurrences(first, rep, count, until) {
+  if (!rep) return [first];
+  const max = Math.min(30, count || (rep.kind === "daily" ? 14 : rep.kind === "weekdays" ? 10 : 8));
+  const out = [], start = new Date(localDate(first) + 12 * 3600000), end = until ? localDate(until) + DAY : Infinity;
+  for (let i = 0; out.length < max && i < 400; i++) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i, 12);
+    if (d.getTime() >= end) break;
+    const wd = d.getDay(), weeks = Math.floor(i / 7);
+    const ok = rep.kind === "daily" || (rep.kind === "weekdays" && wd > 0 && wd < 6)
+      || (rep.kind === "weekly" && wd === start.getDay() && weeks % (rep.every || 1) === 0)
+      || (rep.kind === "days" && rep.days.includes(wd));
+    if (ok) out.push(dayKey(d));
+  }
+  return out.length ? out : [first];
+}
+function repeatLabel(rep, n) {
+  if (!rep) return "";
+  const names = { daily: "Every day", weekdays: "Weekdays", weekly: rep.every === 2 ? "Every 2 weeks" : "Weekly" };
+  return (names[rep.kind] || "Every " + rep.days.map((d) => WEEKDAYS[d][0].toUpperCase() + WEEKDAYS[d].slice(1)).join(", ")) + " · " + n + "×";
+}
+function pickRepeat(anchor, cur, onPick) {
+  menu(anchor, [
+    { label: (!cur.repeat ? "✓ " : "") + "Doesn't repeat", run: () => onPick(null) },
+    { label: "Every day", run: () => onPick({ kind: "daily" }) },
+    { label: "Weekdays", run: () => onPick({ kind: "weekdays" }) },
+    { label: "Every week", run: () => onPick({ kind: "weekly", every: 1 }) },
+    { label: "Every 2 weeks", run: () => onPick({ kind: "weekly", every: 2 }) },
+    "-",
+    ...[4, 8, 12, 16].map((n) => ({ label: (cur.count === n ? "✓ " : "") + n + " times", disabled: !cur.repeat, run: () => onPick(cur.repeat, n) }))
+  ]);
+}
+// Many deadlines in one request, shown at once, with one Undo for all of them.
+function createDues(list, label) {
+  const temps = list.map((o) => ({ id: tmpId(), src: "personal", title: dueName(o.title) + " due" + (o.time ? " " + o.time : ""), allDay: true,
+    start: localDate(o.day), end: localDate(o.day) + DAY, where: "", notes: o.notes || "", steps: [], modes: [], pending: true }));
+  temps.forEach((t) => events.push(t)); render();
+  return batchPost(list.map((o) => ({ action: "saveDue", title: o.title, day: o.day, time: o.time || "", notes: o.notes || "" }))).then((d) => {
+    const refs = [];
+    d.results.forEach((r, i) => { if (r.ok && r.ref) { Object.assign(temps[i], { id: r.ref.id, src: r.ref.cal, start: Number(r.ref.start), pending: false }); refs.push(r.ref); } else removeEv(temps[i]); });
+    render();
+    toast((label || "Added " + refs.length + " tasks") + (d.failed ? " (" + d.failed + " didn't save)" : ""),
+      () => { temps.forEach(removeEv); render(); return batchPost(refs.map((ref) => ({ action: "deleteDue", ref }))).then(load); });
+    load();
+  }).catch((err) => { temps.forEach(removeEv); render(); toast("Didn't add them: " + errText(err) + "."); });
+}
+
+// ---- Paste a list (from a syllabus, an email, notes): one task per line, each read like typed text.
+function pasteList(text, base) {
+  const now = new Date();
+  const lines = text.split(/\r?\n/).map((l) => l.replace(/^\s*(?:[-*•·]|\d+[.)]|\[[ x]\])\s*/i, "").trim()).filter((l) => l.length > 1).slice(0, 40);
+  const rows = lines.map((l) => {
+    const p = parseQuick(l, now);
+    const course = p.course || base.course || courseOf(p.title);
+    const day = p.day || base.day;
+    const time = p.beforeClass && classStart(course, day) ? fmtTime(classStart(course, day)) : p.time || "";
+    return { on: true, title: withType(withCourse(p.title, course), typeOf(p.title)), day, time, course };
+  }).filter((r) => r.title);
+  if (!rows.length) return false;
+  const list = h("div", { class: "paste-list" });
+  const btn = h("button", { class: "pill-btn primary", type: "button" });
+  const draw = () => {
+    list.replaceChildren(...rows.map((r) => h("label", { class: "paste-row" + (r.on ? "" : " off") },
+      h("input", { type: "checkbox", checked: r.on ? "" : null, onchange: (e) => { r.on = e.target.checked; draw(); } }),
+      h("i", { class: "dot", style: "background:" + colorOf(r.course) }),
+      h("span", { class: "ml", text: r.title }),
+      h("span", { class: "kbd", text: dayLabel(r.day, now) + (r.time ? " " + r.time : "") }))));
+    const n = rows.filter((r) => r.on).length;
+    btn.textContent = "Add " + n + " task" + (n === 1 ? "" : "s"); btn.disabled = !n;
+  };
+  btn.addEventListener("click", () => { closePop(); createDues(rows.filter((r) => r.on), null); resetDraft(); composerOpen = true; composerFocus = true; render(); });
+  draw();
+  openPop($(".composer .c-inp"), [h("div", { class: "pop-h", text: "Add these as tasks? Lines without a date are due " + dayLabel(base.day, now) + "." }), list,
+    h("div", { class: "row end" }, h("button", { class: "mini", type: "button", onclick: closePop, text: "Cancel" }), btn)], { cls: "pastepop", focus: ".pill-btn" });
+  return true;
+}
+
+// ---- Selecting several tasks: ⌘/Ctrl-click or Shift-click rows (or X on a row), then act on all of them.
+let selected = new Set(), lastPicked = null;
+function toggleSel(x, range) {
+  if (range && lastPicked) {
+    const keys = [...document.querySelectorAll(".task")].map((n) => n.getAttribute("data-key"));
+    const a = keys.indexOf(lastPicked), b = keys.indexOf(x.key);
+    if (a >= 0 && b >= 0) keys.slice(Math.min(a, b), Math.max(a, b) + 1).forEach((k) => selected.add(k));
+  } else if (selected.has(x.key)) selected.delete(x.key); else selected.add(x.key);
+  lastPicked = x.key;
+  render();
+}
+function clearSel() { if (!selected.size) return; selected = new Set(); render(); }
+function drawBulk() {
+  const bar = $("#bulk");
+  if (!bar) return;
+  const items = currentItems.filter((x) => selected.has(x.key));
+  if (!items.length) { if (selected.size) selected = new Set(); bar.hidden = true; return; }
+  const own = items.filter((x) => ownRef(x));
+  const skipNote = (n) => (n < items.length ? " (" + (items.length - n) + " from Canvas left as they are)" : "");
+  bar.hidden = false;
+  bar.replaceChildren(
+    h("b", { text: items.length + " selected" }),
+    h("button", { type: "button", class: "mini", onclick: () => { items.forEach((x) => { if (!x.auto && !x.done) toggleDone(x); }); toast("Marked " + items.length + " done"); clearSel(); }, text: "Done" }),
+    h("button", { type: "button", class: "mini", onclick: (e) => pickDay(e.currentTarget, null, (k) => bulkSave(own, (x) => ({ day: k }), "Moved " + own.length + " to " + dayLabel(k, new Date()) + skipNote(own.length))), text: "Move to…" }),
+    h("button", { type: "button", class: "mini", onclick: (e) => pickCourse(e.currentTarget, null, (k) => bulkSave(own, (x) => ({ title: withCourse(dueName(evOf(ownRef(x)).title), k) }), "Changed the class on " + own.length + skipNote(own.length))), text: "Class…" }),
+    h("button", { type: "button", class: "mini", onclick: () => { const now = new Date(); const on = !items.every(isStarred); items.forEach((x) => { if (!x.done) setStar(x, on, now); }); clearSel(); }, text: items.every(isStarred) ? "Unstar" : "Star" }),
+    h("button", { type: "button", class: "mini", onclick: () => planMany(items.filter((x) => !x.done && !x.past && !x.planned.min)), text: "Plan time" }),
+    h("button", { type: "button", class: "mini danger", disabled: own.length ? null : "", onclick: () => bulkDelete(own, skipNote(own.length)), text: "Delete" }),
+    h("button", { type: "button", class: "ico-btn", "aria-label": "Clear selection (Esc)", onclick: clearSel, text: "×" }));
+}
+function bulkSave(list, change, label) {
+  if (!list.length) { toast("Only your own tasks can be changed here; Canvas ones change in Canvas."); return; }
+  const ops = [], undo = [];
+  list.forEach((x) => {
+    const ref = ownRef(x), ev = evOf(ref);
+    const old = { title: dueName(ev ? ev.title : x.title), day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes || "" : "" };
+    const n = Object.assign({}, old, change(x));
+    if (ev) { ev.title = dueName(n.title) + " due" + (n.time ? " " + n.time : ""); ev.start = localDate(n.day); ev.end = ev.start + DAY; ev.pending = true; }
+    ops.push(Object.assign({ action: "saveDue", ref }, n)); undo.push({ old, ev });
+  });
+  selected = new Set(); render();
+  batchPost(ops).then((d) => {
+    const back = d.results.map((r, i) => r.ok ? Object.assign({ action: "saveDue", ref: r.ref }, undo[i].old) : null).filter(Boolean);
+    toast(label, () => batchPost(back).then(load));
+    load();
+  }).catch((err) => { toast("Didn't save: " + errText(err) + "."); load(); });
+}
+function bulkDelete(list, note) {
+  const copies = list.map((x) => { const ev = evOf(ownRef(x)); return { ref: ownRef(x), ev, copy: { action: "saveDue", title: dueName(ev ? ev.title : x.title), day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes || "" : "" } }; });
+  copies.forEach((c) => { if (c.ev) removeEv(c.ev); });
+  selected = new Set(); render();
+  batchPost(copies.map((c) => ({ action: "deleteDue", ref: c.ref }))).then(() => {
+    toast("Deleted " + copies.length + " task" + (copies.length === 1 ? "" : "s") + (note || ""), () => batchPost(copies.map((c) => c.copy)).then(load));
+    load();
+  }).catch((err) => { toast("Didn't delete: " + errText(err) + "."); load(); });
+}
+
+// ---- Plan my week: one block for everything due in the next 7 days that has no time yet.
+function planOp(x, minutes) {
+  const where = /\b(oral|speak|aloud|flashcard|vocab)\b/i.test(x.title) ? "Dorm desk" : "Library";
+  const label = (x.course ? x.course + " · " : "") + x.title.replace(new RegExp("^" + (x.course || "") + "\\s+", "i"), "");
+  const T = templateFor(x.title);
+  return { action: "plan", title: label.slice(0, 70), minutes, before: x.dueEnd, where, steps: T ? T.steps.map((t) => ({ text: t, digest: /^Digest:/.test(t) })) : [], modes: T ? T.modes : [] };
+}
+function planMany(list) {
+  if (!list.length) { toast("Everything selected already has time planned."); return; }
+  selected = new Set();
+  toast("Finding time for " + list.length + "…", null, 20000);
+  batchPost(list.map((x) => planOp(x, sittingMinutes(x)))).then((d) => {
+    const made = d.results.filter((r) => r.ok && r.block);
+    const missed = list.filter((x, i) => !d.results[i].ok).map((x) => x.title);
+    toast("Planned " + made.length + " block" + (made.length === 1 ? "" : "s") + (missed.length ? ". No room for: " + missed.join(", ") : ""),
+      made.length ? () => batchPost(made.map((r) => ({ action: "deleteBlock", block: r.block }))).then(load) : null, 12000);
+    load();
+  }).catch((err) => toast("Couldn't plan: " + errText(err) + "."));
+}
+function planWeek(anchor) {
+  const t = Date.now();
+  const rows = currentItems.filter((x) => !x.done && !x.past && !x.planned.min && x.dueEnd - t < 7 * DAY).sort((a, b) => a.dueEnd - b.dueEnd).map((x) => ({ x, on: true, m: sittingMinutes(x) }));
+  if (!rows.length) { toast("Everything due this week already has time planned."); return; }
+  const list = h("div", { class: "paste-list" }), btn = h("button", { class: "pill-btn primary", type: "button" });
+  const draw = () => {
+    list.replaceChildren(...rows.map((r) => h("div", { class: "paste-row" + (r.on ? "" : " off") },
+      h("input", { type: "checkbox", checked: r.on ? "" : null, "aria-label": r.x.title, onchange: (e) => { r.on = e.target.checked; draw(); } }),
+      h("i", { class: "dot", style: "background:" + colorOf(r.x.course) }),
+      h("span", { class: "ml", text: r.x.title }),
+      h("button", { type: "button", class: "mini", title: "Length: click to change", onclick: () => { r.m = r.m >= 120 ? 30 : r.m + 30; draw(); }, text: hoursText(r.m) }),
+      h("span", { class: "kbd", text: dueShort(r.x, new Date()) }))));
+    const on = rows.filter((r) => r.on);
+    btn.textContent = "Plan " + on.length + " block" + (on.length === 1 ? "" : "s") + " · " + hoursText(on.reduce((s, r) => s + r.m, 0));
+    btn.disabled = !on.length;
+  };
+  btn.addEventListener("click", () => {
+    closePop();
+    const on = rows.filter((r) => r.on);
+    toast("Finding time for " + on.length + "…", null, 20000);
+    batchPost(on.map((r) => planOp(r.x, r.m))).then((d) => {
+      const made = d.results.filter((r) => r.ok && r.block);
+      const missed = on.filter((r, i) => !d.results[i].ok).map((r) => r.x.title);
+      toast("Planned " + made.length + " block" + (made.length === 1 ? "" : "s") + " in your free time" + (missed.length ? ". No room before it's due: " + missed.join(", ") : ""),
+        made.length ? () => batchPost(made.map((r) => ({ action: "deleteBlock", block: r.block }))).then(load) : null, 12000);
+      load();
+    }).catch((err) => toast("Couldn't plan: " + errText(err) + "."));
+  });
+  draw();
+  openPop(anchor, [h("div", { class: "pop-h", text: "Due in the next 7 days with no time planned" }), list,
+    h("p", { class: "hint pad", text: "Each goes in the first free slot before it's due, outside classes and sleep, keeping days under " + STUDY_CAP_HOURS + "h of study." }),
+    h("div", { class: "row end" }, h("button", { class: "mini", type: "button", onclick: closePop, text: "Cancel" }), btn)], { cls: "pastepop", focus: ".pill-btn" });
+}
+
+// ---- Block templates: the usual shapes of a work session, with their length, learning modes and steps.
+const TEMPLATES = [
+  { name: "Reading", mins: 60, modes: ["C", "E"], steps: ["Skim the headings and questions", "Read; one line per section", "Digest: three takeaways in your own words"], rx: /\b(reading|rdg|read|wr\s*\d)\b/i },
+  { name: "Problem set", mins: 90, modes: ["P"], steps: ["Do every problem you can", "Mark the ones you're stuck on", "Digest: what made the hard ones hard"], rx: /\b(pset|problem set|hw|homework|exercise)/i },
+  { name: "Essay", mins: 90, modes: ["A", "E"], steps: ["Outline the next section", "Draft it without editing", "Digest: one fix for next time"], rx: /\b(essay|paper|draft)\b/i },
+  { name: "Lab report", mins: 90, modes: ["E"], steps: ["Data and figures", "Analysis and error", "Check against the rubric"], rx: /\b(lab report|report)\b/i },
+  { name: "Exam review", mins: 120, modes: ["P", "R"], steps: ["Timed practice problems", "Grade them", "Digest: miss list"], rx: /\b(exam|quiz|test|midterm|final|review)\b/i },
+  { name: "Flashcards", mins: 25, modes: ["R"], steps: [], rx: /\b(anki|flashcards?|vocab|deck)\b/i }
+];
+const templateFor = (title) => TEMPLATES.find((T) => T.rx.test(title || "")) || null;
+const tplSteps = (T) => T.steps.map((t) => ({ text: t, digest: /^Digest:/.test(t) }));
+
+// ---- Week strip and study load, above the timeline.
+function studyMinutesOn(dayMs) {
+  const a = startOfDay(new Date(dayMs)).getTime(), b = a + DAY;
+  return events.filter((e) => e.src === "study" && !e.allDay && e.start < b && e.end > a && !SKIP_CHECK_RX.test(e.title))
+    .reduce((s, e) => s + (Math.min(e.end, b) - Math.max(e.start, a)) / 60000, 0);
+}
+function weekStrip(now) {
+  const sel = startOfDay(new Date(addDays(now, agendaOffset, 12)));
+  const mon = new Date(sel.getFullYear(), sel.getMonth(), sel.getDate() - ((sel.getDay() + 6) % 7), 12);
+  const today = dayKey(now);
+  return h("div", { class: "wk", role: "group", "aria-label": "This week" }, Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i, 12), k = dayKey(d);
+    const mins = studyMinutesOn(d.getTime());
+    const due = currentItems.filter((x) => !x.done && x.d.day === k);
+    const off = Math.round((startOfDay(d).getTime() - startOfDay(now).getTime()) / DAY);
+    const over = mins > STUDY_CAP_HOURS * 60;
+    return h("button", { type: "button", class: "wk-d" + (k === dayKey(sel) ? " sel" : "") + (k === today ? " today" : "") + (over ? " over" : ""),
+      disabled: off < -7 || off > 14 ? "" : null, title: d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) + " · " + fmtMins(Math.round(mins)) + " of study planned" + (due.length ? " · " + due.length + " due" : ""),
+      onclick: () => { agendaOffset = off; tl.scroll = null; render(); } },
+      h("span", { class: "wl", text: "SMTWTFS"[d.getDay()] }), h("span", { class: "wn", text: String(d.getDate()) }),
+      h("span", { class: "wb" }, h("i", { style: "height:" + Math.min(100, mins / (STUDY_CAP_HOURS * 60) * 100) + "%" })),
+      h("span", { class: "wdots" }, due.slice(0, 3).map((x) => h("i", { class: isExam(x.d) ? "ex" : "", style: "background:" + colorOf(x.course) }))));
+  }));
+}
+function loadLine(dayMs) {
+  const mins = studyMinutesOn(dayMs), cap = STUDY_CAP_HOURS * 60;
+  return h("div", { class: "load" + (mins > cap ? " over" : "") },
+    h("span", { text: (mins ? fmtMins(Math.round(mins)) : "No") + " study planned" }),
+    h("span", { class: "lb" }, h("i", { style: "width:" + Math.min(100, mins / cap * 100) + "%" })),
+    h("span", { class: "lc", text: mins > cap ? "over the " + STUDY_CAP_HOURS + "h cap" : "of " + STUDY_CAP_HOURS + "h" }));
+}
+
+// ---- List filters
+let listFilter = store("deskboard-filter") || "all";
+const FILTERS = [["all", "All"], ["unplanned", "Not planned"], ["exams", "Exams & quizzes"], ["mine", "Added by me"], ["canvas", "From Canvas"]];
+function passesFilter(x) {
+  if (listFilter === "unplanned") return !x.done && !x.past && !x.planned.min;
+  if (listFilter === "exams") return isExam(x.d);
+  if (listFilter === "mine") return !!ownRef(x);
+  if (listFilter === "canvas") return refsOf(x).some((r) => r.cal === "canvas");
+  return true;
+}
+function filterBar() {
+  return h("div", { class: "filters", role: "group", "aria-label": "Show" }, FILTERS.map(([k, l]) => h("button", { type: "button", class: "fchip", "aria-pressed": listFilter === k ? "true" : "false",
+    onclick: () => { listFilter = k; store("deskboard-filter", k); render(); }, text: l })));
 }
 
 /* ---------- Full-screen focus ---------- */
@@ -2890,6 +3312,7 @@ document.addEventListener("keydown", (e) => {
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z" && !typing && !palOpen) { const u = lastUndo(); if (u) { e.preventDefault(); runUndo(u); } return; }
   if (pop || palOpen) return;
   if (drawerOpen && e.key === "Escape") { e.preventDefault(); closeDrawer(); return; }
+  if (!drawerOpen && !typing && e.key === "Escape" && selected.size) { e.preventDefault(); clearSel(); return; }
   if (drawerOpen) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (typing) return;
