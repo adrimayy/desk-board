@@ -553,7 +553,11 @@ button.due-pill:hover { box-shadow: inset 0 0 0 1px var(--sage-deep); }
 .tl-ev .tm { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-variant-numeric: tabular-nums; }
 .tl-ev.short { padding-top: 1px; display: flex; gap: 6px; align-items: baseline; }
 .tl-ev.short b { flex: 0 1 auto; min-width: 0; }
-.tl-ev.short .tm { flex: none; }
+.tl-ev.short .tm { flex: 0 1 auto; min-width: 0; }
+/* Squeezed beside other events: the name comes first; the end time, then the time, give way. */
+.tl-ev { container-type: inline-size; }
+@container (max-width: 150px) { .tl-ev .t2, .tl-ev .t3 { display: none; } .tl-ev.short .tm { display: none; } }
+@container (max-width: 90px) { .tl-ev .tm { display: none; } .tl-ev b { -webkit-line-clamp: 2; } }
 .tl-ev.past { opacity: 0.5; }
 .tl-ev.live { box-shadow: 0 0 0 2px var(--ok) inset; }
 .tl-ev.rated-done b::after { content: " ✓"; color: var(--ok); }
@@ -565,6 +569,18 @@ button.due-pill:hover { box-shadow: inset 0 0 0 1px var(--sage-deep); }
 .tl-ev:hover .tl-rs::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 18px; margin-left: -9px; height: 3px; border-radius: 2px; background: var(--course); opacity: 0.7; }
 .tl-now { position: absolute; left: -6px; right: 0; height: 0; border-top: 2px solid var(--alert); z-index: 4; pointer-events: none; }
 .tl-now::before { content: ""; position: absolute; left: -4px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--alert); }
+.tl-due { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--course); z-index: 3; pointer-events: none; }
+.tl-due.past { opacity: 0.5; }
+.tl-flag { pointer-events: auto; position: absolute; right: 0; bottom: 1px; max-width: 100%; border: 0; background: var(--course); color: #fff; font-size: 0.7rem; font-weight: 700; line-height: 1.2; padding: 2px 7px; border-radius: 6px 6px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-flex; gap: 5px; align-items: baseline; }
+.tl-flag .fl-t { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tl-flag .fl-w { flex: none; opacity: 0.85; font-weight: 600; }
+.tl-flag:hover { filter: brightness(1.08); }
+.tl-allday { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tl-allday .chip.ad { border: 0; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+.tl-allday .chip.ad:hover { filter: brightness(1.08); }
+.today-card { position: relative; }
+.tl-nowbtn { position: absolute; right: 22px; bottom: 44px; z-index: 7; box-shadow: var(--shadow-lift); background: var(--ink); color: var(--card); border-color: var(--ink); }
+.tl-nowbtn:hover { color: var(--card); }
 .tl-ghost { position: absolute; left: 0; right: 0; border-radius: 7px; background: color-mix(in srgb, var(--sage-deep) 22%, transparent); border: 2px dashed var(--sage-deep); color: var(--ink); font-size: 0.76rem; font-weight: 700; padding: 3px 7px; z-index: 6; pointer-events: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-sizing: border-box; }
 /* ---------- Alignment fixes ---------- */
 .due-pill { background: transparent; line-height: 1.25; }
@@ -593,6 +609,9 @@ button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight
 .checklist { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 2px; }
 .notes-text { margin: 0; white-space: pre-wrap; font-size: 0.86rem; color: var(--ink-2); line-height: 1.45; }
 .notes-text a { color: var(--sage-deep); font-weight: 600; }
+.notes-text.editable { cursor: text; border-radius: 8px; padding: 4px 6px; margin: -4px -6px; }
+.notes-text.editable:hover, .notes-text.editable:focus-visible { background: var(--card); outline: none; box-shadow: inset 0 0 0 1px var(--line); }
+.notes-edit { font-size: 0.86rem; line-height: 1.45; min-height: 3.2em; }
 .cl-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .cl-items li { display: grid; grid-template-columns: 22px minmax(0, 1fr) 28px; align-items: center; gap: 8px; font-size: 0.88rem; }
 .cl-items li.done .cl-t { text-decoration: line-through; color: var(--ink-3); }
@@ -625,6 +644,7 @@ button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight
 .wk-d { display: grid; grid-template-rows: 14px 24px 22px 8px; align-items: center; justify-items: center; gap: 2px; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 5px 0 4px; color: var(--ink-2); }
 .wk-d:hover { background: var(--card-2); }
 .wk-d.sel { background: var(--mint); border-color: var(--sage-deep); }
+.wk-d.drop { background: var(--mint); border-color: var(--sage-deep); box-shadow: 0 0 0 2px var(--sage-deep); }
 .wk-d.today .wn { color: var(--card); background: var(--sage-deep); border-radius: 50%; }
 .wk-d .wl { font-size: 0.66rem; font-weight: 700; color: var(--ink-3); }
 .wk-d .wn { font-size: 0.86rem; font-weight: 700; font-variant-numeric: tabular-nums; width: 24px; height: 24px; display: grid; place-items: center; }
@@ -879,7 +899,7 @@ function apiPost(body) {
 /* ---------- State ---------- */
 let events = [], stats = [], conn = { ok: false, at: 0, error: "" }, sources = {}, calIds = {}, owner = "";
 let doneDue = {}, layout = {}, holdLayoutUntil = 0, srv = {};   // srv: reviewed day, last tap anywhere, last fresh start
-const localChecks = {}, localSteps = {};
+const localChecks = {}, localSteps = {}, doneIntent = {};
 let view = store("deskboard-view") || "todo";
 let moveOffer = null, checkNote = null, cardNotes = {}, nightNote = null;
 let dragging = null;
@@ -1076,12 +1096,18 @@ function toggleStep(ev, s) {
   apiPost({ action: "step", block: { cal: ev.src, id: ev.id, start: ev.start }, text: s.text, done: next })
     .catch(() => { delete localSteps[k]; render(); });
 }
-function toggleDone(x) {
+function toggleDone(x, quiet) {
   const was = !!doneDue[x.key];
   if (was) delete doneDue[x.key]; else doneDue[x.key] = Date.now();
   render();
-  apiPost({ action: "dueDone", due: x.key, done: !was }).then((d) => { if (d.state && d.state.doneDue) doneDue = d.state.doneDue; })
-    .catch(() => { if (was) doneDue[x.key] = 1; else delete doneDue[x.key]; render(); });
+  if (!was && !quiet) toast("Done · “" + x.title + "”", () => { toggleDone(x, true); }, 6000);
+  const want = !was; doneIntent[x.key] = want;
+  apiPost({ action: "dueDone", due: x.key, done: want }).then((d) => {
+    if (!d.state || !d.state.doneDue) return;
+    doneDue = d.state.doneDue;
+    // The last tap here wins over a reply that crossed it on the wire.
+    if (doneIntent[x.key]) doneDue[x.key] = doneDue[x.key] || Date.now(); else delete doneDue[x.key];
+  }).catch(() => { if (doneIntent[x.key] === want) { if (was) doneDue[x.key] = 1; else delete doneDue[x.key]; render(); toast("Couldn't save that. Try again.", () => toggleDone(x, quiet), 10000, "Retry"); } });
 }
 let layoutTimer = null;
 function saveLayout() {
@@ -1289,7 +1315,7 @@ function renderTask(x, now) {
       ico("play"), active ? h("span", { text: timerText(pomo, t) }) : h("span", { text: "Start" })),
     ownRef(x) && !x.done ? h("button", { class: "due-pill" + pill, type: "button", title: "Change the date (T)",
         onclick: (e) => { e.stopPropagation(); pickDay(e.currentTarget, x.d.day, (k) => updateDue(x, { day: k }), { title: "Move to" }); }, text: (x.past ? "Passed · " : "") + dueShort(x, now) })
-      : h("span", { class: "due-pill" + pill, title: refsOf(x).some((r) => r.cal === "canvas") ? "From Canvas: the date changes there" : null, text: (x.past && !x.done ? "Passed · " : "") + dueShort(x, now) }),
+      : h("span", { class: "due-pill" + pill, title: "From " + fromWhere(x) + ": the date changes there", text: (x.past && !x.done ? "Passed · " : "") + dueShort(x, now) }),
     x.done ? h("span") : h("button", { class: "star" + (star ? " on" : ""), type: "button", title: star ? "Unstar" : "Star",
       "aria-label": star ? "Unstar" : "Star", "aria-pressed": star ? "true" : "false",
       onclick: (e) => { e.stopPropagation(); setStar(x, !star, now); } }, ico("star")),
@@ -1299,7 +1325,7 @@ function renderTask(x, now) {
   if (x.pending) li.classList.add("pending");
   li.addEventListener("contextmenu", (e) => { if (e.target.closest("input, textarea")) return; e.preventDefault(); taskMenu(x, li, { x: e.clientX, y: e.clientY }); });
   const tt = li.querySelector(".task-title");
-  if (tt) tt.addEventListener("dblclick", (e) => { e.stopPropagation(); if (ownRef(x)) renameInline(x); else toast("That one comes from Canvas, so its name changes there."); });
+  if (tt) tt.addEventListener("dblclick", (e) => { e.stopPropagation(); if (ownRef(x)) renameInline(x); else toast("That one comes from " + fromWhere(x) + ", so its name changes there."); });
 
   li.addEventListener("dragstart", (e) => { if (e.target !== li) return; dragging = x; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", x.key); });
   li.addEventListener("dragend", () => { dragging = null; li.classList.remove("dragging"); document.querySelectorAll(".drop-hint").forEach((n) => n.remove()); document.querySelectorAll(".group.over").forEach((n) => n.classList.remove("over")); });
@@ -1639,7 +1665,7 @@ function renderNow(now) {
   const panel = h("section", { class: "panel now hero", style: "--course:" + colorOf(course), "aria-label": "Do now" });
   const main = h("div", { class: "hero-main" });
   main.append(h("div", { class: "head" },
-    h("span", { class: "label", text: isNow ? "Now" : "Up next" }),
+    h("span", { class: "label", text: isNow ? "Now" : ev.start - t > 2 * 3600000 ? (now.getHours() < WAKE ? "First thing today" : "Later today") : "Up next" }),
     course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null,
     ev.modes && ev.modes.length ? ev.modes.map((k) => h("span", { class: "chip", title: PACER[k].verb }, h("span", { class: "mode-k", text: k }), PACER[k].short)) : null));
   main.append(h("h1", null, ev.title, h("button", { class: "edit-link", type: "button", onclick: () => openEvent(ev), text: ev.src === "study" ? "Edit" : "Details" })));
@@ -1659,7 +1685,7 @@ function renderNow(now) {
   const remaining = isNow ? ev.end - t : ev.start - t;
   const act = h("div", { class: "hero-act" },
     h("div", { class: "big-time" }, fmtDur(remaining).replace(" min", "m"), h("small", { text: isNow ? "left in block" : "until it starts" })),
-    ev.src === "study" ? h("button", { class: "pill-btn primary big", type: "button", onclick: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); },
+    ev.src === "study" && (isNow || ev.start - t <= 2 * 3600000) ? h("button", { class: "pill-btn primary big", type: "button", onclick: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); },
       text: timerRunning(pomo) ? "Pause timer" : isNow ? "Start timer" : "Start early" }) : null);
   panel.append(main, act);
   return panel;
@@ -1701,7 +1727,7 @@ function heroFor(x, now, o) {
 // Exams in the next 10 days, with how much prep is on the calendar for each.
 function examStrip(now) {
   const t = now.getTime();
-  const ex = currentItems.filter((x) => !x.done && !x.past && isExam(x.d) && x.dueEnd - t < 10 * DAY).sort((a, b) => a.dueEnd - b.dueEnd).slice(0, 3);
+  const ex = currentItems.filter((x) => !x.done && !x.past && isExam(x.d) && !/^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title) && x.dueEnd - t < 10 * DAY).sort((a, b) => a.dueEnd - b.dueEnd).slice(0, 3);
   if (!ex.length) return null;
   return h("div", { class: "exams", role: "list", "aria-label": "Exams coming up" }, ex.map((x) => {
     const min = x.planned.min || 0, w = Number(srv.dueWorked && srv.dueWorked[x.key]) || 0;
@@ -2042,6 +2068,7 @@ function newBlockAt(startMs, mins, seed) {
 // A deadline's editor. Your own ones: name, due day and time, class, type and notes.
 // Canvas ones are read-only here (Canvas would undo a change), but you can still plan, start or finish them.
 const refsOf = (x) => x.refs || (x.d && x.d.refs) || [];
+const fromWhere = (x) => (refsOf(x).some((r) => r.cal === "canvas") ? "Canvas" : "Google Calendar");
 function ownRef(x) { return refsOf(x).find((r) => (r.cal === "personal" || r.cal === "primary") && !r.rec && r.id && !String(r.id).startsWith("tmp-")) || null; }
 function editDue(x) {
   const ref = ownRef(x);
@@ -2105,9 +2132,9 @@ function editDue(x) {
 
 // ---- Toasts
 let toastSeq = 0, toastList = [];
-function toast(text, undo, ms) {
+function toast(text, undo, ms, label) {
   const id = ++toastSeq;
-  toastList = toastList.slice(-1).concat([{ id, text, undo }]);
+  toastList = toastList.slice(-1).concat([{ id, text, undo, label }]);
   drawToasts();
   setTimeout(() => { toastList = toastList.filter((x) => x.id !== id); drawToasts(); }, ms || (undo ? 10000 : 5000));
   return id;
@@ -2117,12 +2144,12 @@ function drawToasts() {
   if (!box) return;
   box.replaceChildren(...toastList.map((x) => h("div", { class: "toast" + (/^(Didn't|Couldn't|Undo didn't)/.test(x.text) ? " err" : "") },
     h("span", { text: x.text }),
-    x.undo ? h("button", { class: "undo", type: "button", onclick: () => runUndo(x), text: "Undo" }) : null,
+    x.undo ? h("button", { class: "undo", type: "button", onclick: () => runUndo(x), text: x.label || "Undo" }) : null,
     h("button", { class: "x", type: "button", "aria-label": "Dismiss", onclick: () => { toastList = toastList.filter((y) => y !== x); drawToasts(); }, text: "×" }))));
 }
 function runUndo(x) {
   toastList = toastList.filter((y) => y !== x); drawToasts();
-  Promise.resolve().then(x.undo).then(() => toast("Undone."), (err) => { toast("Undo didn't work: " + errText(err) + "."); load(); });
+  Promise.resolve().then(x.undo).then(() => { if (!x.label) toast("Undone."); }, (err) => { if (!x.label) { toast("Undo didn't work: " + errText(err) + "."); load(); } });
 }
 function lastUndo() { for (let i = toastList.length - 1; i >= 0; i--) if (toastList[i].undo) return toastList[i]; return null; }
 
@@ -2399,7 +2426,7 @@ function createDue(o, quiet) {
       d.ref ? () => { removeEv(ev); render(); return apiPost({ action: "deleteDue", ref: d.ref }).then(load); } : null);
     load();
     return d;
-  }).catch((err) => { removeEv(ev); render(); toast("Didn't add “" + dueName(o.title) + "”: " + errText(err) + "."); throw err; });
+  }).catch((err) => { removeEv(ev); render(); toast("Didn't add “" + dueName(o.title) + "”: " + errText(err) + ".", () => createDue(o, quiet), 12000, "Retry"); throw err; });
 }
 // o: any of { title, day, time (null = none), notes }
 function updateDue(x, o, quiet) {
@@ -2418,7 +2445,7 @@ function updateDue(x, o, quiet) {
       toast(what + " · “" + dueName(next.title) + "”", () => apiPost({ action: "saveDue", ref: nref, title: old.title, day: old.day, time: old.time, notes: old.notes }).then(load));
     }
     load();
-  }).catch((err) => { toast("Didn't save: " + errText(err) + "."); load(); });
+  }).catch((err) => { toast("Didn't save: " + errText(err) + ".", () => updateDue(x, o, quiet), 12000, "Retry"); load(); });
 }
 function deleteDue(x) {
   const ref = ownRef(x);
@@ -2431,7 +2458,7 @@ function deleteDue(x) {
   apiPost({ action: "deleteDue", ref }).then(() => {
     toast("Deleted “" + copy.title + "”", () => createDue(copy, true));
     load();
-  }).catch((err) => { if (ev) events.push(ev); render(); toast("Didn't delete: " + errText(err) + "."); });
+  }).catch((err) => { if (ev) events.push(ev); render(); toast("Didn't delete: " + errText(err) + ".", () => deleteDue(x), 12000, "Retry"); });
 }
 const stepsOf = (ev) => (ev.steps || []).map((s) => ({ text: s.show || s.text, done: stepDone(ev, s), digest: !!s.digest }));
 function createBlock(p, quiet) {
@@ -2446,7 +2473,7 @@ function createBlock(p, quiet) {
     });
     load();
     return d;
-  }).catch((err) => { removeEv(ev); render(); toast("Didn't add the block: " + errText(err) + "."); throw err; });
+  }).catch((err) => { removeEv(ev); render(); toast("Didn't add the block: " + errText(err) + ".", () => createBlock(p, quiet), 12000, "Retry"); throw err; });
 }
 function moveBlock(ev, start, end, quiet) {
   if (ev.src !== "study") return;
@@ -2461,7 +2488,7 @@ function moveBlock(ev, start, end, quiet) {
         () => moveBlock(ev, from.start, from.end, true));
     }
     load();
-  }).catch((err) => { ev.start = from.start; ev.end = from.end; ev.pending = false; render(); toast("Didn't move it: " + errText(err) + "."); });
+  }).catch((err) => { ev.start = from.start; ev.end = from.end; ev.pending = false; render(); toast("Didn't move it: " + errText(err) + ".", () => moveBlock(ev, start, end, quiet), 12000, "Retry"); });
 }
 function renameBlock(ev, title) {
   const old = ev.title;
@@ -2479,7 +2506,7 @@ function removeBlock(ev) {
   apiPost({ action: "deleteBlock", block: { cal: "study", id: ev.id, start: ev.start } }).then(() => {
     toast("Deleted “" + copy.title + "” · " + whenText(copy.start), () => createBlock(copy, true));
     load();
-  }).catch((err) => { events.push(ev); render(); toast("Didn't delete: " + errText(err) + "."); });
+  }).catch((err) => { events.push(ev); render(); toast("Didn't delete: " + errText(err) + ".", () => removeBlock(ev), 12000, "Retry"); });
 }
 
 // ---- The composer: one box for tasks and blocks, Notion / Todoist style
@@ -2647,7 +2674,7 @@ function taskMenu(x, anchor, at) {
 }
 function renameInline(x) {
   const row = rowOf(x);
-  if (!row || !ownRef(x)) { if (!ownRef(x)) toast("That one comes from Canvas, so its name changes there."); return; }
+  if (!row || !ownRef(x)) { if (!ownRef(x)) toast("That one comes from " + fromWhere(x) + ", so its name changes there."); return; }
   const tEl = row.querySelector(".task-title");
   const ev = evOf(ownRef(x));
   const old = dueName(ev ? ev.title : x.title);
@@ -2762,6 +2789,15 @@ function renderAgenda(now) {
   const grid = h("div", { class: "tl", style: "height:" + (h1 - h0) * PX + "px" });
   for (let hh = h0; hh < h1; hh++) grid.append(h("div", { class: "tl-hour", style: "top:" + (hh - h0) * PX + "px" }, h("span", { text: pad(hh) + ":00" })));
   const lane = h("div", { class: "tl-lane" });
+  const dayK = dayKey(day);
+  const dues = currentItems.filter((x) => !x.done && x.d.day === dayK).sort((a, b) => a.dueEnd - b.dueEnd);
+  dues.filter((x) => x.d.dueAt && x.d.dueAt >= top0 && x.d.dueAt <= bottom).forEach((x) => {
+    const flag = h("div", { class: "tl-due" + (x.past ? " past" : ""), style: "top:" + y(x.d.dueAt) + "px;--course:" + colorOf(x.course) },
+      h("button", { type: "button", class: "tl-flag", title: x.title + " · due " + fmtTime(x.d.dueAt) + ". Click to open it.", onclick: (e) => { e.stopPropagation(); openTask(x); } },
+        h("span", { "aria-hidden": "true", text: "⚑" }), h("span", { class: "fl-t", text: x.title }), h("span", { class: "fl-w", text: "due " + fmtTime(x.d.dueAt) })));
+    flag.addEventListener("pointerdown", (e) => e.stopPropagation());
+    lane.append(flag);
+  });
   const cols = layoutCols(items);
   const evEls = new Map();
   items.forEach((ev) => {
@@ -2774,7 +2810,8 @@ function renderAgenda(now) {
       style: "top:" + top + "px;height:" + hgt + "px;left:" + (c.col / c.n * 100) + "%;width:calc(" + (100 / c.n) + "% - 3px);--course:" + (study || ev.src === "classes" ? colorOf(course) : "var(--ink-3)"),
       tabindex: "0", role: "button", "aria-label": ev.title + ", " + fmtTime(ev.start) + " to " + fmtTime(ev.end) + (study ? ". Drag to move, Enter to edit." : ""),
       title: ev.title + " · " + fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where ? " · " + ev.where : "") },
-      h("b", { text: ev.title }), h("span", { class: "tm", text: fmtTime(ev.start) + "–" + fmtTime(ev.end) + (ev.where && hgt >= 50 ? " · " + ev.where : "") + (ev.worked && hgt >= 50 ? " · " + fmtMins(ev.worked) + " worked" : "") }),
+      h("b", { text: ev.title }), h("span", { class: "tm" }, h("span", { class: "t1", text: fmtTime(ev.start) }), h("span", { class: "t2", text: "–" + fmtTime(ev.end) }),
+        h("span", { class: "t3", text: (ev.where && hgt >= 50 ? " · " + ev.where : "") + (ev.worked && hgt >= 50 ? " · " + fmtMins(ev.worked) + " worked" : "") })),
       study && !ev.pending ? h("span", { class: "tl-rs", "aria-hidden": "true" }) : null);
     el._ev = ev;
     if (!study) el.addEventListener("click", () => openEvent(ev, el));
@@ -2829,7 +2866,7 @@ function renderAgenda(now) {
       d.s = ns; d.e = ne;
       d.el.classList.add("dragging");
       d.el.style.top = y(ns) + "px"; d.el.style.height = Math.max(16, y(ne) - y(ns) - 2) + "px";
-      const tm = d.el.querySelector(".tm"); if (tm) tm.textContent = fmtTime(ns) + "–" + fmtTime(ne) + " · " + fmtDur(ne - ns);
+      const tm = d.el.querySelector(".tm"); if (tm) tm.replaceChildren(h("span", { class: "t1", text: fmtTime(ns) }), h("span", { class: "t2", text: "–" + fmtTime(ne) + " · " + fmtDur(ne - ns) }));
     }
   });
   const end = (e) => {
@@ -2862,7 +2899,11 @@ function renderAgenda(now) {
     createBlock({ title: x.title, start: a, end: a + sittingMinutes(x) * 60000, where: "Library", steps: [], modes: [] }).catch(() => {});
   });
 
-  card.append(weekStrip(now), loadLine(day.getTime()), scroller);
+  const allDue = dues.filter((x) => !x.d.dueAt || x.d.dueAt < top0 || x.d.dueAt > bottom);
+  const dueRow = allDue.length ? h("div", { class: "tl-allday", role: "list", "aria-label": "Due " + label.toLowerCase() },
+    h("span", { class: "label", text: "Due" }), allDue.slice(0, 4).map((x) => h("button", { type: "button", class: "chip course ad", role: "listitem", style: "--course:" + colorOf(x.course), title: x.title + " · due " + dueText(x, now), onclick: () => openTask(x), text: x.title })),
+    allDue.length > 4 ? h("span", { class: "hint", text: "+" + (allDue.length - 4) }) : null) : null;
+  card.append(weekStrip(now), loadLine(day.getTime()), dueRow, scroller);
   // Keep the scroll position across refreshes; on a new day start an hour before now (or at the first thing).
   const key = dayKey(day);
   requestAnimationFrame(() => {
@@ -2873,7 +2914,10 @@ function renderAgenda(now) {
     }
     tl.scrollDay = key;
   });
-  scroller.addEventListener("scroll", () => { tl.scroll = scroller.scrollTop; tl.scrollDay = key; });
+  const nowBtn = agendaOffset === 0 && t > top0 && t < bottom ? h("button", { type: "button", class: "mini tl-nowbtn", hidden: "", title: "Scroll to the current time", onclick: () => { scroller.scrollTo({ top: Math.max(0, y(t) - 80), behavior: "smooth" }); }, text: "↓ Now" }) : null;
+  const checkNow = () => { if (!nowBtn) return; const yy = y(t) - scroller.scrollTop; const off = yy < 10 || yy > scroller.clientHeight - 10; nowBtn.hidden = !off; nowBtn.textContent = yy < 10 ? "↑ Now" : "↓ Now"; };
+  scroller.addEventListener("scroll", () => { tl.scroll = scroller.scrollTop; tl.scrollDay = key; checkNow(); });
+  if (nowBtn) { card.append(nowBtn); requestAnimationFrame(() => requestAnimationFrame(checkNow)); }
   if (!items.length) card.append(h("p", { class: "empty-now", text: "Nothing on the calendar " + (agendaOffset === 0 ? "today" : "that day") + "." }));
   const done = Number(log[dayKey(now)]) || 0;
   card.append(h("div", { class: "foot", text: (agendaOffset === 0 && done ? done + " focus round" + (done > 1 ? "s" : "") + " so far. " : "") + "Drag on empty time to add a block, drag a block to move it, or drop a to-do here." }));
@@ -3034,8 +3078,26 @@ function checklistBox(x) {
   const own = !!ownRef(x);
   const { items, rest } = checklistOf(notesOf(x));
   const box = h("div", { class: "checklist" });
-  if (rest) box.append(h("p", { class: "notes-text" }, ...linkify(rest)));
-  if (!own) return rest ? box : null;
+  if (!own) { if (rest) box.append(h("p", { class: "notes-text" }, ...linkify(rest))); return rest ? box : null; }
+  // Notes: shown as text with live links; click to edit in place, blur or Ctrl/⌘+Enter saves.
+  const noteP = h("p", { class: "notes-text editable", title: "Click to edit", tabindex: "0", role: "button" }, ...(rest ? linkify(rest) : [h("span", { class: "hint", text: "Add notes…" })]));
+  const editNotes = () => {
+    const ta = growBox({ class: "notes-edit", placeholder: "Notes: pages, links, what the prof said…", "aria-label": "Notes" }, rest);
+    let done = false;
+    const finish = (save) => {
+      if (done) return; done = true;
+      const v = ta.value.trim();
+      if (save && v !== rest) setChecklist(x, items, v);
+      else { ta.replaceWith(noteP); if (pendingRender) { pendingRender = false; render(); } }
+    };
+    ta.addEventListener("blur", () => finish(true));
+    ta.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); finish(false); } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); finish(true); } });
+    ta.addEventListener("click", (e) => e.stopPropagation());
+    noteP.replaceWith(ta); ta.focus({ preventScroll: true });
+  };
+  noteP.addEventListener("click", (e) => { if (e.target.closest("a")) return; e.stopPropagation(); editNotes(); });
+  noteP.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); editNotes(); } });
+  box.append(noteP);
   box.append(h("ul", { class: "cl-items" }, items.map((it, i) => h("li", { class: it.done ? "done" : "" },
     h("button", { type: "button", class: "cl-box", "aria-pressed": it.done ? "true" : "false", "aria-label": (it.done ? "Untick " : "Tick ") + it.text,
       onclick: (e) => { e.stopPropagation(); const n = items.map((y) => Object.assign({}, y)); n[i].done = !n[i].done; setChecklist(x, n, rest); } }),
@@ -3173,7 +3235,7 @@ function drawBulk() {
   bar.hidden = false;
   bar.replaceChildren(
     h("b", { text: items.length + " selected" }),
-    h("button", { type: "button", class: "mini", onclick: () => { items.forEach((x) => { if (!x.auto && !x.done) toggleDone(x); }); toast("Marked " + items.length + " done"); clearSel(); }, text: "Done" }),
+    h("button", { type: "button", class: "mini", onclick: () => { const did = items.filter((x) => !x.auto && !x.done); did.forEach((x) => toggleDone(x, true)); toast("Marked " + did.length + " done", () => did.forEach((x) => toggleDone(x, true))); clearSel(); }, text: "Done" }),
     h("button", { type: "button", class: "mini", onclick: (e) => pickDay(e.currentTarget, null, (k) => bulkSave(own, (x) => ({ day: k }), "Moved " + own.length + " to " + dayLabel(k, new Date()) + skipNote(own.length))), text: "Move to…" }),
     h("button", { type: "button", class: "mini", onclick: (e) => pickCourse(e.currentTarget, null, (k) => bulkSave(own, (x) => { const ev = evOf(ownRef(x)); return { title: withCourse(dueName(ev ? ev.title : x.title), k) }; }, "Changed the class on " + own.length + skipNote(own.length))), text: "Class…" }),
     h("button", { type: "button", class: "mini", onclick: () => { const now = new Date(); const on = !items.every(isStarred); items.forEach((x) => { if (!x.done) setStar(x, on, now); }); clearSel(); }, text: items.every(isStarred) ? "Unstar" : "Star" }),
@@ -3289,12 +3351,24 @@ function weekStrip(now) {
     const due = currentItems.filter((x) => !x.done && x.d.day === k);
     const off = Math.round((startOfDay(d).getTime() - startOfDay(now).getTime()) / DAY);
     const over = mins > STUDY_CAP_HOURS * 60;
-    return h("button", { type: "button", class: "wk-d" + (k === dayKey(sel) ? " sel" : "") + (k === today ? " today" : "") + (over ? " over" : ""),
-      disabled: off < -7 || off > 14 ? "" : null, title: d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) + " · " + fmtMins(Math.round(mins)) + " of study planned" + (due.length ? " · " + due.length + " due" : ""),
+    const btn = h("button", { type: "button", class: "wk-d" + (k === dayKey(sel) ? " sel" : "") + (k === today ? " today" : "") + (over ? " over" : ""),
+      disabled: off < -7 || off > 14 ? "" : null, title: d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) + " · " + fmtMins(Math.round(mins)) + " of study planned" + (due.length ? " · " + due.length + " due" : "") + " · drop a task here to move it",
       onclick: () => { agendaOffset = off; tl.scroll = null; render(); } },
       h("span", { class: "wl", text: "SMTWTFS"[d.getDay()] }), h("span", { class: "wn", text: String(d.getDate()) }),
       h("span", { class: "wb" }, h("i", { style: "height:" + Math.min(100, mins / (STUDY_CAP_HOURS * 60) * 100) + "%" })),
       h("span", { class: "wdots" }, due.slice(0, 3).map((x) => h("i", { class: isExam(x.d) ? "ex" : "", style: "background:" + colorOf(x.course) }))));
+    // Drop a task on a day to make it due then.
+    btn.addEventListener("dragover", (e) => { if (!dragging) return; e.preventDefault(); e.dataTransfer.dropEffect = ownRef(dragging) ? "move" : "none"; btn.classList.add("drop"); });
+    btn.addEventListener("dragleave", () => btn.classList.remove("drop"));
+    btn.addEventListener("drop", (e) => {
+      if (!dragging) return;
+      e.preventDefault(); btn.classList.remove("drop");
+      const x = dragging; dragging = null;
+      if (!ownRef(x)) { toast("That one comes from " + (refsOf(x).some((r) => r.cal === "canvas") ? "Canvas" : "Google Calendar") + ", so its date changes there."); render(); return; }
+      if (x.d.day === k) { render(); return; }
+      updateDue(x, { day: k });
+    });
+    return btn;
   }));
 }
 function loadLine(dayMs) {
@@ -3368,19 +3442,32 @@ function eventCard(ev, anchor) {
 
 /* ---------- Duplicates: spot them, and merge them into one ---------- */
 const DUP_STOP = { due: 1, the: 1, a: 1, an: 1, of: 1, for: 1, and: 1, to: 1, in: 1, on: 1, at: 1, by: 1, part: 1, week: 1, my: 1, do: 1, work: 1, block: 1 };
-function dupWords(t) { return new Set(String(t || "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/\bdue\b.*$/, "").split(/[^a-z0-9]+/).filter((w) => w && (w.length > 1 || /\d/.test(w)) && !DUP_STOP[w])); }
+function dupWords(t) { return new Set(String(t || "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/\bdue\b.*$/, "").replace(/\b(ps|hw|pset|ch|chapter|lesson|wk|week|lab|essay|quiz|unit)\s+(\d+)\b/g, "$1$2").split(/[^a-z0-9]+/).filter((w) => w && (w.length > 1 || /\d/.test(w)) && !DUP_STOP[w])); }
+// A number, a lone letter ("Drill A" / "Drill B") or a section mark tells two pieces of work apart.
+function dupMarks(t) {
+  const s = String(t || "").toLowerCase().replace(/\[[^\]]*\]/g, " ").replace(/\bdue\b.*$/, "");
+  return (s.match(/\d+/g) || []).concat(s.match(/(?<![a-z0-9])[a-z](?![a-z0-9])/g) || []);
+}
 function titleSim(a, b) {
   const A = dupWords(a), B = dupWords(b);
   if (!A.size || !B.size) return 0;
-  const na = [...A].filter((w) => /^\d+$/.test(w)), nb = [...B].filter((w) => /^\d+$/.test(w));
-  if (na.length && nb.length && !na.some((w) => B.has(w))) return 0;     // "PS6" and "PS7" are different work
+  const ma = new Set(dupMarks(a)), mb = new Set(dupMarks(b));
+  if (ma.size && mb.size && (ma.size !== mb.size || [...ma].some((w) => !mb.has(w)))) return 0;   // "PS6" and "PS7", "Drill A" and "Drill B": different work
   let n = 0; A.forEach((w) => { if (B.has(w)) n++; });
   return n / Math.min(A.size, B.size);
+}
+// Two entries of one repeating calendar event are that event, not duplicates of each other.
+function sameSeries(x, y) {
+  const a = refsOf(x), b = refsOf(y);
+  return a.some((r) => r.rec && b.some((q) => q.rec && q.cal === r.cal && String(q.id).replace(/_\d{8}T\d{6}Z?$/, "") === String(r.id).replace(/_\d{8}T\d{6}Z?$/, "")));
 }
 function sameTask(x, y) {
   if (x === y || x.done || y.done) return false;
   if (x.course && y.course && x.course !== y.course) return false;
-  if (Math.abs(dayGap(x.d.day, y.d.day)) > 2) return false;
+  const gap = Math.abs(dayGap(x.d.day, y.d.day));
+  if (gap > 1) return false;
+  if (gap && x.d.dueAt && y.d.dueAt) return false;    // both say exactly when, and they disagree
+  if (sameSeries(x, y)) return false;
   return titleSim(x.title, y.title) >= 0.75;
 }
 function similarBlocks(ev) {
@@ -3394,13 +3481,15 @@ function findDuplicates() {
   const open = currentItems.filter((x) => !x.done && !x.past);
   open.forEach((x) => {
     if (used.has(x)) return;
-    const group = [x].concat(open.filter((y) => !used.has(y) && sameTask(x, y)));
+    const group = [x];
+    open.forEach((y) => { if (!used.has(y) && group.every((g) => sameTask(g, y))) group.push(y); });   // everyone must match everyone
     if (group.length > 1 && !notDup[dupKey(group)]) { group.forEach((g) => used.add(g)); out.push({ kind: "tasks", list: group }); }
   });
   const seen = new Set();
   events.filter((e) => e.src === "study" && !e.allDay && !e.pending && e.end > t && e.start < t + 14 * DAY).sort((a, b) => a.start - b.start).forEach((e) => {
     if (seen.has(e)) return;
-    const group = [e].concat(similarBlocks(e).filter((x) => !seen.has(x)));
+    const group = [e];
+    similarBlocks(e).forEach((x) => { if (!seen.has(x) && group.every((g) => similarBlocks(g).includes(x))) group.push(x); });
     if (group.length > 1 && !notDup[dupKey(group)]) { group.forEach((g) => seen.add(g)); out.push({ kind: "blocks", list: group }); }
   });
   return out;
@@ -3410,9 +3499,10 @@ function dupLine() {
   if (!d.length) return null;
   const g = d[0];
   const names = g.kind === "tasks" ? g.list.map((x) => "“" + x.title + "”") : g.list.map((e) => "“" + e.title + "” " + fmtTime(e.start));
+  const shown = names.slice(0, 2).join(" and ") + (names.length > 2 ? " and " + (names.length - 2) + " more" : "");
   return h("div", { class: "dup-line", role: "status" },
     h("span", { class: "dl-i", "aria-hidden": "true", text: "⧉" }),
-    h("span", { class: "dl-t" }, h("b", { text: g.kind === "tasks" ? "Looks like the same task: " : "Overlapping blocks for the same work: " }), names.join(" and ") + (d.length > 1 ? " · " + (d.length - 1) + " more to review" : "")),
+    h("span", { class: "dl-t" }, h("b", { text: g.kind === "tasks" ? "Looks like the same task: " : "Overlapping blocks for the same work: " }), shown + (d.length > 1 ? " · " + (d.length - 1) + " more to review" : "")),
     h("button", { class: "pill-btn primary", type: "button", onclick: () => openMerge(g.list, g.kind), text: "Review & merge" }),
     h("button", { class: "mini", type: "button", onclick: () => { notDup[dupKey(g.list)] = 1; store("deskboard-notdup", notDup); render(); }, text: "Not the same" }));
 }
@@ -3427,7 +3517,9 @@ function openMerge(list, kind) {
   if (kind === "tasks") {
     // Keep a Canvas one if there is one (it can't be deleted), otherwise the one with more in it.
     const ci = list.findIndex((x) => refsOf(x).some((r) => r.cal === "canvas"));
-    keep = ci >= 0 ? ci : list.reduce((b, x, i) => (x.dueEnd < list[b].dueEnd || (x.dueEnd === list[b].dueEnd && notesOf(x).length > notesOf(list[b]).length) ? i : b), 0);
+    // Otherwise one you can edit here, the earliest due (then the one with more notes).
+    const better = (x, b) => (!!ownRef(x) !== !!ownRef(b) ? !!ownRef(x) : x.dueEnd !== b.dueEnd ? x.dueEnd < b.dueEnd : notesOf(x).length > notesOf(b).length);
+    keep = ci >= 0 ? ci : list.reduce((b, x, i) => (better(x, list[b]) ? i : b), 0);
   }
   const opts = { span: true, notes: true };
   const rows = h("div", { class: "merge-list" });
@@ -3438,7 +3530,7 @@ function openMerge(list, kind) {
       const own = isTask ? !!ownRef(x) : true;
       const cl = isTask && own ? checklistOf(notesOf(x)) : null;
       const info = isTask
-        ? [dueText(x, now), refsOf(x).some((r) => r.cal === "canvas") ? "from Canvas" : "added by you", x.planned.min ? hoursText(x.planned.min) + " planned" : "", cl && cl.items.length ? plural(cl.items.length, "step") : "", cl && cl.rest ? "has notes" : ""].filter(Boolean).join(" · ")
+        ? [dueText(x, now), refsOf(x).some((r) => r.cal === "canvas") ? "from Canvas" : ownRef(x) ? "added by you" : refsOf(x).some((r) => r.rec) ? "repeats on your calendar" : "from another calendar", x.planned.min ? hoursText(x.planned.min) + " planned" : "", cl && cl.items.length ? plural(cl.items.length, "step") : "", cl && cl.rest ? "has notes" : ""].filter(Boolean).join(" · ")
         : [fmtTime(x.start) + "–" + fmtTime(x.end), x.where, (x.steps || []).length ? plural(x.steps.length, "step") : "", x.worked ? fmtMins(x.worked) + " worked" : ""].filter(Boolean).join(" · ");
       return h("label", { class: "merge-row" + (i === keep ? " keep" : ""), style: "--course:" + colorOf(isTask ? x.course : courseOf(x.title)) },
         h("input", { type: "radio", name: "keep", checked: i === keep ? "" : null, onchange: () => { keep = i; draw(); } }),
@@ -3447,7 +3539,7 @@ function openMerge(list, kind) {
     }));
     const k = list[keep];
     summary.textContent = kind === "tasks"
-      ? (ownRef(k) ? "The others' notes and checklist steps are added to the one you keep. " : "Canvas items can't take notes, so the others' notes are dropped. ") + "Canvas items you don't keep are marked done instead of deleted. You can undo."
+      ? (ownRef(k) ? "The others' notes and checklist steps are added to the one you keep. " : "The one you're keeping can't take notes here, so the others' notes are dropped. ") + "Anything from Canvas or a repeating event is marked done instead of deleted. You can undo."
       : "The block you keep " + (opts.span ? "stretches to cover all of them (" + fmtTime(Math.min(...list.map((e) => e.start))) + "–" + fmtTime(Math.max(...list.map((e) => e.end))) + ")" : "keeps its own time") + " and gets every step. The others are deleted. You can undo.";
   };
   draw();
@@ -3487,11 +3579,11 @@ function mergeTasks(list, keepIdx) {
       ops.push({ action: "deleteDue", ref: r });
       undo.push({ action: "saveDue", title: dueName(ev ? ev.title : x.title), day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes || "" : "" });
       if (ev) removeEv(ev);
-    } else if (!x.done) { toggleDone(x); doneMarked.push(x); }
+    } else if (!x.done) { toggleDone(x, true); doneMarked.push(x); }
     if (isStarred(x) && !isStarred(k)) setStar(k, true, new Date());
   });
   render();
-  const finish = () => toast("Merged into “" + k.title + "”", () => { doneMarked.forEach((x) => toggleDone(x)); return undo.length ? batchPost(undo).then(load) : load(); });
+  const finish = () => toast("Merged into “" + k.title + "”", () => { doneMarked.forEach((x) => toggleDone(x, true)); return undo.length ? batchPost(undo).then(load) : load(); });
   if (!ops.length) { finish(); return; }
   batchPost(ops).then(() => { finish(); load(); }).catch((err) => { toast("Didn't merge: " + errText(err) + "."); load(); });
 }
@@ -3571,6 +3663,7 @@ document.addEventListener("keydown", (e) => {
   const typing = e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName);
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (drawerOpen) closeDrawer(); closePop(); openPalette(); return; }
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z" && !typing && !palOpen) { const u = lastUndo(); if (u) { e.preventDefault(); runUndo(u); } return; }
+  if (pop && e.key === "Escape") { e.preventDefault(); closePop(); return; }
   if (pop || palOpen) return;
   if (drawerOpen && e.key === "Escape") { e.preventDefault(); closeDrawer(); return; }
   if (!drawerOpen && !typing && e.key === "Escape" && selected.size) { e.preventDefault(); clearSel(); return; }

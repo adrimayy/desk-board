@@ -107,6 +107,10 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Undo:** every change shows up right away with a toast at the bottom; most have **Undo**, and Ctrl/⌘ Z undoes the last one.
 - **Open an event:** click a block or class on the timeline and a small card opens right next to it (time, class, steps, Start/Edit/Delete). Editors open as a centered window.
 - **Duplicates:** when two tasks or two overlapping blocks look like the same work, a bar above the list offers **Review & merge** (or **Not the same**). Merging keeps the earliest due time, combines notes and checklists, and can be undone. Right-click a task or block for **Merge with…**.
+- **The day's deadlines on the timeline:** anything due at a time shows as a flag on that hour; the rest sit in a **Due** row above. Click one to open it.
+- **Move a due date by dragging:** drop a task on a day in the week strip.
+- **Notes in place:** open a task and click its notes to edit them; blur or Ctrl/⌘ Enter saves.
+- **Done has Undo**, and anything that didn't save offers **Retry**.
 - **Repeating tasks:** add `every mon`, `every tue and thu`, `weekly`, `daily` or `weekdays`, plus `x6`, `for 6 weeks` or `until dec 10` (or use the **Repeat** chip). Each one is its own event, so each can be moved or ticked off; Undo removes the whole set.
 - **Paste a list:** paste several lines (a syllabus, an email) into the box and it offers to add each line as a task, reading dates and classes from each line.
 - **Checklists and notes:** open a task and type steps under it; the row shows ☑ 2/5. Links in the notes become clickable, and the row gets a ↗ link to the first one.
