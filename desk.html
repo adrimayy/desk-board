@@ -227,7 +227,7 @@ html.fs-open { overflow: hidden; }
 .group.over { background: color-mix(in srgb, var(--mint) 55%, transparent); }
 .group-overdue .group-head h2, .group-overdue .group-head .n { color: var(--alert); }
 .group-note { margin: 0 20px 6px 62px; font-size: 0.8rem; color: var(--ink-3); }
-.linkish { border: 0; background: none; padding: 0 0 0 6px; color: var(--sage-deep); font: inherit; font-size: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.linkish { border: 0; background: none; padding: 0; margin-left: 8px; color: var(--sage-deep); font: inherit; font-size: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .tasks { list-style: none; margin: 0; padding: 0 0 8px; }
 .tasks .none { padding: 6px 20px 10px 62px; font-size: 0.86rem; color: var(--ink-3); }
 .drop-hint { height: 3px; margin: 0 20px 0 58px; border-radius: 3px; background: var(--sage-deep); }
@@ -274,6 +274,7 @@ html.fs-open { overflow: hidden; }
 .task.is-active .task-row { box-shadow: inset 3px 0 0 var(--sage-deep); }
 .plan-it { border: 1px dashed var(--sage-deep); background: transparent; color: var(--sage-deep); border-radius: 999px; padding: 1px 9px; font-size: 0.76rem; font-weight: 700; }
 .plan-it:hover { background: var(--mint); border-style: solid; }
+.task:not(:hover):not(:focus-within):not(.open):not(.sel) .plan-it { display: none; }
 .star { width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); display: grid; place-items: center; padding: 0; opacity: 0; }
 .task-row:hover .star, .task:focus-within .star, .star.on { opacity: 1; }
 .star:hover { background: var(--page-2); color: var(--ink); }
@@ -368,11 +369,11 @@ body.night .composer { display: none; }
 .now.hero .first-move { align-self: flex-start; }
 @media (max-width: 820px) { .now.hero { grid-template-columns: 1fr; } .hero-act { align-items: stretch; flex-direction: row; justify-content: space-between; align-items: flex-end; } }
 /* Exams in the next 10 days */
-.exams { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-.exam { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 11px 14px 11px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); position: relative; overflow: hidden; }
+.exams { display: flex; flex-wrap: wrap; gap: 8px; }
+.exam { text-align: left; display: flex; flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; padding: 7px 12px 7px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); position: relative; overflow: hidden; }
 .exam::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--course); }
 .exam:hover { border-color: var(--sage-deep); }
-.exam .nm { font-weight: 700; font-size: 0.95rem; line-height: 1.25; overflow-wrap: anywhere; }
+.exam .nm { font-weight: 700; font-size: 0.88rem; line-height: 1.25; overflow-wrap: anywhere; }
 .exam .when { font-size: 0.82rem; color: var(--ink-2); }
 .exam .prep { font-size: 0.78rem; font-weight: 600; color: var(--ok); }
 .exam .prep.none { color: var(--ink-3); }
@@ -481,6 +482,8 @@ body.night .composer { display: none; }
 .task-list .add-row, .tasks .add-row { list-style: none; }
 .add-row button { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: transparent; color: var(--ink-3); padding: 9px 20px 9px 22px; font-size: 0.88rem; text-align: left; }
 .add-row button:hover { color: var(--sage-deep); background: var(--card-2); }
+.group:not(.is-empty) .add-row { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.18s ease, opacity 0.18s ease; }
+.group:not(.is-empty):hover .add-row, .group:not(.is-empty):focus-within .add-row, .group.over .add-row { max-height: 60px; opacity: 1; }
 .add-row .plus { width: 18px; text-align: center; font-weight: 700; font-size: 1.05rem; }
 .task.pending, .tl-ev.pending { opacity: 0.55; }
 .task.pending .task-title::after { content: " · saving…"; color: var(--ink-3); font-weight: 500; }
@@ -662,6 +665,7 @@ button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight
 .filters { display: flex; gap: 6px; flex-wrap: wrap; margin: -4px 0 0; }
 .fchip { border: 1px solid var(--line); background: transparent; color: var(--ink-2); border-radius: 999px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; }
 .fchip:hover { border-color: var(--sage-deep); }
+.fbtn.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
 .fchip[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
 /* ---------- Week strip and load ---------- */
 .wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
@@ -713,8 +717,10 @@ button.due-pill { cursor: pointer; font: inherit; font-size: 0.8rem; font-weight
 .ec-acts .grow { flex: 1; }
 .ec-acts .hint { font-size: 0.78rem; color: var(--ink-3); }
 /* ---------- Duplicates ---------- */
-.dup-line { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px; border-radius: 14px; background: var(--warn-bg, #f6ecd5); color: var(--ink); font-size: 0.86rem; flex-wrap: wrap; }
-.dup-line .dl-i { font-size: 18px; color: var(--warn, #9a6b16); }
+.dup-line { display: flex; align-items: center; gap: 12px; padding: 6px 4px; border-radius: 0; background: transparent; color: var(--ink-2); font-size: 0.84rem; flex-wrap: wrap; }
+.dup-line .dl-i { font-size: 16px; color: var(--warn, #9a6b16); }
+.dup-line .dl-t b { font-weight: 600; }
+.linkish.soft { color: var(--ink-3); font-weight: 500; }
 .dup-line .dl-t { flex: 1; min-width: 200px; line-height: 1.4; }
 .merge-list { display: flex; flex-direction: column; gap: 8px; }
 .merge-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; box-shadow: inset 3px 0 0 var(--course); }
@@ -1266,7 +1272,7 @@ function dateGroup(x, now) {
 function groupOf(x, now) { return x.done ? "done" : isStarred(x) ? "star" : dateGroup(x, now); }   // passed due times are done
 const OVERDUE_DAYS = 7;
 const GROUPS = [
-  { id: "overdue", name: "Overdue", note: "Late work usually still counts for something. Hand it in, then tick it; it stays here until you do." },
+  { id: "overdue", name: "Overdue", note: "Late work usually still counts. Tick each one once it's in." },
   { id: "star", name: "Starred", empty: "Star anything you want to keep in sight. Drag a task here or press S." },
   { id: "today", name: "Today" },
   { id: "tomorrow", name: "Tomorrow" },
@@ -1478,7 +1484,7 @@ function renderGroup(G, items, now) {
   items.forEach((x) => list.append(renderTask(x, now)));
   if (!items.length && G.id !== "today" && G.id !== "tomorrow") list.append(h("li", { class: "none", text: G.empty || "" }));
   if (G.id !== "done" && G.id !== "overdue" && (!courseFilter || courseFilter !== "~")) list.append(addRow(G));
-  const sec = h("section", { class: "group group-" + G.id + (isClosed ? " closed" : ""), "data-group": G.id },
+  const sec = h("section", { class: "group group-" + G.id + (isClosed ? " closed" : "") + (items.length ? "" : " is-empty"), "data-group": G.id },
     h("button", { class: "group-head", type: "button", "aria-expanded": isClosed ? "false" : "true",
       onclick: () => { collapsed[G.id] = !isClosed; store("deskboard-collapsed3", collapsed); render(); } },
       h("h2", { text: G.name }), h("span", { class: "n", text: String(items.length) }),
@@ -1526,8 +1532,8 @@ function renderTodo(now) {
     const late = items.filter((x) => !x.done && dayDiff(x.dueEnd, now) < 0).length;
     wrap.append(h("header", { class: "list-head" },
       h("div", { class: "grow" }, h("h1", { text: "To do" }),
-        h("p", null, late ? h("b", { class: "late", text: late + " overdue · " }) : null, !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : listFilter !== "all" ? "Nothing matches this filter." : "Nothing due in the next 6 weeks.")),
-      conn.ok ? planBtn : null));
+        h("p", null, late ? h("b", { class: "late", text: late + " overdue · " }) : null, !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week" : listFilter !== "all" ? "Nothing matches this filter." : "Nothing due in the next 6 weeks.")),
+      conn.ok ? filterButton() : null, conn.ok ? planBtn : null));
   }
   if (conn.ok) { wrap.append(filterBar()); const dl = dupLine(); if (dl) wrap.append(dl); }
   const alert = dueAlert(now);
@@ -1992,15 +1998,14 @@ function renderTop(now) {
   $(".date", top).textContent = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const t = now.getTime();
   $(".timer .t", top).textContent = timerText(pomo, t);
-  $(".timer .phase", top).textContent = timerLabel(pomo, t);
+  $(".timer .phase", top).textContent = timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc > 0) || (pomo.mode === "pomo" && pomo.left < TIMER_LEN.focus) ? timerLabel(pomo, t) : "";
   $("#t-toggle").textContent = timerButton(pomo);
   $("#t-reset").textContent = pomo.mode === "flow" ? "Done" : "Reset";
   $("#t-reset").title = pomo.mode === "flow" ? "Log the time to this block and start fresh" : "Back to a fresh 25:00";
   const d = workedToday(now);
   $(".timer .pomos", top).textContent = fmtMins(d) + " today";
   $(".timer .pomos", top).title = fmtMins(workedWeek(now)) + " in the last 7 days";
-  $("#t-mode").textContent = pomo.mode === "flow" ? "↑ count up" : "25 min";
-  $("#t-mode").disabled = timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc > 0);
+
   const ex = examToday(now), chip = $("#exam-chip");
   if (ex) {
     const left = ex.at - t, lv = ex.leave - t;
@@ -2022,7 +2027,6 @@ function topBar() {
       h("span", { class: "t", title: "Full screen (F)", onclick: () => setFs(true) }),
       h("button", { class: "pill-btn primary", id: "t-toggle", type: "button", onclick: toggleTimer }),
       h("button", { class: "pill-btn", id: "t-reset", type: "button", onclick: resetTimer, text: "Done" }),
-      h("button", { class: "mode-btn", id: "t-mode", type: "button", title: "Switch between counting up and 25-minute rounds", onclick: switchMode }),
       h("button", { class: "expand", type: "button", title: "Full screen (F)", "aria-label": "Full screen focus", onclick: () => setFs(true) }, ico("expand"))),
     h("div", { class: "exam-chip", id: "exam-chip", hidden: "" }),
     h("div", { class: "sync" }, h("i"), h("span")));
@@ -2037,7 +2041,7 @@ function render() {
   const now = new Date();
   refreshActiveCourses();
   currentItems = deadlines(now);
-  const firstUnplanned = currentItems.filter((x) => !x.done && !x.past && !x.planned.min && x.dueEnd - now.getTime() < 7 * DAY).sort((a, b) => a.dueEnd - b.dueEnd)[0];
+  const firstUnplanned = currentItems.filter((x) => !x.done && !x.past && !x.planned.min && x.dueEnd - now.getTime() < 7 * DAY && !/^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title)).sort((a, b) => a.dueEnd - b.dueEnd)[0];
   warnKey = firstUnplanned ? firstUnplanned.key : null;
   if (courseFilter && courseFilter !== "~" && !COURSES[courseFilter]) courseFilter = "";
   const scroll = window.scrollY;
@@ -3636,6 +3640,7 @@ function loadLine(dayMs) {
 
 // ---- List filters
 let listFilter = store("deskboard-filter") || "all";
+let filtersOpen = false;
 const FILTERS = [["all", "All"], ["unplanned", "Not planned"], ["exams", "Exams & quizzes"], ["mine", "Added by me"], ["canvas", "From Canvas"]];
 function passesFilter(x) {
   if (listFilter === "unplanned") return !x.done && !x.past && !x.planned.min;
@@ -3645,8 +3650,15 @@ function passesFilter(x) {
   return true;
 }
 function filterBar() {
+  if (!filtersOpen && listFilter === "all") return null;
   return h("div", { class: "filters", role: "group", "aria-label": "Show" }, FILTERS.map(([k, l]) => h("button", { type: "button", class: "fchip", "aria-pressed": listFilter === k ? "true" : "false",
-    onclick: () => { listFilter = k; store("deskboard-filter", k); render(); }, text: l })));
+    onclick: () => { listFilter = k; store("deskboard-filter", k); if (k === "all") filtersOpen = false; render(); }, text: l })));
+}
+function filterButton() {
+  const on = listFilter !== "all";
+  return h("button", { class: "mini ghost fbtn" + (on ? " on" : ""), type: "button", "aria-expanded": filtersOpen || on ? "true" : "false", title: "Show only some of the list",
+    onclick: () => { if (on) { listFilter = "all"; store("deskboard-filter", "all"); filtersOpen = false; } else filtersOpen = !filtersOpen; render(); },
+    text: on ? (FILTERS.find((f) => f[0] === listFilter) || [])[1] + " ×" : "Filter" });
 }
 
 
@@ -3758,8 +3770,8 @@ function dupLine() {
   return h("div", { class: "dup-line", role: "status" },
     h("span", { class: "dl-i", "aria-hidden": "true", text: "⧉" }),
     h("span", { class: "dl-t" }, h("b", { text: g.kind === "tasks" ? "Looks like the same task: " : "Overlapping blocks for the same work: " }), shown + (d.length > 1 ? " · " + (d.length - 1) + " more to review" : "")),
-    h("button", { class: "pill-btn primary", type: "button", onclick: () => openMerge(g.list, g.kind), text: "Review & merge" }),
-    h("button", { class: "mini", type: "button", onclick: () => { notDup[dupKey(g.list)] = 1; store("deskboard-notdup", notDup); render(); }, text: "Not the same" }));
+    h("button", { class: "linkish", type: "button", onclick: () => openMerge(g.list, g.kind), text: "Merge…" }),
+    h("button", { class: "linkish soft", type: "button", onclick: () => { notDup[dupKey(g.list)] = 1; store("deskboard-notdup", notDup); render(); }, text: "Not the same" }));
 }
 function pickMergeTarget(x, anchor) {
   const others = currentItems.filter((y) => y !== x && !y.done && !y.past).sort((a, b) => titleSim(x.title, b.title) - titleSim(x.title, a.title) || a.dueEnd - b.dueEnd).slice(0, 10);

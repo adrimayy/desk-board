@@ -135,6 +135,10 @@ Built around the patterns that actually cost grades, so they're there without be
 - **Full screen** shows when the current block ends and what's next.
 - **Quick add:** "tonight" / "this evening" (today, 21:00) and "someday" (four weeks out, so it stops nagging).
 - Ticking a task pops the check before the row goes.
+
+### Less on screen
+
+Filters sit behind one **Filter** button; "Add a task" rows appear when you hover a group; **Plan 2h** appears when you hover a task (the red "No time planned" is always there); exams are one compact row; the duplicate notice is a single line; the timer mode switch lives in full screen. Everything still does what it did.
 - **Repeating tasks:** add `every mon`, `every tue and thu`, `weekly`, `daily` or `weekdays`, plus `x6`, `for 6 weeks` or `until dec 10` (or use the **Repeat** chip). Each one is its own event, so each can be moved or ticked off; Undo removes the whole set.
 - **Paste a list:** paste several lines (a syllabus, an email) into the box and it offers to add each line as a task, reading dates and classes from each line.
 - **Checklists and notes:** open a task and type steps under it; the row shows ☑ 2/5. Links in the notes become clickable, and the row gets a ↗ link to the first one.
