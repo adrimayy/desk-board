@@ -227,6 +227,7 @@ html.fs-open { overflow: hidden; }
 .group.over { background: color-mix(in srgb, var(--mint) 55%, transparent); }
 .group-overdue .group-head h2, .group-overdue .group-head .n { color: var(--alert); }
 .group-note { margin: 0 20px 6px 62px; font-size: 0.8rem; color: var(--ink-3); }
+.linkish { border: 0; background: none; padding: 0 0 0 6px; color: var(--sage-deep); font: inherit; font-size: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .tasks { list-style: none; margin: 0; padding: 0 0 8px; }
 .tasks .none { padding: 6px 20px 10px 62px; font-size: 0.86rem; color: var(--ink-3); }
 .drop-hint { height: 3px; margin: 0 20px 0 58px; border-radius: 3px; background: var(--sage-deep); }
@@ -239,6 +240,11 @@ html.fs-open { overflow: hidden; }
 .task:focus-visible .task-row { box-shadow: inset 3px 0 0 var(--sage-deep); background: var(--card-2); }
 .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--ink-3); background: transparent; padding: 0; display: grid; place-items: center; }
 .check:hover { border-color: var(--sage-deep); }
+.task.finishing .check { background: var(--sage-deep); border-color: var(--sage-deep); animation: checkPop 0.26s ease-out; }
+.task.finishing .check::after { content: ""; width: 9px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px, -1px); }
+.task.finishing .task-title { color: var(--ink-3); text-decoration: line-through; transition: color 0.2s; }
+@keyframes checkPop { 0% { transform: scale(0.8); } 55% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .task.finishing .check { animation: none; } }
 .check:hover::after, .task.is-done .check::after { content: ""; width: 9px; height: 5px; border-left: 2px solid var(--sage-deep); border-bottom: 2px solid var(--sage-deep); transform: rotate(-45deg) translate(1px, -1px); }
 .task.is-done .check { background: var(--sage-deep); border-color: var(--sage-deep); }
 .task.is-done .check::after { border-color: var(--card); }
@@ -311,6 +317,8 @@ html.fs-open { overflow: hidden; }
 .side > * { flex-shrink: 0; }
 .checkin { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 14px 16px; border-radius: var(--radius); background: var(--ink); color: var(--card); }
 .checkin p { margin: 0 0 4px; flex: 1 1 100%; font-weight: 600; font-size: 0.92rem; }
+.checkin .inp.jr { width: 100%; margin: 8px 0; font-size: 0.86rem; padding: 7px 10px; background: color-mix(in srgb, var(--card) 12%, transparent); border-color: color-mix(in srgb, var(--card) 30%, transparent); color: var(--card); }
+.checkin .inp.jr::placeholder { color: color-mix(in srgb, var(--card) 60%, transparent); }
 .checkin .pill-btn { background: var(--card); color: var(--ink); }
 .checkin .pill-btn.sage { background: var(--sage); color: #10261a; }
 .night-list { list-style: none; margin: 0 0 4px; padding: 0; flex: 1 1 100%; display: flex; flex-direction: column; gap: 6px; }
@@ -341,6 +349,7 @@ html.fs-open { overflow: hidden; }
 .now.hero.is-on { background: linear-gradient(90deg, var(--mint), var(--card) 70%); }
 .now.hero.night { background: var(--card-2); }
 .now.hero.exam-hero { background: linear-gradient(90deg, var(--alert-bg), var(--card) 70%); }
+.now.hero.plan .meta .warn { color: var(--alert); font-weight: 600; }
 .now.hero.night h1 { font-size: 1.35rem; }
 body.night .list, body.night .exams, body.night .filters, body.night .dup-line, body.night .rail { opacity: 0.55; transition: opacity 0.3s; }
 body.night .list:hover, body.night .list:focus-within, body.night .rail:hover, body.night .rail:focus-within { opacity: 1; }
@@ -734,9 +743,11 @@ input[type=radio], input[type=checkbox] { accent-color: var(--sage-deep); }
   <div class="fs-bar">
     <div class="fs-group"><button class="pill-btn primary fs-big" id="fs-toggle" type="button">Start</button>
     <button class="pill-btn fs-big" id="fs-reset" type="button">Done</button>
+    <button class="pill-btn fs-big" id="fs-keep" type="button" hidden title="Skip the break and start the next round now">Keep going</button>
     <button class="pill-btn ghost fs-big" id="fs-discard" type="button" hidden>Discard</button></div>
     <span class="fs-tally" id="fs-tally"></span>
-    <div class="fs-group end"><button class="pill-btn ghost fs-big" id="fs-mode" type="button">25-min rounds</button>
+    <div class="fs-group end"><button class="pill-btn ghost fs-big" id="fs-noise" type="button" aria-pressed="false" title="Brown noise while you work">Noise</button>
+    <button class="pill-btn ghost fs-big" id="fs-mode" type="button">25-min rounds</button>
     <button class="pill-btn ghost fs-big" id="fs-exit" type="button">Exit <span class="kbd">Esc</span></button></div>
   </div>
 </div>
@@ -1017,6 +1028,26 @@ function pushTimer() {
   holdTimerUntil = Date.now() + 30000;
   apiPost({ action: "timer", timer: pomo }).then(afterPost, () => { holdTimerUntil = 0; });
 }
+let noiseNode = null, noiseGain = null;
+function setNoise(on) {
+  if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
+  try {
+    if (on && !noiseNode) {
+      const len = audio.sampleRate * 4, buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+      noiseNode = audio.createBufferSource(); noiseNode.buffer = buf; noiseNode.loop = true;
+      noiseGain = audio.createGain(); noiseGain.gain.setValueAtTime(0.0001, audio.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.12, audio.currentTime + 1.5);
+      noiseNode.connect(noiseGain); noiseGain.connect(audio.destination); noiseNode.start();
+      if (audio.state === "suspended") audio.resume();
+    } else if (!on && noiseNode) {
+      const n = noiseNode, g = noiseGain; noiseNode = null; noiseGain = null;
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.8); setTimeout(() => { try { n.stop(); } catch (e) {} }, 900);
+    }
+  } catch (e) {}
+  $("#fs-noise").setAttribute("aria-pressed", noiseNode ? "true" : "false");
+  $("#fs-noise").textContent = noiseNode ? "Noise · on" : "Noise";
+}
 function chime() {
   if (!audio) return;
   try {
@@ -1099,6 +1130,13 @@ function sittingMinutes(x) {
   return st ? Math.min(180, Math.round(base * st.factor / 15) * 15) : base;
 }
 const sizingNote = (x) => { const st = statFor(x); return st ? " · sized ×" + st.factor + " from your last " + st.n + " " + st.label + " blocks" : ""; };
+// The break just started but you're in it: straight into the next round, nothing lost.
+function keepGoing() {
+  if (!(pomo.mode === "pomo" && pomo.phase === "rest")) return;
+  const t = Date.now();
+  pomo = timerToggle(timerFresh("pomo"), t, studyBlockAt(t), pomo.due);
+  pushTimer(); renderTop(); renderFs(new Date()); render();
+}
 function discardTimer() { pomo = timerFresh(pomo.mode); pushTimer(); renderTop(); renderFs(new Date()); render(); }
 function switchMode() {
   if (timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc)) { say("Finish (Done) or discard the running timer first.", 4000); return; }
@@ -1342,7 +1380,7 @@ function renderTask(x, now) {
   li.append(h("div", { class: "task-row", onclick: (e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || selected.size) { toggleSel(x, e.shiftKey); return; } expanded = open ? null : x.key; render(); } },
     x.auto ? h("span", { class: "check", title: "Due time passed: counted as handed in", "aria-label": "Due time passed" })
       : h("button", { class: "check", type: "button", title: x.done ? "Mark not done" : "Mark done", "aria-label": x.done ? "Mark not done" : "Mark done",
-        onclick: (e) => { e.stopPropagation(); toggleDone(x); } }),
+        onclick: (e) => { e.stopPropagation(); if (x.done) return toggleDone(x); const li = e.currentTarget.closest(".task"); li.classList.add("finishing"); setTimeout(() => toggleDone(x), 260); } }),
     h("div", { class: "task-main" }, h("div", { class: "task-title", text: x.title }), sub.childNodes.length ? sub : null),
     x.done || x.past ? h("span") : h("button", { class: "go" + (active ? " on" : ""), type: "button",
       title: active ? (timerRunning(pomo) ? "On the clock: open the timer" : "Paused: resume") : "Start the timer on this",
@@ -1438,7 +1476,7 @@ function renderGroup(G, items, now) {
       h("h2", { text: G.name }), h("span", { class: "n", text: String(items.length) }),
       isClosed && G.id !== "done" && items.length ? h("span", { class: "peek", text: "Next: " + items[0].title + " · " + dueShort(items[0], now) }) : null,
       h("span", { class: "chev" }, ico("chev"))),
-    G.note && !isClosed && items.length ? h("p", { class: "group-note", text: G.note }) : null,
+    G.note && !isClosed && items.length ? h("p", { class: "group-note" }, G.note, G.id === "overdue" && items.some(ownRef) ? h("button", { class: "linkish", type: "button", onclick: () => moveOverdue(items, now), text: "Move mine to today" }) : null) : null,
     list);
   sec.addEventListener("dragover", (e) => {
     if (!dragging) return;
@@ -1622,6 +1660,20 @@ function freshWeek(now) {
   return u.length ? u : null;
 }
 const drifting = (now) => conn.ok && srv.lastActive && now.getTime() - srv.lastActive > 4 * DAY;
+// The three things this week is about: starred first, then what's due soonest. Goes to the clipboard for the accountability text.
+function moveOverdue(items, now) {
+  const mine = items.filter((x) => !x.done && ownRef(x)), other = items.length - mine.length;
+  if (!mine.length) return;
+  const today = dayKey(now);
+  Promise.all(mine.map((x) => updateDue(x, { day: today }, true))).then(() => toast("Moved " + plural(mine.length, "task") + " to today" + (other ? ". " + other + " from Canvas keep their date." : "."), null, 6000)).catch(() => {});
+}
+function copyTop3(now) {
+  const open = currentItems.filter((x) => !x.done && !x.past && x.dueEnd - now.getTime() < 8 * DAY);
+  const top = open.filter(isStarred).concat(open.filter((x) => !isStarred(x))).slice(0, 3);
+  if (!top.length) { say("Nothing due this week to send.", 4000); return; }
+  const text = "This week: " + top.map((x, i) => (i + 1) + ". " + x.title + " (" + dueText(x, now).toLowerCase() + ")").join("  ");
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => say("Copied. Send it to your GTD buddy.", 5000), () => say(text, 12000));
+}
 function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
 
 function renderCheck(now) {
@@ -1654,12 +1706,12 @@ function renderCheck(now) {
       const box = h("div", { class: "checkin" }, h("p", { text: plural(again.length, "block") + " already got a second slot and still didn't happen. A third slot won't either." }));
       box.append(h("ul", { class: "night-list" }, again.map((ev) => h("li", null, h("span", { class: "nm", text: ev.title }),
         h("span", { class: "seg" }, h("button", { type: "button", onclick: () => decide(ev, "short"), text: "25 min tomorrow" }), h("button", { type: "button", onclick: () => decide(ev, "drop"), text: "Let it go" }))))));
-      box.append(btn("Later", () => { moveOffer = null; say("OK. Sunday's fresh start will ask again.", 6000); }));
+      box.append(btn("Later", () => { moveOffer = null; say("OK. Sunday's fresh start will ask again.", 6000); render(); }));
       return box;
     }
     return card("Move what's left of " + plural(mo.n, "block") + " to free slots?",
       btn("Move", () => { moveOffer = null; moveLeft(mo.days); }, "sage"),
-      btn("Not now", () => { moveOffer = null; say("OK. Sunday's fresh start will offer again.", 6000); }));
+      btn("Not now", () => { moveOffer = null; say("OK. Sunday's fresh start will offer again.", 6000); render(); }));
   }
   if (checkNote && checkNote.until > t) return card(checkNote.text);
   if (drifting(now)) {
@@ -1669,13 +1721,23 @@ function renderCheck(now) {
   }
   const fw = freshWeek(now);
   if (fw) {
-    return card("New week: " + plural(fw.length, "unfinished block") + " from last week. Move them into this week?",
+    const since = t - 7 * DAY;
+    const plannedMin = Math.round(events.filter((e) => checkable(e) && e.end <= t && e.start >= since).reduce((n, e) => n + (e.end - e.start) / 60000, 0));
+    let workedMin = 0; for (let i = 1; i <= 7; i++) workedMin += Number(worked[dayKey(addDays(now, -i, 12))]) || 0;
+    const box = card("New week: " + plural(fw.length, "unfinished block") + " from last week. Move them into this week?",
       btn("Move them", () => { srv.resetAt = Date.now(); moveLeft(7); }, "sage"),
-      btn("Let them go", () => { srv.resetAt = Date.now(); post({ action: "reset", keep: false }); say("Clean week.", 5000); }));
+      btn("Let them go", () => { srv.resetAt = Date.now(); post({ action: "reset", keep: false }); say("Clean week.", 5000); }),
+      btn("Copy my top 3", () => copyTop3(now)));
+    if (plannedMin) box.insertBefore(h("p", { class: "hint", text: "Last week: " + fmtMins(plannedMin) + " planned, " + fmtMins(workedMin) + " on the clock (" + Math.min(999, Math.round(workedMin / plannedMin * 100)) + "% of the plan)." }), box.children[1]);
+    return box;
   }
   const nb = nightBlocks(now);
   if (!nb) return null;
-  const box = h("div", { class: "checkin night" }, h("p", { text: "How did today go? Mark anything that didn't go to plan. The rest counts as done." }));
+  const dayDone = currentItems.filter((x) => x.done && doneDue[x.key] > 1 && dayKey(doneDue[x.key]) === nb.day).length;
+  const box = h("div", { class: "checkin night" }, h("p", { text: "How did today go? Mark anything that didn't go to plan. The rest counts as done." }),
+    h("p", { class: "hint", text: fmtMins(Number(worked[nb.day]) || 0) + " worked · " + plural(nb.all.length, "block") + (dayDone ? " · " + plural(dayDone, "task") + " done" : "") }));
+  const note = h("input", { class: "inp jr", type: "text", maxlength: "140", placeholder: "One line about today (optional)", "aria-label": "One line about today" });
+  note.addEventListener("keydown", (e) => e.stopPropagation());
   box.append(h("ul", { class: "night-list" }, nb.all.map((ev) => {
     const r = rating(ev);
     return h("li", null, h("span", { class: "nm", text: fmtTime(ev.start) + " " + ev.title }),
@@ -1683,12 +1745,15 @@ function renderCheck(now) {
         type: "button", "aria-pressed": (r || "done") === k ? "true" : "false", class: !r && k === "done" ? "implied" : "",
         onclick: () => rateBlock(ev, k), text: k === "done" ? "Done" : k === "partly" ? "Partly" : "Missed" }))));
   })));
+  box.append(note);
   box.append(btn("Looks right", () => {
+    if (note.value.trim()) { const j = journal(); j[nb.day] = note.value.trim(); Object.keys(j).sort().slice(0, -60).forEach((k) => delete j[k]); store("deskboard-journal", j); }
     srv.reviewed = nb.day;
     post({ action: "reviewed", day: nb.day });
     const left = nb.all.filter((ev) => { const r = rating(ev); return (r === "missed" || r === "partly") && !ev.moved; });
     const again = left.filter((ev) => ev.movedFrom);
-    if (left.length) { moveOffer = { n: left.length - again.length, days: 1, again }; render(); } else say("Logged. Good night.");
+    if (left.length) { moveOffer = { n: left.length - again.length, days: 1, again }; } else say("Logged. Good night.");
+    render();
   }, "sage"));
   return box;
 }
@@ -1703,6 +1768,8 @@ function renderNow(now) {
   const exam = examToday(now);
   if (exam && exam.at - t <= 2 * 3600000 && exam.at > t - 30 * 60000) return examCard(exam, now);
   const today = nowTimed(now);
+  const live = today.some((i) => i.src === "study" && i.start <= t && i.end > t);
+  if (!live && !timerRunning(pomo) && now.getHours() >= WAKE && now.getHours() < 14 && conn.ok && store("deskboard-planned") !== dayKey(now)) { const pc = planCard(now, today); if (pc) return pc; }
   const cur = today.filter((i) => i.src === "study" && i.start <= t && i.end > t).sort((a, b) => b.start - a.start)[0]
     || today.filter((i) => i.start <= t && i.end > t).sort((a, b) => b.start - a.start)[0];
   const next = today.filter((i) => i.start > t)[0];
@@ -1757,6 +1824,43 @@ function renderNow(now) {
     h("div", { class: "big-time" }, fmtDur(remaining).replace(" min", "m"), h("small", { text: isNow ? "left in block" : "until it starts" })),
     ev.src === "study" && (isNow || ev.start - t <= 2 * 3600000) ? h("button", { class: "pill-btn primary big", type: "button", onclick: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); },
       text: timerRunning(pomo) ? "Pause timer" : notStarted ? "Start · just step 1" : isNow ? "Start timer" : "Start early" }) : null);
+  panel.append(main, act);
+  return panel;
+}
+// Free minutes between now and the evening, minus everything already on the timeline.
+function freeMinutesLeft(now, timed) {
+  const t = now.getTime(), end = startOfDay(now).getTime() + 23 * 3600000;
+  if (t >= end) return 0;
+  const busy = timed.filter((i) => i.end > t && i.start < end).map((i) => [Math.max(i.start, t), Math.min(i.end, end)]).sort((a, b) => a[0] - b[0]);
+  let free = 0, cur = t;
+  busy.forEach(([a, b]) => { if (a > cur) free += a - cur; cur = Math.max(cur, b); });
+  if (cur < end) free += end - cur;
+  return Math.round(free / 60000);
+}
+const journal = () => store("deskboard-journal") || {};
+function planCard(now, timed) {
+  const t = now.getTime();
+  const due = currentItems.filter((x) => !x.done && !x.past && dayDiff(x.dueEnd, now) <= 1).sort((a, b) => a.dueEnd - b.dueEnd);
+  const soon = currentItems.filter((x) => !x.done && !x.past && dayDiff(x.dueEnd, now) <= 2);
+  const unplanned = soon.filter((x) => !x.planned.min && !/^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title));
+  const planned = Math.round(timed.filter((i) => i.src === "study" && i.end > t && !SKIP_CHECK_RX.test(i.title)).reduce((n, i) => n + (i.end - Math.max(i.start, t)) / 60000, 0));
+  const free = freeMinutesLeft(now, timed);
+  const over = planned - free;
+  const late = currentItems.filter((x) => !x.done && dayDiff(x.dueEnd, now) < 0).length;
+  if (!due.length && !unplanned.length && !planned && !late) return null;
+  const yday = journal()[dayKey(addDays(now, -1, 12))];
+  const panel = h("section", { class: "panel now hero plan", style: "--course:var(--sage-deep)", "aria-label": "Plan today" });
+  const main = h("div", { class: "hero-main" });
+  main.append(h("div", { class: "head" }, h("span", { class: "label", text: "Plan today" })),
+    h("h1", { text: due.length ? plural(due.length, "deadline") + " by tomorrow" + (unplanned.length ? " · " + unplanned.length + " with no time planned" : " · all have time planned") : late ? plural(late, "overdue task") + " and nothing due by tomorrow" : "Nothing due by tomorrow" }),
+    h("div", { class: "meta" },
+      h("span", null, "Study planned: ", h("b", { text: fmtMins(planned) }), " · free until 23:00: ", h("b", { text: fmtMins(free) })),
+      over > 15 ? h("span", { class: "warn", text: "Over by " + fmtMins(over) + ". Move one block to tomorrow before you start." }) : planned && free - planned > 120 ? h("span", { text: fmtMins(free - planned) + " unplanned; that's fine if it's meant for people, food and air." }) : null,
+      yday ? h("span", { class: "hint", text: "Last night: “" + yday + "”" }) : null),
+    due.length ? h("p", { class: "first-move" }, h("span", { class: "label", text: "First" }), due[0].title + " · " + dueText(due[0], now)) : null);
+  const act = h("div", { class: "hero-act" }, h("div", { class: "btns" },
+    unplanned.length ? h("button", { class: "pill-btn primary big", type: "button", onclick: () => planMany(unplanned), text: "Plan the " + unplanned.length }) : null,
+    h("button", { class: "pill-btn big", type: "button", onclick: () => { store("deskboard-planned", dayKey(now)); render(); }, text: "That's the plan" })));
   panel.append(main, act);
   return panel;
 }
@@ -2366,6 +2470,8 @@ function parseQuick(text, now) {
   const at = (n) => dayKey(addDays(now, n, 12));
   s = parseRepeat(s, out, now);
   take(/\s#([a-z][a-z0-9-]*)(?=\s)/i, (m) => { const k = courseByTag(m[1]); if (!k) return false; out.course = k; });
+  take(/\s(?:tonight|this\s+evening)(?=\s)/i, () => { out.day = at(0); out.time = "21:00"; });
+  take(/\s(?:someday|no\s+rush|eventually)(?=\s)/i, () => { out.day = at(28); });
   take(/\s!{1,3}(?=\s)/, () => { out.star = true; });
   take(/\s(?:for\s+)?(\d+(?:\.\d+)?)\s*(?:h|hr|hrs|hours?)(?:\s*(\d+)\s*m(?:in)?)?(?=\s)/i, (m) => { const v = Math.round(parseFloat(m[1]) * 60 + (m[2] ? +m[2] : 0)); if (!v || v > 600) return false; out.mins = v; });
   take(/\s(?:for\s+)?(\d{2,3})\s*(?:m|min|mins|minutes)(?=\s)/i, (m) => { if (+m[1] > 600) return false; out.mins = +m[1]; });
@@ -3774,6 +3880,7 @@ function renderFs(now) {
   $("#fs-toggle").textContent = timerButton(pomo);
   $("#fs-reset").textContent = pomo.mode === "flow" ? "Done" : "Reset";
   $("#fs-discard").hidden = !(pomo.mode === "flow" && flowElapsed(pomo, t) > 0);
+  $("#fs-keep").hidden = !(pomo.mode === "pomo" && pomo.phase === "rest");
   $("#fs-mode").textContent = pomo.mode === "flow" ? "25-min rounds" : "Count up";
   $("#fs-mode").disabled = timerRunning(pomo);
   const blk = studyBlockAt(t);
@@ -3793,10 +3900,13 @@ function renderFs(now) {
   if (ex && ex.at - t < 3 * 3600000 && ex.at > t) { step = (title ? step + "  ·  " : "") + "Exam " + fmtTime(ex.at) + " · leave by " + fmtTime(ex.leave); if (!title) title = ex.title; }
   if ($("#fs-title").textContent !== title) $("#fs-title").textContent = title;
   if ($("#fs-step").textContent !== step) $("#fs-step").textContent = step;
-  $("#fs-tally").textContent = fmtMins(workedToday(now)) + " worked today";
+  const nxt = nowTimed(now).filter((i) => i.start > t && i.start < t + 6 * 3600000).sort((a, b) => a.start - b.start)[0];
+  $("#fs-tally").textContent = fmtMins(workedToday(now)) + " worked today" + (blk && blk.end > t ? " · this ends " + fmtTime(blk.end) : "") + (nxt ? " · next: " + nxt.title + " " + fmtTime(nxt.start) : "");
 }
 $("#fs-time").addEventListener("click", () => setFs(false));
 $("#fs-exit").addEventListener("click", () => setFs(false));
+$("#fs-keep").addEventListener("click", keepGoing);
+$("#fs-noise").addEventListener("click", () => setNoise(!noiseNode));
 $("#fs-toggle").addEventListener("click", () => { toggleTimer(); renderFs(new Date()); });
 $("#fs-reset").addEventListener("click", () => { resetTimer(); renderFs(new Date()); });
 $("#fs-discard").addEventListener("click", discardTimer);

@@ -123,6 +123,18 @@ Built around the patterns that actually cost grades, so they're there without be
 - **Missed twice gets a decision, not a third slot.** At the night check-in, a block that was already moved once and missed again offers "25 min tomorrow" or "Let it go" instead of rescheduling.
 - **A block that's been on for 10 minutes with no timer** says so, and the button becomes "Start · just step 1".
 - **UW's no-AI rule** shows as a chip whenever that class is on the card.
+
+### Borrowed from what people say actually works
+
+- **Plan today (mornings, until you say "That's the plan"):** what's due by tomorrow, how many of those have no time, study planned vs free time left, and an "over by" warning if the day is overbooked. "Plan the N" finds slots for the rest. One card, gone when you're done.
+- **Night check-in:** the day in numbers, and one optional line about the day that the morning card shows back to you.
+- **New week:** last week's planned vs on-the-clock time, and **Copy my top 3** (starred first) for your accountability text.
+- **Overdue:** "Move mine to today" moves the pile in one go. Canvas items keep their dates.
+- **Keep going:** in 25-min mode, when the break starts, one button skips it and starts the next round. Hyperfocus is a feature, not a bug.
+- **Noise:** brown noise in full screen, one toggle, no download.
+- **Full screen** shows when the current block ends and what's next.
+- **Quick add:** "tonight" / "this evening" (today, 21:00) and "someday" (four weeks out, so it stops nagging).
+- Ticking a task pops the check before the row goes.
 - **Repeating tasks:** add `every mon`, `every tue and thu`, `weekly`, `daily` or `weekdays`, plus `x6`, `for 6 weeks` or `until dec 10` (or use the **Repeat** chip). Each one is its own event, so each can be moved or ticked off; Undo removes the whole set.
 - **Paste a list:** paste several lines (a syllabus, an email) into the box and it offers to add each line as a task, reading dates and classes from each line.
 - **Checklists and notes:** open a task and type steps under it; the row shows ☑ 2/5. Links in the notes become clickable, and the row gets a ↗ link to the first one.
