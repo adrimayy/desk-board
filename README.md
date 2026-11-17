@@ -111,6 +111,18 @@ It's laid out like Google Tasks with a Google Classroom side: a sidebar on the l
 - **Move a due date by dragging:** drop a task on a day in the week strip.
 - **Notes in place:** open a task and click its notes to edit them; blur or Ctrl/⌘ Enter saves.
 - **Done has Undo**, and anything that didn't save offers **Retry**.
+
+### Safety nets (desktop)
+
+Built around the patterns that actually cost grades, so they're there without being asked for:
+
+- **After bed time (01:00–09:00)** the top card says what's first in the morning and nothing else. Adding and planning are off; the list dims but stays readable. "I'm up for a reason" gives 25 minutes of the normal board, once. New blocks default to 09:00, and anything placed in the sleep window says so.
+- **Overdue** is its own group at the top, for a week. A missed deadline doesn't vanish at midnight; it waits until it's ticked. (Exams and "walk to" items do leave at the end of their day.)
+- **Exam day:** a chip by the clock all day with the leave time, the top card takes over for the last two hours (time, room, leave by, what to bring), the full-screen timer shows it, and the board chimes and pauses the timer when it's time to leave. A "Walk to exam… due 15:50" task sets the leave time; otherwise it's 25 minutes before.
+- **Blocks are sized from your own check-ins:** "Plan 2.5h" instead of "Plan 1h" when the board has watched that kind of work run long (hover the button to see why).
+- **Missed twice gets a decision, not a third slot.** At the night check-in, a block that was already moved once and missed again offers "25 min tomorrow" or "Let it go" instead of rescheduling.
+- **A block that's been on for 10 minutes with no timer** says so, and the button becomes "Start · just step 1".
+- **UW's no-AI rule** shows as a chip whenever that class is on the card.
 - **Repeating tasks:** add `every mon`, `every tue and thu`, `weekly`, `daily` or `weekdays`, plus `x6`, `for 6 weeks` or `until dec 10` (or use the **Repeat** chip). Each one is its own event, so each can be moved or ticked off; Undo removes the whole set.
 - **Paste a list:** paste several lines (a syllabus, an email) into the box and it offers to add each line as a task, reading dates and classes from each line.
 - **Checklists and notes:** open a task and type steps under it; the row shows ☑ 2/5. Links in the notes become clickable, and the row gets a ↗ link to the first one.

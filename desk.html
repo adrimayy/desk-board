@@ -97,6 +97,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep);
 .pill-btn.sage { background: var(--sage); color: #10261a; }
 .pill-btn.ghost { background: transparent; border: 1px solid var(--line); }
 .pill-btn:hover { filter: brightness(0.96); }
+.exam-chip { font-size: 0.82rem; font-weight: 700; color: var(--alert); background: var(--alert-bg); border-radius: 999px; padding: 6px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+.exam-chip.soon { background: var(--alert); color: #fff; animation: examPulse 2s ease-in-out infinite; }
+@keyframes examPulse { 50% { filter: brightness(1.15); } }
 .sync { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--ink-3); white-space: nowrap; }
 .sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
 .sync.ok i { background: #7cc47a; box-shadow: 0 0 6px rgba(124, 196, 122, 0.8); }
@@ -154,6 +157,7 @@ a.gcal:hover { text-decoration: underline; }
 .inp.bad { outline: 2px solid var(--alert); }
 
 /* ---------- Full-screen focus (styles) ---------- */
+html.fs-open { overflow: hidden; }
 .fs { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 28px 40px 32px; background: var(--page); }
 .fs-top { display: flex; justify-content: space-between; }
 .fs-top .label { font-size: 12px; }
@@ -204,6 +208,7 @@ a.gcal:hover { text-decoration: underline; }
 .list-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; padding: 4px 4px 0; }
 .list-head h1 { margin: 0; font-size: 1.7rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
 .list-head p { margin: 4px 0 0; color: var(--ink-3); font-size: 0.9rem; }
+.list-head p .late { color: var(--alert); font-weight: 700; }
 .list-head .grow { flex: 1; min-width: 200px; }
 .list-head.course { padding: 22px 24px 18px; border-radius: var(--radius); background: var(--course); color: #fff; position: relative; overflow: hidden; }
 .list-head.course::after { content: ""; position: absolute; right: -40px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); box-shadow: -70px 80px 0 rgba(255, 255, 255, 0.06); }
@@ -220,6 +225,8 @@ a.gcal:hover { text-decoration: underline; }
 .group.closed .chev { transform: rotate(-90deg); }
 .group.closed .tasks { display: none; }
 .group.over { background: color-mix(in srgb, var(--mint) 55%, transparent); }
+.group-overdue .group-head h2, .group-overdue .group-head .n { color: var(--alert); }
+.group-note { margin: 0 20px 6px 62px; font-size: 0.8rem; color: var(--ink-3); }
 .tasks { list-style: none; margin: 0; padding: 0 0 8px; }
 .tasks .none { padding: 6px 20px 10px 62px; font-size: 0.86rem; color: var(--ink-3); }
 .drop-hint { height: 3px; margin: 0 20px 0 58px; border-radius: 3px; background: var(--sage-deep); }
@@ -283,6 +290,7 @@ a.gcal:hover { text-decoration: underline; }
 .chip.alert { background: var(--alert-bg); color: var(--alert); }
 .chip.warn { background: var(--warn-bg); color: var(--warn); }
 .chip.ok { background: var(--mint); color: var(--ok); }
+.chip.rule { background: transparent; border: 1px dashed var(--alert); color: var(--alert); }
 .mode-k { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; background: var(--ink); color: var(--card); font: 400 10px/1 var(--f-label); }
 
 /* Steps (shared) */
@@ -312,6 +320,7 @@ a.gcal:hover { text-decoration: underline; }
 .night-list .seg button { border: 0; background: transparent; color: inherit; font-size: 0.72rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; opacity: 0.7; }
 .night-list .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); opacity: 1; }
 .night-list .seg button.implied[aria-pressed="true"] { background: rgba(255, 255, 255, 0.28); color: inherit; }
+.first-move .label { white-space: nowrap; }
 .first-move { margin: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--mint); font-size: 0.92rem; }
 .now { padding: 16px 18px 16px 22px; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
 .now::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--course, var(--sage)); }
@@ -330,6 +339,12 @@ a.gcal:hover { text-decoration: underline; }
 /* The top of To do: what to do now and the button that starts it. */
 .now.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 28px; padding: 20px 24px 20px 30px; align-items: stretch; }
 .now.hero.is-on { background: linear-gradient(90deg, var(--mint), var(--card) 70%); }
+.now.hero.night { background: var(--card-2); }
+.now.hero.exam-hero { background: linear-gradient(90deg, var(--alert-bg), var(--card) 70%); }
+.now.hero.night h1 { font-size: 1.35rem; }
+body.night .list, body.night .exams, body.night .filters, body.night .dup-line, body.night .rail { opacity: 0.55; transition: opacity 0.3s; }
+body.night .list:hover, body.night .list:focus-within, body.night .rail:hover, body.night .rail:focus-within { opacity: 1; }
+body.night .composer { display: none; }
 .hero-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .now.hero h1 { font-size: 1.55rem; line-height: 1.2; overflow-wrap: anywhere; }
 .now.hero .meta { font-size: 0.9rem; }
@@ -776,7 +791,7 @@ function parseEvents(list) {
     const ci = /^\s*Check-in:\s*(Done|Partly|Missed)/im.exec(text);
     return {
       id: String(e.id || ""), src: String(e.cal || "primary"), title: String(e.title || "Busy"), where: String(e.where || ""),
-      allDay, start, end, checkin: ci ? ci[1].toLowerCase() : null, moved: /^\s*Moved to:/im.test(text),
+      allDay, start, end, checkin: ci ? ci[1].toLowerCase() : null, moved: /^\s*Moved to:/im.test(text), movedFrom: /^\s*Moved from:/im.test(text),
       rec: !!e.rec, url: String(e.url || ""), notes: e.cal === "study" || e.cal === "canvas" ? "" : text.trim(),
       worked: ((w) => w ? Number(w[1] || 0) * 60 + Number(w[2] || 0) : 0)(/^\s*Worked:\s*(?:(\d+)h)?\s*(?:(\d+)m)?/im.exec(text)),
       steps: e.cal === "canvas" ? [] : stepsFrom(text), modes: e.cal === "canvas" ? [] : modesFrom(text)
@@ -784,6 +799,8 @@ function parseEvents(list) {
   }).filter((e) => !isNaN(e.start) && !isNaN(e.end));
 }
 
+// Conditional children: append(cond ? node : null) adds nothing, instead of the text "null".
+["append", "replaceChildren"].forEach((m) => { const orig = Element.prototype[m]; Element.prototype[m] = function (...kids) { return orig.apply(this, kids.flat().filter((k) => k != null && k !== false)); }; });
 const $ = (sel, root) => (root || document).querySelector(sel);
 const h = (tag, attrs, ...kids) => {
   const el = document.createElement(tag);
@@ -844,6 +861,9 @@ COURSE_LIST.forEach(([k, name, color, rx]) => { COURSES[k] = { name, color, rx }
 // Words that could mean more than one course ("Phys report") go to whichever one you're taking now.
 const AMBIGUOUS = [[/\bphys(ics)?\b/i, ["Phys Lab", "Physics II"]], [/\bchem\b/i, ["Gen Chem"]], [/\bcs\b|\bcoms\b/i, ["AP", "Discrete", "Theory", "Databases"]]];
 const OTHER = { name: "Other", color: "#77806f" };
+// Rules a class sets that the board keeps in front of you. UW's syllabus bans AI for every part of the course.
+const COURSE_RULES = { UW: "No AI in this class: every word is yours" };
+const ruleChip = (k) => (k && COURSE_RULES[k] ? h("span", { class: "chip rule", title: "From the syllabus", text: COURSE_RULES[k] }) : null);
 let activeCourses = [];
 function refreshActiveCourses() {
   const seen = {};
@@ -950,7 +970,8 @@ const rating = (ev) => localChecks[ev.src + "|" + ev.id + "|" + ev.start] || ev.
 
 function deadlines(now) {
   const t = now.getTime();
-  return buildDeadlines(events, now).map((d) => {
+  const today = dayKey(now);
+  return buildDeadlines(events, new Date(addDays(now, -OVERDUE_DAYS, 12))).filter((d) => d.day >= today || !(isExam(d) || /^(walk|go|head|leave|travel|commute|get)\b/i.test(d.title))).map((d) => {
     const key = dueKey(d);
     const dueEnd = dueEndOf(d);
     const course = courseOf(d.course + " " + d.raw + " " + d.title);
@@ -1063,10 +1084,21 @@ function startOn(x) {
   renderTop(); render(); setFs(true);
 }
 // How long one sitting usually takes, for "Plan it".
+const STAT_KIND = { exam: "review", quiz: "review", pset: "psets", essay: "essay", report: "report", lab: "lab", reading: "reading", flashcards: "flashcards", exercise: "exercise" };
+const STAT_COURSE = { "Phys Lab": "Phys", "Physics II": "Phys", "Gen Chem": "Chem" };
+// The board's own numbers for this course and kind of work, if it has rated 3+ blocks of it.
+function statFor(x) {
+  const k = isExam(x.d) ? "exam" : kindOf(x.d.raw || x.d.title);
+  const label = ((x.course ? (STAT_COURSE[x.course] || x.course) + " " : "") + (STAT_KIND[k] || "work")).toLowerCase();
+  return stats.find((s) => s.factor && String(s.label).toLowerCase() === label) || stats.find((s) => s.factor && x.course && String(s.label).toLowerCase().startsWith((STAT_COURSE[x.course] || x.course).toLowerCase() + " ")) || null;
+}
 function sittingMinutes(x) {
   const k = isExam(x.d) ? "exam" : kindOf(x.d.raw || x.d.title);
-  return k === "exam" || k === "essay" ? 120 : k === "pset" || k === "report" || k === "lab" ? 90 : 60;
+  const base = k === "exam" || k === "essay" ? 120 : k === "pset" || k === "report" || k === "lab" ? 90 : 60;
+  const st = statFor(x);
+  return st ? Math.min(180, Math.round(base * st.factor / 15) * 15) : base;
 }
+const sizingNote = (x) => { const st = statFor(x); return st ? " · sized ×" + st.factor + " from your last " + st.n + " " + st.label + " blocks" : ""; };
 function discardTimer() { pomo = timerFresh(pomo.mode); pushTimer(); renderTop(); renderFs(new Date()); render(); }
 function switchMode() {
   if (timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc)) { say("Finish (Done) or discard the running timer first.", 4000); return; }
@@ -1180,12 +1212,15 @@ const isStarred = (x) => { const o = layout[x.key]; return !!(o && o.lane === "n
 function dayDiff(ms, now) { return Math.round((startOfDay(new Date(ms)).getTime() - startOfDay(now).getTime()) / DAY); }
 // Where a task sits by date alone, ignoring stars and done.
 function dateGroup(x, now) {
-  if (x.past) return "today";
   const diff = dayDiff(x.dueEnd, now);
+  if (diff < 0) return "overdue";
+  if (x.past) return "today";
   return diff <= 0 ? "today" : diff === 1 ? "tomorrow" : diff < 7 ? "week" : "later";
 }
 function groupOf(x, now) { return x.done ? "done" : isStarred(x) ? "star" : dateGroup(x, now); }   // passed due times are done
+const OVERDUE_DAYS = 7;
 const GROUPS = [
+  { id: "overdue", name: "Overdue", note: "Late work usually still counts for something. Hand it in, then tick it; it stays here until you do." },
   { id: "star", name: "Starred", empty: "Star anything you want to keep in sight. Drag a task here or press S." },
   { id: "today", name: "Today" },
   { id: "tomorrow", name: "Tomorrow" },
@@ -1295,7 +1330,7 @@ function renderTask(x, now) {
       if (note) sub.append(h("span", { class: note.err ? "warn" : "ok", text: note.text }));
       else {
         const m = sittingMinutes(x);
-        sub.append(h("button", { class: "plan-it", type: "button", title: "Add a " + hoursText(m) + " Study block in your next free slot before it's due",
+        sub.append(h("button", { class: "plan-it", type: "button", title: "Add a " + hoursText(m) + " Study block in your next free slot before it's due" + sizingNote(x),
           onclick: (e) => { e.stopPropagation(); findTime(x, m); }, text: "Plan " + hoursText(m) }));
       }
     }
@@ -1367,7 +1402,7 @@ function taskDetail(x, now) {
     if (!x.past) plan.append(h("span", { class: "find" }, "Find ",
       h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 60); }, text: "1h" }),
       h("button", { type: "button", onclick: (e) => { e.stopPropagation(); findTime(x, 120); }, text: "2h" }),
-      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); newBlockAt(Date.now() + 15 * 60000, 60, { title: x.title }); }, text: "Pick a time…" })));
+      h("button", { type: "button", onclick: (e) => { e.stopPropagation(); newBlockAt(nextStart(Date.now()), sittingMinutes(x), { title: x.title }); }, text: "Pick a time…" })));
     if (plan.childNodes.length) box.append(plan);
     const nb = x.nextBlock;
     if (nb) {
@@ -1396,13 +1431,14 @@ function renderGroup(G, items, now) {
   const list = h("ul", { class: "tasks" });
   items.forEach((x) => list.append(renderTask(x, now)));
   if (!items.length && G.id !== "today" && G.id !== "tomorrow") list.append(h("li", { class: "none", text: G.empty || "" }));
-  if (G.id !== "done" && (!courseFilter || courseFilter !== "~")) list.append(addRow(G));
+  if (G.id !== "done" && G.id !== "overdue" && (!courseFilter || courseFilter !== "~")) list.append(addRow(G));
   const sec = h("section", { class: "group group-" + G.id + (isClosed ? " closed" : ""), "data-group": G.id },
     h("button", { class: "group-head", type: "button", "aria-expanded": isClosed ? "false" : "true",
       onclick: () => { collapsed[G.id] = !isClosed; store("deskboard-collapsed3", collapsed); render(); } },
       h("h2", { text: G.name }), h("span", { class: "n", text: String(items.length) }),
       isClosed && G.id !== "done" && items.length ? h("span", { class: "peek", text: "Next: " + items[0].title + " · " + dueShort(items[0], now) }) : null,
       h("span", { class: "chev" }, ico("chev"))),
+    G.note && !isClosed && items.length ? h("p", { class: "group-note", text: G.note }) : null,
     list);
   sec.addEventListener("dragover", (e) => {
     if (!dragging) return;
@@ -1428,7 +1464,7 @@ function renderGroup(G, items, now) {
 function renderTodo(now) {
   const t = now.getTime();
   const items = filtered(currentItems).filter(passesFilter);
-  const open = items.filter((x) => !x.done && !x.past);
+  const open = items.filter((x) => !x.done && !x.past && dayDiff(x.dueEnd, now) >= 0);
   const wrap = h("div", { class: "list-wrap" });
   const planBtn = h("button", { class: "pill-btn plan-week", type: "button", title: "One block for everything due this week with no time yet", onclick: (e) => planWeek(e.currentTarget) }, "Plan my week");
   const k = courseFilter && courseFilter !== "~" ? courseFilter : null;
@@ -1441,9 +1477,10 @@ function renderTodo(now) {
   } else {
     const today = open.filter((x) => dayDiff(x.dueEnd, now) <= 0).length;
     const week = open.filter((x) => x.dueEnd - t < 7 * DAY).length;
+    const late = items.filter((x) => !x.done && dayDiff(x.dueEnd, now) < 0).length;
     wrap.append(h("header", { class: "list-head" },
       h("div", { class: "grow" }, h("h1", { text: "To do" }),
-        h("p", { text: !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : listFilter !== "all" ? "Nothing matches this filter." : "Nothing due in the next 6 weeks." })),
+        h("p", null, late ? h("b", { class: "late", text: late + " overdue · " }) : null, !conn.ok ? "Loading your calendar…" : open.length ? (today ? today + " due today · " : "Nothing due today · ") + week + " this week · " + open.length + " coming up" : listFilter !== "all" ? "Nothing matches this filter." : "Nothing due in the next 6 weeks.")),
       conn.ok ? planBtn : null));
   }
   if (conn.ok) { wrap.append(filterBar()); const dl = dupLine(); if (dl) wrap.append(dl); }
@@ -1559,7 +1596,10 @@ function renderSide(now) {
 // No question after every block. One check-in at night (unmarked blocks count as done),
 // a fresh start at the turn of the week, and a gentle restart after a few days away.
 const SKIP_CHECK_RX = /\b(eat|break|lunch|dinner|breakfast|commute|sleep|head to|weekly review)\b/i;
-const NIGHT_HOUR = 21, WAKE = 9;
+const NIGHT_HOUR = 21, WAKE = 9, BED = 1;   // bed by 01:00, up at 09:00: the sleep rule the whole plan rests on
+const inSleep = (now) => now.getHours() >= BED && now.getHours() < WAKE;
+// "I'm up for a reason": 25 minutes of normal board, once, then the bed card comes back.
+const nightPass = () => { const p = store("deskboard-nightpass"); return p && p.until > Date.now() && dayKey(new Date(p.until)) === dayKey(new Date()) ? p : null; };
 const checkable = (ev) => ev.src === "study" && !ev.allDay && ev.end - ev.start >= 30 * 60000 && !SKIP_CHECK_RX.test(ev.title);
 function reviewDay(now) { return now.getHours() < WAKE ? dayKey(addDays(now, -1, 12)) : dayKey(now); }
 function nightBlocks(now) {
@@ -1594,6 +1634,29 @@ function renderCheck(now) {
   }
   if (moveOffer) {
     const mo = moveOffer;
+    const again = mo.again || [];
+    if (again.length) {
+      const decide = (ev, how) => {
+        mo.again = again.filter((e) => e !== ev);
+        const op = { action: "drop", block: { cal: ev.src, id: ev.id, start: ev.start }, note: how === "short" ? "25 min tomorrow" : "let go" };
+        ev.moved = true;
+        if (how === "short") {
+          const d0 = startOfDay(new Date(t + DAY)).getTime(), from = d0 + WAKE * 3600000 + 30 * 60000;
+          const items = timedFor(events, new Date(d0 + 12 * 3600000)).filter((e) => !e.allDay);
+          const s0 = freeHour(items, from, d0 + 22 * 3600000);
+          createBlock({ title: ev.title, start: s0, end: s0 + 25 * 60000, where: ev.where, steps: stepsOf(ev).filter((x) => !x.done).slice(0, 1).map((x) => ({ text: x.text, digest: x.digest })), modes: ev.modes }, true)
+            .then(() => say("25 minutes tomorrow " + fmtTime(s0) + " · “" + ev.title + "”", 6000)).catch(() => {});
+        }
+        apiPost(op).catch(() => {});
+        if (!mo.again.length && !mo.n) moveOffer = null;
+        render();
+      };
+      const box = h("div", { class: "checkin" }, h("p", { text: plural(again.length, "block") + " already got a second slot and still didn't happen. A third slot won't either." }));
+      box.append(h("ul", { class: "night-list" }, again.map((ev) => h("li", null, h("span", { class: "nm", text: ev.title }),
+        h("span", { class: "seg" }, h("button", { type: "button", onclick: () => decide(ev, "short"), text: "25 min tomorrow" }), h("button", { type: "button", onclick: () => decide(ev, "drop"), text: "Let it go" }))))));
+      box.append(btn("Later", () => { moveOffer = null; say("OK. Sunday's fresh start will ask again.", 6000); }));
+      return box;
+    }
     return card("Move what's left of " + plural(mo.n, "block") + " to free slots?",
       btn("Move", () => { moveOffer = null; moveLeft(mo.days); }, "sage"),
       btn("Not now", () => { moveOffer = null; say("OK. Sunday's fresh start will offer again.", 6000); }));
@@ -1624,7 +1687,8 @@ function renderCheck(now) {
     srv.reviewed = nb.day;
     post({ action: "reviewed", day: nb.day });
     const left = nb.all.filter((ev) => { const r = rating(ev); return (r === "missed" || r === "partly") && !ev.moved; });
-    if (left.length) { moveOffer = { n: left.length, days: 1 }; render(); } else say("Logged. Good night.");
+    const again = left.filter((ev) => ev.movedFrom);
+    if (left.length) { moveOffer = { n: left.length - again.length, days: 1, again }; render(); } else say("Logged. Good night.");
   }, "sage"));
   return box;
 }
@@ -1635,6 +1699,9 @@ function renderCheck(now) {
 function nowTimed(now) { return timedFor(events, now).filter((i) => !/^sleep\b/i.test(i.title)); }
 function renderNow(now) {
   const t = now.getTime();
+  if (inSleep(now) && !nightPass()) return nightCard(now);
+  const exam = examToday(now);
+  if (exam && exam.at - t <= 2 * 3600000 && exam.at > t - 30 * 60000) return examCard(exam, now);
   const today = nowTimed(now);
   const cur = today.filter((i) => i.src === "study" && i.start <= t && i.end > t).sort((a, b) => b.start - a.start)[0]
     || today.filter((i) => i.start <= t && i.end > t).sort((a, b) => b.start - a.start)[0];
@@ -1643,9 +1710,10 @@ function renderNow(now) {
   const onClock = pomo.due && (timerRunning(pomo) || flowElapsed(pomo, t) > 0) ? open.find((x) => x.key === pomo.due.key) || null : null;
   // Late at night free time isn't a nudge to start something.
   const gap = now.getHours() >= 23 || now.getHours() < WAKE ? null : freeGap(today, t);
+  const windDown = now.getHours() === 0 && now.getMinutes() >= 30 ? "Bed at 01:00 · stop at a good point" : null;
 
   // Working on a deadline outside its own block.
-  if (onClock && !(cur && cur.src === "study")) return heroFor(onClock, now, { label: timerRunning(pomo) ? "Working on" : "Paused", next });
+  if (onClock && !(cur && cur.src === "study")) return heroFor(onClock, now, { label: (timerRunning(pomo) ? "Working on" : "Paused") + (windDown ? " · " + windDown : ""), next });
   if (gap) {
     const pickD = pickSuggestion(open.map((x) => x.d), now, (d) => isStarred({ key: dueKey(d) }));
     const pick = pickD ? open.find((x) => x.d === pickD) : null;
@@ -1665,8 +1733,8 @@ function renderNow(now) {
   const panel = h("section", { class: "panel now hero", style: "--course:" + colorOf(course), "aria-label": "Do now" });
   const main = h("div", { class: "hero-main" });
   main.append(h("div", { class: "head" },
-    h("span", { class: "label", text: isNow ? "Now" : ev.start - t > 2 * 3600000 ? (now.getHours() < WAKE ? "First thing today" : "Later today") : "Up next" }),
-    course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null,
+    h("span", { class: "label", text: (isNow ? "Now" : ev.start - t > 2 * 3600000 ? (now.getHours() < WAKE ? "First thing today" : "Later today") : "Up next") + (windDown ? " · " + windDown : "") }),
+    course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null, ruleChip(course),
     ev.modes && ev.modes.length ? ev.modes.map((k) => h("span", { class: "chip", title: PACER[k].verb }, h("span", { class: "mode-k", text: k }), PACER[k].short)) : null));
   main.append(h("h1", null, ev.title, h("button", { class: "edit-link", type: "button", onclick: () => openEvent(ev), text: ev.src === "study" ? "Edit" : "Details" })));
   main.append(h("div", { class: "meta" },
@@ -1683,10 +1751,47 @@ function renderNow(now) {
     main.append(h("p", { class: "first-move" }, h("span", { class: "label", text: "Start with" }), "Open it and do one 25-min round."));
   }
   const remaining = isNow ? ev.end - t : ev.start - t;
+  const notStarted = isNow && ev.src === "study" && !timerRunning(pomo) && !ev.worked && t - ev.start >= 10 * 60000 && !/\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(ev.title);
+  if (notStarted) main.querySelector(".label").textContent = "Now · " + fmtDur(t - ev.start).replace(" min", " min") + " in, not started";
   const act = h("div", { class: "hero-act" },
     h("div", { class: "big-time" }, fmtDur(remaining).replace(" min", "m"), h("small", { text: isNow ? "left in block" : "until it starts" })),
     ev.src === "study" && (isNow || ev.start - t <= 2 * 3600000) ? h("button", { class: "pill-btn primary big", type: "button", onclick: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); },
-      text: timerRunning(pomo) ? "Pause timer" : isNow ? "Start timer" : "Start early" }) : null);
+      text: timerRunning(pomo) ? "Pause timer" : notStarted ? "Start · just step 1" : isNow ? "Start timer" : "Start early" }) : null);
+  panel.append(main, act);
+  return panel;
+}
+// The two hours before an exam: nothing to start, just when to leave and what to bring.
+function examCard(e, now) {
+  const t = now.getTime(), left = e.at - t, lv = e.leave - t;
+  const panel = h("section", { class: "panel now hero exam-hero", style: "--course:" + colorOf(e.x.course), "aria-label": "Exam today" });
+  const main = h("div", { class: "hero-main" });
+  main.append(h("div", { class: "head" }, h("span", { class: "label", text: left > 0 ? "Exam today" : "Exam now" }),
+      e.x.course ? h("span", { class: "chip course", style: "--course:" + colorOf(e.x.course), text: e.x.course }) : null),
+    h("h1", { text: e.title }),
+    h("div", { class: "meta" }, h("span", null, h("b", { text: fmtTime(e.at) }), e.where ? " · " + e.where : ""),
+      h("span", null, lv > 0 ? "Leave by " : "Leave ", h("b", { text: lv > 0 ? fmtTime(e.leave) : "now" }))),
+    h("p", { class: "first-move" }, h("span", { class: "label", text: "Before you go" }), "Eat something. ID, pen, water. Phone on silent. Nothing new to study now."));
+  const act = h("div", { class: "hero-act" }, h("div", { class: "big-time" }, left > 0 ? fmtDur(left).replace(" min", "m") : "now", h("small", { text: left > 0 ? "until it starts" : "started" })));
+  panel.append(main, act);
+  return panel;
+}
+// After bed time the hero is one calm card: what's first tomorrow, and nothing to start.
+function nightCard(now) {
+  const t = now.getTime();
+  const first = nowTimed(now).filter((i) => i.start > t && i.start < t + 16 * 3600000)[0];
+  const due = currentItems.filter((x) => !x.done && x.dueEnd > t && x.dueEnd < t + 20 * 3600000).sort((a, b) => a.dueEnd - b.dueEnd)[0];
+  const panel = h("section", { class: "panel now hero night", style: "--course:var(--ink-3)", "aria-label": "Bed time" });
+  const main = h("div", { class: "hero-main" });
+  main.append(h("div", { class: "head" }, h("span", { class: "label", text: "After bed time" })),
+    h("h1", { text: "Nothing here needs you before 09:00." }),
+    h("div", { class: "meta" },
+      first ? h("span", null, "First thing: ", h("b", { text: first.title + " at " + fmtTime(first.start) }), first.where ? " · " + first.where : "") : null,
+      due ? h("span", null, "First due: ", h("b", { text: due.title + " · " + dueText(due, now) })) : null,
+      h("span", { class: "hint", text: "The list is still below if you need to check something. Adding and planning wait for the morning." })));
+  const act = h("div", { class: "hero-act" },
+    h("div", { class: "big-time" }, fmtDur(Math.max(0, startOfDay(now).getTime() + WAKE * 3600000 - t)).replace(" min", "m"), h("small", { text: "until 09:00" })),
+    h("div", { class: "btns" }, h("button", { class: "pill-btn big", type: "button", title: "25 minutes of the normal board, once tonight",
+      onclick: () => { const until = Date.now() + 25 * 60000; store("deskboard-nightpass", { until }); toast("25 minutes. Then bed.", null, 6000); render(); }, text: "I'm up for a reason · 25 min" })));
   panel.append(main, act);
   return panel;
 }
@@ -1696,7 +1801,7 @@ function heroFor(x, now, o) {
   const panel = h("section", { class: "panel now hero" + (active ? " is-on" : ""), style: "--course:" + colorOf(x.course), "aria-label": "Do now" });
   const main = h("div", { class: "hero-main" });
   main.append(h("div", { class: "head" }, h("span", { class: "label", text: o.label }),
-    x.course ? h("span", { class: "chip course", style: "--course:" + colorOf(x.course), text: x.course }) : null,
+    x.course ? h("span", { class: "chip course", style: "--course:" + colorOf(x.course), text: x.course }) : null, ruleChip(x.course),
     isStarred(x) ? h("span", { class: "chip", text: "★ starred" }) : null));
   main.append(h("h1", { text: x.title }));
   const bits = ["Due " + dueText(x, now) + " (" + countdown(x.dueEnd, t) + ")"];
@@ -1716,8 +1821,8 @@ function heroFor(x, now, o) {
         h("button", { class: "pill-btn primary big", type: "button", onclick: toggleTimer, text: timerButton(pomo) }),
         h("button", { class: "pill-btn big", type: "button", onclick: resetTimer, text: pomo.mode === "flow" ? "Done" : "Reset" })));
   } else {
-    act.append(o.gap ? h("div", { class: "big-time" }, fmtDur(o.gap).replace(" min", "m"), h("small", { text: "free now" })) : null,
-      h("div", { class: "btns" },
+    if (o.gap) act.append(h("div", { class: "big-time" }, fmtDur(o.gap).replace(" min", "m"), h("small", { text: "free now" })));
+    act.append(h("div", { class: "btns" },
         h("button", { class: "pill-btn primary big", type: "button", onclick: () => startOn(x) }, ico("play"), "Start"),
         !x.planned.min && !note ? h("button", { class: "pill-btn big", type: "button", onclick: () => findTime(x, sittingMinutes(x)), text: "Plan " + hoursText(sittingMinutes(x)) }) : null));
   }
@@ -1727,7 +1832,8 @@ function heroFor(x, now, o) {
 // Exams in the next 10 days, with how much prep is on the calendar for each.
 function examStrip(now) {
   const t = now.getTime();
-  const ex = currentItems.filter((x) => !x.done && !x.past && isExam(x.d) && !/^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title) && x.dueEnd - t < 10 * DAY).sort((a, b) => a.dueEnd - b.dueEnd).slice(0, 3);
+  const today = examToday(now), heroUp = today && today.at - t <= 2 * 3600000;
+  const ex = currentItems.filter((x) => !x.done && !x.past && isExam(x.d) && !/^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title) && x.dueEnd - t < 10 * DAY && !(heroUp && x === today.x)).sort((a, b) => a.dueEnd - b.dueEnd).slice(0, 3);
   if (!ex.length) return null;
   return h("div", { class: "exams", role: "list", "aria-label": "Exams coming up" }, ex.map((x) => {
     const min = x.planned.min || 0, w = Number(srv.dueWorked && srv.dueWorked[x.key]) || 0;
@@ -1738,6 +1844,27 @@ function examStrip(now) {
       h("span", { class: "when", text: dueShort(x, now) + " · " + countdown(x.dueEnd, t) }),
       h("span", { class: "prep" + (min ? "" : " none"), text: (min ? hoursText(min) + " prep planned" : "no prep planned") + (w ? " · " + fmtMins(w) + " done" : "") }));
   }));
+}
+// Today's exam, if there is one: the deadline, when to leave, and where. "Walk to exam…" tasks set the leave time.
+const LEAVE_MIN = 25;
+function examToday(now) {
+  const t = now.getTime(), k = dayKey(now);
+  const ex = currentItems.filter((x) => !x.done && isExam(x.d) && x.d.day === k && x.d.dueAt && !/^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title) && x.dueEnd > t - 2 * 3600000).sort((a, b) => a.dueEnd - b.dueEnd)[0];
+  if (!ex) return null;
+  const walk = currentItems.find((x) => !x.done && x.d.day === k && x.d.dueAt && x.d.dueAt < ex.d.dueAt && x.d.dueAt > ex.d.dueAt - 3 * 3600000 && /^(walk|go|head|leave|travel|commute|get)\b/i.test(x.title));
+  const ev = evOf(refsOf(ex)[0]);
+  const whereM = /\b(?:at|in|@)\s+([A-Z][\w .-]{2,30}?)(?=,|\s*$)/.exec(walk ? walk.title : "") || /:\s*([A-Z][\w .,-]{2,40})$/.exec(walk ? walk.title : "");
+  return { x: ex, at: ex.d.dueAt, leave: walk ? walk.d.dueAt : ex.d.dueAt - LEAVE_MIN * 60000, where: (ev && ev.where) || (whereM ? whereM[1] : ""), title: ex.title };
+}
+let examWarned = "";
+function examTick(now) {
+  const e = examToday(now); if (!e) return;
+  const t = now.getTime(), key = e.x.key + "|" + dayKey(now);
+  if (t >= e.leave && t < e.at && examWarned !== key) {
+    examWarned = key; chime();
+    toast("Time to leave for " + e.title + " (" + fmtTime(e.at) + (e.where ? " · " + e.where : "") + ").", null, 15 * 60000);
+    if (timerRunning(pomo)) { toggleTimer(); }
+  }
 }
 let agendaOffset = 0;   // 0 = today; the arrows page through the week behind and two weeks ahead
 function renderRail(now) {
@@ -1762,6 +1889,13 @@ function renderTop(now) {
   $(".timer .pomos", top).title = fmtMins(workedWeek(now)) + " in the last 7 days";
   $("#t-mode").textContent = pomo.mode === "flow" ? "↑ count up" : "25 min";
   $("#t-mode").disabled = timerRunning(pomo) || (pomo.mode === "flow" && pomo.acc > 0);
+  const ex = examToday(now), chip = $("#exam-chip");
+  if (ex) {
+    const left = ex.at - t, lv = ex.leave - t;
+    chip.textContent = ex.title.replace(/\s*\(.*?\)\s*/g, " ").trim() + " · " + fmtTime(ex.at) + (left > 0 ? (lv > 0 ? " · leave in " + fmtDur(lv).replace(" min", "m") : " · leave now") : " · now");
+    chip.classList.toggle("soon", lv < 60 * 60000);
+  }
+  chip.hidden = !ex;
   const s = $(".sync", top);
   s.className = "sync " + (conn.ok && !conn.stale ? "ok" : conn.ok ? "" : "bad");
   $("span", s).textContent = conn.ok ? (conn.stale ? "Offline · " : "Synced ") + fmtTime(conn.at) : (conn.error || "Connecting…");
@@ -1778,6 +1912,7 @@ function topBar() {
       h("button", { class: "pill-btn", id: "t-reset", type: "button", onclick: resetTimer, text: "Done" }),
       h("button", { class: "mode-btn", id: "t-mode", type: "button", title: "Switch between counting up and 25-minute rounds", onclick: switchMode }),
       h("button", { class: "expand", type: "button", title: "Full screen (F)", "aria-label": "Full screen focus", onclick: () => setFs(true) }, ico("expand"))),
+    h("div", { class: "exam-chip", id: "exam-chip", hidden: "" }),
     h("div", { class: "sync" }, h("i"), h("span")));
 }
 function setView(v) { view = v; store("deskboard-view", v); expanded = null; render(); window.scrollTo(0, 0); }
@@ -1802,6 +1937,7 @@ function render() {
   const keepFocus = ae && ae.dataset && ae.dataset.keep ? { k: ae.dataset.keep, v: ae.value } : null;
   const shell = h("div", { class: "shell" }, renderSide(now), view === "classes" ? renderClasses(now) : renderTodo(now), renderRail(now));
   app.replaceChildren(topBar(), shell);
+  document.body.classList.toggle("night", inSleep(now) && !nightPass() && conn.ok);
   renderTop(now);
   drawBulk();
   window.scrollTo(0, scroll);
@@ -1941,7 +2077,7 @@ function editBlock(ev, seed) {
   const clashLine = h("p", { class: "hint clash" });
   const showClash = () => {
     const { a, b } = times();
-    const c = isNaN(a) || isNaN(b) ? null : timedFor(events, new Date(a)).filter((e) => e !== ev && e.src !== "sleep" && e.start < b && e.end > a)[0];
+    const c = isNaN(a) || isNaN(b) ? null : timedFor(events, new Date(a)).filter((e) => e !== ev && e.src !== "sleep" && e.start < b && e.end > a)[0] || sleepClash(a, b);
     clashLine.textContent = c ? "Overlaps " + c.title + " " + fmtTime(c.start) + "–" + fmtTime(c.end) : "";
   };
   [day, from, to].forEach((x) => x.addEventListener("input", () => { showLen(); showClash(); }));
@@ -2079,7 +2215,7 @@ function editDue(x) {
   if (!x.done && !x.past) actions.push(
     h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); startOn(x); } }, "Start timer"),
     h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); findTime(x, sittingMinutes(x)); }, text: "Plan " + hoursText(sittingMinutes(x)) }),
-    h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); newBlockAt(nextQuarter(Date.now()), sittingMinutes(x), { title: x.title }); }, text: "Plan at a time…" }));
+    h("button", { class: "mini", type: "button", onclick: () => { closeDrawer(); newBlockAt(nextStart(Date.now()), sittingMinutes(x), { title: x.title }); }, text: "Plan at a time…" }));
   if (!ref) {
     openDrawer("Deadline", [
       h("div", { class: "ro" }, h("b", { text: x.title }), h("span", { text: "Due " + dueText(x, now) + (x.course ? " · " + nameOf(x.course) : "") })),
@@ -2514,6 +2650,10 @@ let cd = null, composerOpen = false, composerFocus = false;
 function resetDraft(mode) { cd = { text: "", mode: mode || (cd && cd.mode) || "task", day: null, time: undefined, course: undefined, type: undefined, notes: null, star: false, start: null, mins: null, where: null }; }
 resetDraft("task");
 function nextQuarter(ms) { const q = 15 * 60000; return Math.ceil((ms + 5 * 60000) / q) * q; }
+// The next sensible start: a quarter-hour from now, or 09:00 if that's inside the sleep window.
+function nextStart(ms) { const d = new Date(ms); return inSleep(d) ? startOfDay(d).getTime() + WAKE * 3600000 : d.getHours() >= 23 ? startOfDay(d).getTime() + DAY + WAKE * 3600000 : nextQuarter(ms); }
+const sleepWindow = (a, b) => { const d0 = startOfDay(new Date(a)).getTime(); return [d0, d0 + DAY].some((D) => a < D + WAKE * 3600000 && b > D + BED * 3600000); };
+const sleepClash = (a, b) => (sleepWindow(a, b) ? { title: "Sleep (" + pad(BED) + ":00–" + pad(WAKE) + ":00)", start: a, end: b, sleep: true } : null);
 function draftValues(now) {
   const p = parseQuick(cd.text, now);
   const autoCourse = p.course || (courseFilter && COURSES[courseFilter] ? courseFilter : null) || courseOf(p.title);
@@ -2531,7 +2671,7 @@ function draftValues(now) {
   } else {
     const day = cd.day || p.day || dayKey(now);
     const time = cd.start != null ? fmtTime(cd.start) : p.time;
-    let start = time ? atTime(day, time) : day === dayKey(now) ? nextQuarter(now.getTime()) : atTime(day, "14:00");
+    let start = time ? atTime(day, time) : day === dayKey(now) ? nextStart(now.getTime()) : atTime(day, "14:00");
     out.start = start;
     out.tpl = cd.tpl !== undefined ? cd.tpl : templateFor(p.title);
     out.mins = cd.mins || p.mins || (out.tpl ? out.tpl.mins : 60);
@@ -2539,11 +2679,12 @@ function draftValues(now) {
     out.where = cd.where || "Library";
     out.day = day;
     const clash = timedFor(events, new Date(start)).filter((e) => e.src !== "sleep" && e.start < out.end && e.end > start);
-    out.clash = clash[0] || null;
+    out.clash = clash[0] || sleepClash(start, out.end);
   }
   return out;
 }
 function focusComposer(mode, preset) {
+  if (inSleep(new Date()) && !nightPass()) { toast("After bed time. It'll keep until the morning, or take 25 minutes from the card at the top.", null, 6000); return; }
   if (view !== "todo") { view = "todo"; store("deskboard-view", view); }
   if (mode && mode !== cd.mode) { const t = cd.text; resetDraft(mode); cd.text = t; }
   Object.assign(cd, preset || {});
@@ -2653,7 +2794,7 @@ function taskMenu(x, anchor, at) {
     { label: own ? "Edit…" : "Details", kbd: "E", run: () => editDue(x) },
     !x.done && !x.past && { label: "Start timer on it", kbd: "G", run: () => startOn(x) },
     !x.done && !x.past && { label: "Plan " + hoursText(sittingMinutes(x)) + " in the next free slot", kbd: "P", run: () => findTime(x, sittingMinutes(x)) },
-    !x.done && !x.past && { label: "Plan a block at a time…", run: () => newBlockAt(nextQuarter(Date.now()), sittingMinutes(x), { title: x.title }) },
+    !x.done && !x.past && { label: "Plan a block at a time…", run: () => newBlockAt(nextStart(Date.now()), sittingMinutes(x), { title: x.title }) },
     "-",
     own && { label: "Rename", kbd: "R", run: () => renameInline(x) },
     own && { label: "Change date…", kbd: "T", run: () => pickDay(anchorFor(), x.d.day, (k) => updateDue(x, { day: k }), { title: "Move to" }) },
@@ -2779,7 +2920,7 @@ function renderAgenda(now) {
       agendaOffset ? h("button", { class: "mini", type: "button", onclick: () => { agendaOffset = 0; tl.scroll = null; render(); }, text: "Today" }) : null,
       h("button", { class: "ico-btn", type: "button", "aria-label": "Next day", disabled: agendaOffset >= 14 ? "" : null, onclick: () => { agendaOffset++; tl.scroll = null; render(); }, text: "›" }),
       h("button", { class: "mini", type: "button", title: "New Study block (B)", onclick: (e) => {
-        const s = freeHour(items, agendaOffset === 0 ? nextQuarter(t) : d0 + 9 * 3600000, d0 + 23 * 3600000); quickCreate(s, s + 60 * 60000, e.currentTarget); }, text: "+ Block" })));
+        const s = freeHour(items, agendaOffset === 0 ? Math.max(nextStart(t), d0) : d0 + WAKE * 3600000, d0 + 23 * 3600000); quickCreate(s, s + 60 * 60000, e.currentTarget); }, text: "+ Block" })));
   let h0 = 8, h1 = 23;
   items.forEach((e) => { h0 = Math.min(h0, Math.floor((Math.max(e.start, d0) - d0) / 3600000)); h1 = Math.max(h1, Math.ceil((Math.min(e.end, d0 + DAY) - d0) / 3600000)); });
   h0 = Math.max(0, h0); h1 = Math.min(24, Math.max(h1, h0 + 4));
@@ -2903,7 +3044,7 @@ function renderAgenda(now) {
   const dueRow = allDue.length ? h("div", { class: "tl-allday", role: "list", "aria-label": "Due " + label.toLowerCase() },
     h("span", { class: "label", text: "Due" }), allDue.slice(0, 4).map((x) => h("button", { type: "button", class: "chip course ad", role: "listitem", style: "--course:" + colorOf(x.course), title: x.title + " · due " + dueText(x, now), onclick: () => openTask(x), text: x.title })),
     allDue.length > 4 ? h("span", { class: "hint", text: "+" + (allDue.length - 4) }) : null) : null;
-  card.append(weekStrip(now), loadLine(day.getTime()), dueRow, scroller);
+  card.append(weekStrip(now), loadLine(day.getTime()), ...(dueRow ? [dueRow] : []), scroller);
   // Keep the scroll position across refreshes; on a new day start an hour before now (or at the first thing).
   const key = dayKey(day);
   requestAnimationFrame(() => {
@@ -2937,7 +3078,7 @@ function quickCreate(a, b, anchor, onClose) {
     tplRow.replaceChildren(h("span", { class: "hint", text: "Kind:" }), ...TEMPLATES.map((X) => h("button", { type: "button", class: "mini", "aria-pressed": T === X ? "true" : "false",
       title: X.steps.length ? "Steps: " + X.steps.join(" · ") : "", onclick: () => { st.tpl = T === X ? null : X; if (st.tpl) st.b = st.a + X.mins * 60000; draw(); inp.focus(); }, text: X.name })));
     const course = st.course !== undefined ? st.course : courseOf(inp.value);
-    const clash = timedFor(events, new Date(st.a)).filter((e) => e.src !== "sleep" && e.start < st.b && e.end > st.a)[0];
+    const clash = timedFor(events, new Date(st.a)).filter((e) => e.src !== "sleep" && e.start < st.b && e.end > st.a)[0] || sleepClash(st.a, st.b);
     when.replaceChildren(h("b", { text: whenText(st.a) + "–" + fmtTime(st.b) }), h("span", { text: " · " + fmtDur(st.b - st.a) }),
       ...(clash ? [h("div", { class: "clash", text: "Overlaps " + clash.title })] : []));
     chipsRow.replaceChildren(
@@ -2986,7 +3127,7 @@ function openPalette(seed) {
       const time = p.beforeClass && classStart(course, day) ? fmtTime(classStart(course, day)) : p.time;
       if (p.title) rows.push({ group: "Add", label: "Add task “" + withCourse(p.title, course) + "”", meta: "due " + dayLabel(day, now) + (time ? " " + time : "") + (course ? " · " + course : ""),
         run: () => createDue({ title: withType(withCourse(p.title, course), typeOf(p.title)), day, time: time || "", star: p.star }).catch(() => {}) });
-      const bday = p.day || dayKey(now), bs = p.time ? atTime(bday, p.time) : bday === dayKey(now) ? nextQuarter(now.getTime()) : atTime(bday, "14:00");
+      const bday = p.day || dayKey(now), bs = p.time ? atTime(bday, p.time) : bday === dayKey(now) ? nextStart(now.getTime()) : atTime(bday, "14:00");
       if (p.title) rows.push({ group: "Add", label: "Add block “" + withCourse(p.title, course) + "”", meta: whenText(bs) + " · " + fmtDur((p.mins || 60) * 60000),
         run: () => createBlock({ title: withCourse(p.title, course), start: bs, end: bs + (p.mins || 60) * 60000, where: "Library", steps: [], modes: [] }).catch(() => {}) });
     }
@@ -3409,7 +3550,7 @@ function eventCard(ev, anchor) {
       h("span", { text: ev.allDay ? day : day + " · " + fmtTime(ev.start) + "–" + fmtTime(ev.end) + " (" + fmtDur(ev.end - ev.start) + ")" })),
     h("button", { class: "ico-btn", type: "button", "aria-label": "Close", onclick: closePop, text: "×" }));
   const meta = h("div", { class: "ec-meta" },
-    course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null,
+    course ? h("span", { class: "chip course", style: "--course:" + colorOf(course), text: course }) : null, ruleChip(course),
     ev.where ? h("span", { text: "📍 " + ev.where }) : null,
     h("span", { class: "ec-src", text: CAL_NAMES[ev.src] || ev.src }),
     ev.rec ? h("span", { class: "ec-src", text: "repeats" }) : null,
@@ -3613,6 +3754,7 @@ function setFs(on) {
   if (on === fsOpen) return;
   fsOpen = on;
   $("#fs").hidden = !on;
+  document.documentElement.classList.toggle("fs-open", on);
   if (on) {
     if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
     try { if (document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
@@ -3647,6 +3789,8 @@ function renderFs(now) {
       : /\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(blk.title) ? "" : "Open it and do one 25-min round.";
     if (pomo.mode === "pomo" && pomo.phase === "rest" && blk.modes && blk.modes.length) step = "Digest first: " + blk.modes.slice(0, 2).map((k) => PACER[k].verb).join(" · ");
   }
+  const ex = examToday(now);
+  if (ex && ex.at - t < 3 * 3600000 && ex.at > t) { step = (title ? step + "  ·  " : "") + "Exam " + fmtTime(ex.at) + " · leave by " + fmtTime(ex.leave); if (!title) title = ex.title; }
   if ($("#fs-title").textContent !== title) $("#fs-title").textContent = title;
   if ($("#fs-step").textContent !== step) $("#fs-step").textContent = step;
   $("#fs-tally").textContent = fmtMins(workedToday(now)) + " worked today";
@@ -3686,6 +3830,7 @@ let lastMinute = -1;
 setInterval(() => {
   const now = new Date();
   tickTimer(now.getTime());
+  examTick(now);
   renderTop(now);
   renderFs(now);
   if (now.getMinutes() !== lastMinute) {

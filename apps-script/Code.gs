@@ -98,6 +98,7 @@ function route_(body) {
     if (body.action === 'checkin') return checkin_(body);
     if (body.action === 'step') return step_(body);
     if (body.action === 'reschedule') return reschedule_(body);
+    if (body.action === 'drop') return drop_(body);
     if (body.action === 'dueDone') return dueDone_(body);
     if (body.action === 'layout') return layout_(body);
     if (body.action === 'plan') return plan_(body);
@@ -488,6 +489,16 @@ function moveBlock_(ev, r, busy) {
   return { ok: true, start: slot.start.getTime(), end: slot.end.getTime() };
 }
 
+// A missed block you've decided not to chase: it keeps its check-in (so the stats stay honest)
+// but it's marked as handled, so the fresh start won't move it again.
+function drop_(body) {
+  var ev = findEvent_(body.block);
+  if (!ev) return { ok: false, error: 'block not found' };
+  ev.setDescription(setLine_(String(ev.getDescription() || ''), 'Moved to', String(body.note || 'let go').slice(0, 60)));
+  CacheService.getScriptCache().remove('events');
+  return { ok: true };
+}
+
 /* ---------- Night check-in and fresh starts ---------- */
 
 /** Blocks worth a check-in: real Study work of 30+ minutes that has ended. */
@@ -652,7 +663,7 @@ function plan_(body) {
 
 /** Several changes in one request (a pasted list, a repeating task, "plan my week", bulk edits,
     and undoing any of those). Each op is one of the single actions below; results come back in order. */
-var BATCH_OK = { saveDue: saveDue_, deleteDue: deleteDue_, saveBlock: saveBlock_, deleteBlock: deleteBlock_, plan: plan_ };
+var BATCH_OK = { saveDue: saveDue_, deleteDue: deleteDue_, saveBlock: saveBlock_, deleteBlock: deleteBlock_, plan: plan_, drop: drop_ };
 function batch_(body) {
   var ops = Array.isArray(body.ops) ? body.ops.slice(0, 40) : [];
   var results = ops.map(function (op) {
