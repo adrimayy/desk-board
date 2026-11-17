@@ -1028,21 +1028,29 @@ function pushTimer() {
   holdTimerUntil = Date.now() + 30000;
   apiPost({ action: "timer", timer: pomo }).then(afterPost, () => { holdTimerUntil = 0; });
 }
-let noiseNode = null, noiseGain = null;
+let noiseNode = null, noiseGain = null, noiseLfos = [];
+// Deep, slow noise: brown noise rolled off hard above the low end, with a slow swell like surf, so it reads as weather, not static.
 function setNoise(on) {
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; } }
   try {
     if (on && !noiseNode) {
-      const len = audio.sampleRate * 4, buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
-      let last = 0;
-      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+      const sr = audio.sampleRate, len = sr * 6, buf = audio.createBuffer(2, len, sr);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch); let last = 0;
+        for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.008 * w) / 1.008; d[i] = last * 6; }
+      }
       noiseNode = audio.createBufferSource(); noiseNode.buffer = buf; noiseNode.loop = true;
-      noiseGain = audio.createGain(); noiseGain.gain.setValueAtTime(0.0001, audio.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.12, audio.currentTime + 1.5);
-      noiseNode.connect(noiseGain); noiseGain.connect(audio.destination); noiseNode.start();
+      const lp = audio.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 320; lp.Q.value = 0.5;
+      const lp2 = audio.createBiquadFilter(); lp2.type = "lowpass"; lp2.frequency.value = 900; lp2.Q.value = 0.3;
+      const swell = audio.createGain(); swell.gain.value = 0.8;
+      // Two slow, unrelated swells so it never repeats: ~11 s and ~27 s.
+      noiseLfos = [[0.09, 0.14], [0.037, 0.08]].map(([hz, depth]) => { const o = audio.createOscillator(), g = audio.createGain(); o.type = "sine"; o.frequency.value = hz; g.gain.value = depth; o.connect(g); g.connect(swell.gain); o.start(); return o; });
+      noiseGain = audio.createGain(); noiseGain.gain.setValueAtTime(0.0001, audio.currentTime); noiseGain.gain.exponentialRampToValueAtTime(0.22, audio.currentTime + 3);
+      noiseNode.connect(lp); lp.connect(lp2); lp2.connect(swell); swell.connect(noiseGain); noiseGain.connect(audio.destination); noiseNode.start();
       if (audio.state === "suspended") audio.resume();
     } else if (!on && noiseNode) {
-      const n = noiseNode, g = noiseGain; noiseNode = null; noiseGain = null;
-      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.8); setTimeout(() => { try { n.stop(); } catch (e) {} }, 900);
+      const n = noiseNode, g = noiseGain, ls = noiseLfos; noiseNode = null; noiseGain = null; noiseLfos = [];
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 1.5); setTimeout(() => { try { n.stop(); ls.forEach((o) => o.stop()); } catch (e) {} }, 1600);
     }
   } catch (e) {}
   $("#fs-noise").setAttribute("aria-pressed", noiseNode ? "true" : "false");
