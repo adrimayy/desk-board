@@ -24,7 +24,7 @@
 <link rel="icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Silkscreen&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Silkscreen&family=Hanken+Grotesk:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --page: #efebe1;
@@ -105,6 +105,58 @@
   --ink: #fff; --ink-2: #e2e2da; --ink-3: #b0b0a6; --sage: #76e49a; --sage-deep: #9df5b8; --mint: #15351f; --lcd: #15351f;
   --alert: #ff8f6b; --alert-bg: #3d1a0d; --warn: #ffcc4d; --warn-bg: #3a2c00; --ok: #76e49a;
 }
+/* ---------- Cockpit ----------
+   Borrowed from car instrument panels, which have a day mode as well as a night one: depth instead
+   of outlines, condensed tabular numerals, one lit accent, and a soft field behind everything.
+   Nothing is hidden or simplified away; the list, the editors and the timeline are all still here. */
+:root[data-style="cockpit"] {
+  --page: #eef1f0; --page-2: #e4e8e7; --card: #fbfcfc; --card-2: #eef1f1; --line: #d2d9d7;
+  --ink: #0d1413; --ink-2: #44504d; --ink-3: #5e6b68; --sage: #108a53; --sage-deep: #0a6b40; --mint: #d8f0e3; --lcd: #dceee5;
+  --alert: #c03218; --alert-bg: #fbe3de; --warn: #8a5c00; --warn-bg: #f8ecd3; --ok: #0a6b40;
+  --shadow: 0 1px 2px rgba(10, 30, 25, 0.05), 0 8px 24px -12px rgba(10, 30, 25, 0.18);
+  --shadow-lift: 0 18px 50px -14px rgba(10, 30, 25, 0.35);
+  --f-num: "Barlow Condensed", "Hanken Grotesk", system-ui, sans-serif;
+  --radius: 20px;
+  --glow: radial-gradient(120% 70% at 50% 0%, rgba(16, 138, 83, 0.1), transparent 62%);
+  --lit: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-style="cockpit"]:not([data-theme="light"]) {
+    --page: #070b0a; --page-2: #0b100f; --card: #121917; --card-2: #19211f; --line: #273230;
+    --ink: #f1f6f4; --ink-2: #b6c3bf; --ink-3: #8b9995; --sage: #3ddd8c; --sage-deep: #63eda6; --mint: #102b20; --lcd: #0f241b;
+    --alert: #ff7a62; --alert-bg: #35150f; --warn: #ffc257; --warn-bg: #332511; --ok: #63eda6;
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 34px -18px #000;
+    --shadow-lift: 0 26px 60px -18px #000;
+    --glow: radial-gradient(120% 70% at 50% 0%, rgba(61, 221, 140, 0.13), transparent 60%);
+    --lit: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-style="cockpit"] {
+  --page: #070b0a; --page-2: #0b100f; --card: #121917; --card-2: #19211f; --line: #273230;
+  --ink: #f1f6f4; --ink-2: #b6c3bf; --ink-3: #8b9995; --sage: #3ddd8c; --sage-deep: #63eda6; --mint: #102b20; --lcd: #0f241b;
+  --alert: #ff7a62; --alert-bg: #35150f; --warn: #ffc257; --warn-bg: #332511; --ok: #63eda6;
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 34px -18px #000;
+  --shadow-lift: 0 26px 60px -18px #000;
+  --glow: radial-gradient(120% 70% at 50% 0%, rgba(61, 221, 140, 0.13), transparent 60%);
+  --lit: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+/* A field behind everything, so the cards read as floating rather than drawn. */
+[data-style="cockpit"] body { background: var(--glow), var(--page); background-attachment: fixed; }
+[data-style="cockpit"] .panel, [data-style="cockpit"] .today-card { box-shadow: var(--shadow), var(--lit); }
+[data-style="cockpit"] .now.hero { border-radius: calc(var(--radius) + 4px); }
+/* Every number in the condensed face, and the hero reading at instrument scale. */
+[data-style="cockpit"] .hero-act .big-time { font-size: 68px; font-weight: 700; letter-spacing: -0.02em; line-height: 0.86; }
+[data-style="cockpit"] .timer .t, [data-style="cockpit"] .top .clock { font-weight: 600; letter-spacing: 0.01em; }
+[data-style="cockpit"] .fs-time { font-weight: 700; letter-spacing: -0.02em; }
+[data-style="cockpit"] .tl-hour span { font-weight: 600; }
+/* The accent is the only lit thing on the board. */
+[data-style="cockpit"] .pill-btn.primary { box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--sage-deep) 60%, transparent); }
+[data-style="cockpit"] .gofab { box-shadow: 0 16px 40px -12px color-mix(in srgb, var(--sage-deep) 55%, transparent); }
+[data-style="cockpit"] .chip, [data-style="cockpit"] .mini, [data-style="cockpit"] .chip-btn { border-radius: 999px; }
+[data-style="cockpit"] .task:hover { background: color-mix(in srgb, var(--sage) 7%, transparent); }
+[data-style="cockpit"] .tl-ev { border-radius: 10px; box-shadow: var(--lit); }
+
 /* Ink is flat and quiet: no pixel labels, plain tabular numbers, hairline rules. */
 [data-style="ink"] .label, [data-style="ink"] .side h3 { letter-spacing: 0.1em; font-weight: 700; font-size: 0.68rem; }
 [data-style="ink"] .fs-time, [data-style="ink"] .big-time { letter-spacing: -0.02em; font-weight: 700; }
@@ -893,7 +945,7 @@ function parseEvents(list) {
 
 // Conditional children: append(cond ? node : null) adds nothing, instead of the text "null".
 ["append", "replaceChildren"].forEach((m) => { const orig = Element.prototype[m]; Element.prototype[m] = function (...kids) { return orig.apply(this, kids.flat().filter((k) => k != null && k !== false)); }; });
-const STYLES = [["paper", "Paper", "Warm and quiet, the default"], ["ink", "Ink", "Flat and neutral, hairline rules"], ["signal", "Signal", "Bigger and heavier, for reading across the room"]];
+const STYLES = [["paper", "Paper", "Warm and quiet, the default"], ["ink", "Ink", "Flat and neutral, hairline rules"], ["signal", "Signal", "Bigger and heavier, for reading across the room"], ["cockpit", "Cockpit", "Instrument panel: depth, condensed numbers, day and night"]];
 function setStyle(id) {
   const k = STYLES.some((x) => x[0] === id) ? id : "paper";
   document.documentElement.setAttribute("data-style", k);

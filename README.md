@@ -138,13 +138,14 @@ Built around the patterns that actually cost grades, so they're there without be
 
 ### Styles
 
-Three skins over one structure, in the sidebar under **Style** (or Ctrl/⌘K → "style"). Each one
+Four skins over one structure, in the sidebar under **Style** (or Ctrl/⌘K → "style"). Each one
 sets the same tokens, so every control keeps its shape, its place, its wording and its weight;
 only the surface changes. Each follows the light or dark setting of the machine it's on.
 
 - **Paper** — warm and quiet. The default.
 - **Ink** — flat and neutral, hairline rules, plain tabular numbers.
 - **Signal** — bigger type, heavier edges, stronger colour, for reading from across the room.
+- **Cockpit** — borrowed from car instrument panels, which have a day mode as well as a night one: depth instead of outlines, condensed tabular numerals wherever a number appears, one lit accent and a soft field behind the cards. Nothing is simplified away — the list, the editors, merging and the timeline are all there, and all fifteen suites pass with it on.
 
 All three were checked for contrast in light and dark: every piece of text that carries meaning
 clears WCAG AA (4.5:1). It's a setting you pick once, not a decision in the middle of work.
