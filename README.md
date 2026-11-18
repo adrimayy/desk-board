@@ -136,6 +136,16 @@ Built around the patterns that actually cost grades, so they're there without be
 - **Quick add:** "tonight" / "this evening" (today, 21:00) and "someday" (four weeks out, so it stops nagging).
 - Ticking a task pops the check before the row goes.
 
+### Sound and the headphone button
+
+- **Five textures, made in the browser** (no files, no network): **Deep** (low brown noise), **Rain**, **Waves**, **Fan**, **Pink**. Brown and pink are the two with evidence behind them for attention; the rest are the same idea with a different face. Each one loops seamlessly and drifts on two slow, unrelated swells, so it never settles into a pattern you start listening to, and they're level-matched by ear.
+- The **Sound** button in full screen toggles the last one; the **▾** next to it picks another. The choice is remembered, and comes back at your first click after a reload. Ctrl/⌘K also has "Sound: rain" and friends.
+- **AirPods and the media keys** start and pause the timer, and the Mac's media controls show what you're working on and how long is left. Pressing stop (or finishing) hands the buttons back to whatever else you were listening to.
+- **Space** starts and pauses the timer from anywhere on the board.
+- **A big Start/Pause button** appears in the bottom-left corner whenever there's something to start and the big one on the card isn't already in front of you.
+- **The round drains as a bar** under the clock in full screen, for when digits don't land.
+- **A soft note five minutes before** a round or a block ends, so the ending isn't a surprise.
+
 ### Less on screen
 
 Filters sit behind one **Filter** button; "Add a task" rows appear when you hover a group; **Plan 2h** appears when you hover a task (the red "No time planned" is always there); exams are one compact row; the duplicate notice is a single line; the timer mode switch lives in full screen. Everything still does what it did.
