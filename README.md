@@ -136,10 +136,21 @@ Built around the patterns that actually cost grades, so they're there without be
 - **Quick add:** "tonight" / "this evening" (today, 21:00) and "someday" (four weeks out, so it stops nagging).
 - Ticking a task pops the check before the row goes.
 
+### What was deliberately left out
+
+The board is for one person, one semester, five classes. Anything that was a second way to say
+something the board could already work out from the title has been removed: the type picker
+("Econ PS7" is a problem set), the template pickers ("Odyssey reading" is a reading), the repeat
+picker ("every mon" still works when typed), four of the five sounds, and a handful of menu items
+that duplicated dragging or editing. Filters are three, not five. The shortcut sheet lists nine,
+not eighteen; the rest still work and the menus show them.
+
+The rule going in: a control earns its place by preventing something that has actually gone wrong,
+not by making something possible.
+
 ### Sound and the headphone button
 
-- **Five textures, made in the browser** (no files, no network): **Deep** (low brown noise), **Rain**, **Waves**, **Fan**, **Pink**. Brown and pink are the two with evidence behind them for attention; the rest are the same idea with a different face. Each one loops seamlessly and drifts on two slow, unrelated swells, so it never settles into a pattern you start listening to, and they're level-matched by ear.
-- The **Sound** button in full screen toggles the last one; the **▾** next to it picks another. The choice is remembered, and comes back at your first click after a reload. Ctrl/⌘K also has "Sound: rain" and friends.
+- **One sound**, made in the browser (no files, no network): low brown noise, filtered down to something like weather outside and drifting on two slow swells that never line up, so it doesn't settle into a pattern you start listening to. The **Sound** button in full screen turns it on, and it comes back at your first click after a reload. The evidence for noise and attention is small and mixed, so a menu of five would have been five decisions in exchange for nothing.
 - **AirPods and the media keys** start and pause the timer, and the Mac's media controls show what you're working on and how long is left. Pressing stop (or finishing) hands the buttons back to whatever else you were listening to.
 - **Space** starts and pauses the timer from anywhere on the board.
 - **A big Start/Pause button** appears in the bottom-left corner whenever there's something to start and the big one on the card isn't already in front of you.

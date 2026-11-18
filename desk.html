@@ -173,9 +173,6 @@ html.fs-open { overflow: hidden; }
 .fs-group { display: flex; gap: 12px; }
 .fs-group.end { justify-content: flex-end; }
 .fs-big { padding: 12px 20px; font-size: 1rem; white-space: nowrap; }
-.fs-group .split { display: inline-flex; }
-.fs-group .split .pill-btn { border-radius: 999px 0 0 999px; }
-.fs-group .split .more { border-radius: 0 999px 999px 0; border-left: 0; padding: 12px 14px; min-width: 0; }
 /* How much of the round is left, for when numbers don't land. */
 .fs-drain { width: min(60vw, 520px); height: 6px; border-radius: 99px; background: color-mix(in srgb, currentColor 12%, transparent); margin: 2vh auto 0; overflow: hidden; }
 .fs-drain i { display: block; height: 100%; background: var(--sage-deep); border-radius: 99px; transition: width 1s linear; }
@@ -770,7 +767,7 @@ input[type=radio], input[type=checkbox] { accent-color: var(--sage-deep); }
     <button class="pill-btn fs-big" id="fs-keep" type="button" hidden title="Skip the break and start the next round now">Keep going</button>
     <button class="pill-btn ghost fs-big" id="fs-discard" type="button" hidden>Discard</button></div>
     <span class="fs-tally" id="fs-tally"></span>
-    <div class="fs-group end"><span class="split"><button class="pill-btn ghost fs-big" id="fs-sound" type="button" aria-pressed="false" title="Sound while you work">Sound</button><button class="pill-btn ghost fs-big more" id="fs-sound-more" type="button" aria-label="Choose a sound" aria-haspopup="menu">▾</button></span>
+    <div class="fs-group end"><button class="pill-btn ghost fs-big" id="fs-sound" type="button" aria-pressed="false" title="Low noise while you work">Sound</button>
     <button class="pill-btn ghost fs-big" id="fs-mode" type="button">25-min rounds</button>
     <button class="pill-btn ghost fs-big" id="fs-exit" type="button">Exit <span class="kbd">Esc</span></button></div>
   </div>
@@ -1052,115 +1049,49 @@ function pushTimer() {
   holdTimerUntil = Date.now() + 30000;
   apiPost({ action: "timer", timer: pomo }).then(afterPost, () => { holdTimerUntil = 0; });
 }
-/* ---------- Sound: a steady background, generated here, no files and no network ----------
-   Brown and pink noise are the two with real evidence behind them for attention; the others are
-   the same idea wearing a different coat. Everything loops seamlessly and drifts, so it never
-   settles into a pattern you start listening to. */
-const SOUNDS = [
-  { id: "deep", name: "Deep", hint: "Low brown noise, like weather outside" },
-  { id: "rain", name: "Rain", hint: "Steady rain, close to the window" },
-  { id: "waves", name: "Waves", hint: "Slow surf, long swells" },
-  { id: "fan", name: "Fan", hint: "A room fan and its hum" },
-  { id: "pink", name: "Pink", hint: "Softer and brighter than Deep" },
-];
-let sound = null, soundId = store("deskboard-sound") || "deep";
-const soundName = (id) => (SOUNDS.find((x) => x.id === id) || SOUNDS[0]).name;
+/* ---------- Sound: one steady background, generated here, no files and no network ----------
+   Low brown noise, filtered down to something like weather outside and drifting on two slow
+   swells that never line up, so it doesn't settle into a pattern you start listening to.
+   There is one of them on purpose: the evidence for noise and attention is small and mixed,
+   so a menu of five would have been five decisions in exchange for nothing. */
+let sound = null;
 function ensureAudio() {
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
   try { if (audio.state === "suspended") audio.resume(); } catch (e) {}
   return audio;
 }
-// A few seconds of noise, looped. Brown is deep and rounded, pink is the classic hiss, white is raw.
-function noiseBuf(kind, secs) {
+function brownBuf(secs) {
   const sr = audio.sampleRate, len = Math.floor(sr * secs), buf = audio.createBuffer(2, len, sr);
   for (let ch = 0; ch < 2; ch++) {
-    const d = buf.getChannelData(ch);
-    if (kind === "brown") {
-      let last = 0;
-      for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.008 * w) / 1.008; d[i] = last * 6; }
-    } else if (kind === "pink") {
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-      for (let i = 0; i < len; i++) {
-        const w = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759; b2 = 0.969 * b2 + w * 0.153852;
-        b3 = 0.8665 * b3 + w * 0.3104856; b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898;
-        d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
-      }
-    } else for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const d = buf.getChannelData(ch); let last = 0;
+    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + 0.008 * w) / 1.008; d[i] = last * 6; }
   }
   return buf;
 }
-// Rain is hiss plus thousands of little impacts. Baking them into the loop keeps the patter random.
-function rainBuf(secs) {
-  const buf = noiseBuf("pink", secs), sr = audio.sampleRate, len = buf.length;
-  for (let ch = 0; ch < 2; ch++) {
-    const d = buf.getChannelData(ch), drops = Math.floor(secs * 160);
-    for (let n = 0; n < drops; n++) {
-      const dur = Math.floor(sr * (0.003 + Math.random() * 0.011)), at = Math.floor(Math.random() * (len - dur - 1)), amp = 0.3 + Math.random() * 0.7;
-      for (let i = 0; i < dur; i++) d[at + i] += (Math.random() * 2 - 1) * amp * Math.exp(-i / (dur * 0.25)) * 0.5;
-    }
-  }
-  return buf;
-}
-// Each texture: a looping source or two, some filters, and slow swells that never line up.
-function buildSound(id) {
-  const parts = [], out = audio.createGain();
-  const src = (buf) => { const n = audio.createBufferSource(); n.buffer = buf; n.loop = true; parts.push(n); return n; };
-  const filt = (type, f, q) => { const b = audio.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q != null) b.Q.value = q; return b; };
-  const gain = (v) => { const g = audio.createGain(); g.gain.value = v; return g; };
-  const lfo = (hz, depth, target) => { const o = audio.createOscillator(), g = gain(depth); o.type = "sine"; o.frequency.value = hz; o.connect(g); g.connect(target); parts.push(o); };
-  let level = 0.2;
-  if (id === "rain") {
-    const hiss = src(rainBuf(10)), hp = filt("highpass", 340), lp = filt("lowpass", 6200);
-    hiss.connect(hp); hp.connect(lp); lp.connect(out);
-    const body = src(noiseBuf("brown", 7)), bl = filt("lowpass", 260), bg = gain(0.6);
-    body.connect(bl); bl.connect(bg); bg.connect(out);
-    lfo(0.06, 0.1, out.gain); lfo(0.021, 0.07, out.gain);
-    level = 0.05;   // bright textures carry much further than low ones at the same amplitude
-  } else if (id === "waves") {
-    const n = src(noiseBuf("brown", 8)), lp = filt("lowpass", 420, 0.6);
-    n.connect(lp); lp.connect(out);
-    lfo(0.055, 260, lp.frequency);      // the break of each wave opens the filter
-    lfo(0.055, 0.42, out.gain); lfo(0.019, 0.16, out.gain);
-    level = 0.24;
-  } else if (id === "fan") {
-    const n = src(noiseBuf("brown", 6)), lp = filt("lowpass", 520, 0.7), lp2 = filt("lowpass", 1400);
-    n.connect(lp); lp.connect(lp2); lp2.connect(out);
-    const hum = audio.createOscillator(), hg = gain(0.055);
-    hum.type = "sine"; hum.frequency.value = 52; hum.connect(hg); hg.connect(out); parts.push(hum);
-    lfo(6.4, 0.035, out.gain); lfo(0.07, 0.05, out.gain);   // motor flutter, and the room
-    level = 0.19;
-  } else if (id === "pink") {
-    const n = src(noiseBuf("pink", 7)), lp = filt("lowpass", 4800);
-    n.connect(lp); lp.connect(out);
-    lfo(0.048, 0.1, out.gain); lfo(0.017, 0.06, out.gain);
-    level = 0.055;
-  } else {
-    const n = src(noiseBuf("brown", 6)), lp = filt("lowpass", 320, 0.5), lp2 = filt("lowpass", 900, 0.3);
-    n.connect(lp); lp.connect(lp2); lp2.connect(out);
-    lfo(0.09, 0.14, out.gain); lfo(0.037, 0.08, out.gain);
-    level = 0.22;
-  }
-  parts.forEach((n) => n.start());
-  return { out, level, stop: () => parts.forEach((n) => { try { n.stop(); } catch (e) {} }) };
-}
-// Switching fades the old one out under the new one, so there's no gap and no jolt.
-function setSound(id) {
+function setSound(on) {
   if (!ensureAudio()) return;
   const old = sound; sound = null;
   if (old) {
-    const g = old.gain, t0 = audio.currentTime;
-    try { g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.2); } catch (e) {}
+    const t0 = audio.currentTime;
+    try { old.gain.gain.cancelScheduledValues(t0); old.gain.gain.setValueAtTime(Math.max(0.0001, old.gain.gain.value), t0); old.gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.2); } catch (e) {}
     setTimeout(old.stop, 1400);
   }
-  store("deskboard-sound-on", id && id !== "off" ? 1 : 0);
-  if (id && id !== "off") {
-    soundId = id; store("deskboard-sound", id);
+  store("deskboard-sound-on", on ? 1 : 0);
+  if (on) {
     try {
-      const s = buildSound(id), g = audio.createGain(), t0 = audio.currentTime;
-      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(s.level, t0 + 2.5);
-      s.out.connect(g); g.connect(audio.destination);
-      sound = { gain: g, stop: s.stop, id };
+      const parts = [], t0 = audio.currentTime;
+      const n = audio.createBufferSource(); n.buffer = brownBuf(6); n.loop = true; parts.push(n);
+      const lp = audio.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 320; lp.Q.value = 0.5;
+      const lp2 = audio.createBiquadFilter(); lp2.type = "lowpass"; lp2.frequency.value = 900; lp2.Q.value = 0.3;
+      const g = audio.createGain();
+      [[0.09, 0.14], [0.037, 0.08]].forEach(([hz, depth]) => {
+        const o = audio.createOscillator(), og = audio.createGain();
+        o.type = "sine"; o.frequency.value = hz; og.gain.value = depth; o.connect(og); og.connect(g.gain); parts.push(o);
+      });
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.22, t0 + 2.5);
+      n.connect(lp); lp.connect(lp2); lp2.connect(g); g.connect(audio.destination);
+      parts.forEach((x) => x.start());
+      sound = { gain: g, stop: () => parts.forEach((x) => { try { x.stop(); } catch (e) {} }) };
     } catch (e) {}
     mediaKeys();
   }
@@ -1168,13 +1099,9 @@ function setSound(id) {
 }
 function paintSound() {
   const b = $("#fs-sound"); if (!b) return;
-  b.textContent = sound ? soundName(sound.id) : "Sound";
+  b.textContent = sound ? "Sound · on" : "Sound";
   b.setAttribute("aria-pressed", sound ? "true" : "false");
-  b.title = sound ? "Stop the sound" : "Play " + soundName(soundId).toLowerCase() + " while you work";
-}
-function soundMenu(anchor) {
-  menu(anchor, SOUNDS.map((x) => ({ label: (sound && sound.id === x.id ? "✓ " : "") + x.name, kbd: x.hint, run: () => setSound(x.id) }))
-    .concat(sound ? ["-", { label: "Off", run: () => setSound("off") }] : []));
+  b.title = sound ? "Stop it" : "Low noise while you work";
 }
 
 /* ---------- The headphone button ----------
@@ -1855,19 +1782,12 @@ function freshWeek(now) {
   return u.length ? u : null;
 }
 const drifting = (now) => conn.ok && srv.lastActive && now.getTime() - srv.lastActive > 4 * DAY;
-// The three things this week is about: starred first, then what's due soonest. Goes to the clipboard for the accountability text.
+// The overdue pile, moved to today in one go. Canvas keeps its own dates.
 function moveOverdue(items, now) {
   const mine = items.filter((x) => !x.done && ownRef(x)), other = items.length - mine.length;
   if (!mine.length) return;
   const today = dayKey(now);
   Promise.all(mine.map((x) => updateDue(x, { day: today }, true))).then(() => toast("Moved " + plural(mine.length, "task") + " to today" + (other ? ". " + other + " from Canvas keep their date." : "."), null, 6000)).catch(() => {});
-}
-function copyTop3(now) {
-  const open = currentItems.filter((x) => !x.done && !x.past && x.dueEnd - now.getTime() < 8 * DAY);
-  const top = open.filter(isStarred).concat(open.filter((x) => !isStarred(x))).slice(0, 3);
-  if (!top.length) { say("Nothing due this week to send.", 4000); return; }
-  const text = "This week: " + top.map((x, i) => (i + 1) + ". " + x.title + " (" + dueText(x, now).toLowerCase() + ")").join("  ");
-  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => say("Copied. Send it to your GTD buddy.", 5000), () => say(text, 12000));
 }
 function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
 
@@ -1921,8 +1841,7 @@ function renderCheck(now) {
     let workedMin = 0; for (let i = 1; i <= 7; i++) workedMin += Number(worked[dayKey(addDays(now, -i, 12))]) || 0;
     const box = card("New week: " + plural(fw.length, "unfinished block") + " from last week. Move them into this week?",
       btn("Move them", () => { srv.resetAt = Date.now(); moveLeft(7); }, "sage"),
-      btn("Let them go", () => { srv.resetAt = Date.now(); post({ action: "reset", keep: false }); say("Clean week.", 5000); }),
-      btn("Copy my top 3", () => copyTop3(now)));
+      btn("Let them go", () => { srv.resetAt = Date.now(); post({ action: "reset", keep: false }); say("Clean week.", 5000); }));
     if (plannedMin) box.insertBefore(h("p", { class: "hint", text: "Last week: " + fmtMins(plannedMin) + " planned, " + fmtMins(workedMin) + " on the clock (" + Math.min(999, Math.round(workedMin / plannedMin * 100)) + "% of the plan)." }), box.children[1]);
     return box;
   }
@@ -2555,7 +2474,7 @@ function editDue(x) {
     chip("Due", dayLabel(st.day, now), (e) => pickDay(e.currentTarget, st.day, (k) => { st.day = k; draw(); }, { title: "Due" })),
     chip("Time", st.time || "", (e) => pickTime(e.currentTarget, st.time, (t) => { st.time = t; draw(); }, { classAt: classStart(st.course, st.day), title: "Due time" }), { cls: st.time ? "" : "soft" }),
     chip(st.course ? "" : "Class", st.course || "", (e) => pickCourse(e.currentTarget, st.course, (k) => { st.course = k; draw(); }), { color: st.course ? colorOf(st.course) : null, title: "Class" }),
-    chip("Type", st.type ? typeLabel(st.type) : "", (e) => pickType(e.currentTarget, st.type, (k) => { st.type = k; draw(); }), { cls: st.type ? "" : "soft" }));
+    );
   draw();
   const save = () => {
     const title = withType(withCourse(name.value.trim() || name0, st.course), st.type);
@@ -3034,8 +2953,6 @@ function composer() {
         chip("Due", dayLabel(v.day, now), (e) => pickDay(e.currentTarget, v.day, (k) => { cd.day = k; upd(); }, { title: "Due" }), { cls: cd.day || v.p.day ? "" : "soft" }),
         chip("Time", v.time || "", (e) => pickTime(e.currentTarget, v.time, (t) => { cd.time = t; upd(); }, { classAt: v.classAt, title: "Due time" }), { cls: v.time ? "" : "soft" }),
         chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
-        chip("Type", v.type ? typeLabel(v.type) : "", (e) => pickType(e.currentTarget, v.type, (k) => { cd.type = k; upd(); }), { cls: v.type ? "" : "soft" }),
-        chip("Repeat", v.repeat ? repeatLabel(v.repeat, v.days.length) : "", (e) => pickRepeat(e.currentTarget, { repeat: v.repeat, count: v.count }, (rep, n) => { cd.repeat = rep; if (n) cd.count = n; upd(); }), { cls: v.repeat ? "" : "soft" }),
         h("button", { type: "button", class: "chip-btn star-chip" + (v.star ? " set" : ""), "aria-pressed": v.star ? "true" : "false", title: "Star it (or add !)",
           onclick: () => { cd.star = !v.star; upd(); } }, ico("star"), h("span", { class: "cl", text: v.star ? "Starred" : "Star" })),
         h("button", { type: "button", class: "chip-btn" + (cd.notes != null ? " set" : " soft"), onclick: () => { cd.notes = cd.notes == null ? "" : cd.notes; notes.hidden = false; notes.focus(); draw(); } },
@@ -3049,7 +2966,6 @@ function composer() {
         h("span", { class: "durs", role: "group", "aria-label": "Length" }, dur.map((m) => h("button", { type: "button", class: "mini", "aria-pressed": v.mins === m ? "true" : "false",
           onclick: () => { cd.mins = m; upd(); }, text: m < 60 ? m + "m" : m / 60 + "h" }))),
         chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
-        chip("Template", v.tpl ? v.tpl.name : "", (e) => menu(e.currentTarget, [{ label: (!v.tpl ? "✓ " : "") + "None", run: () => { cd.tpl = null; upd(); } }].concat(TEMPLATES.map((T) => ({ label: (v.tpl === T ? "✓ " : "") + T.name, kbd: hoursText(T.mins), run: () => { cd.tpl = T; cd.mins = T.mins; upd(); } })))), { cls: v.tpl ? "" : "soft", title: "Length, learning modes and steps for this kind of work" }),
         chip("At", v.where, (e) => menu(e.currentTarget, ["Library", "Dorm desk", "Butler", "Lerner"].map((w) => ({ label: w, run: () => { cd.where = w; upd(); } })))),
         chip("For", "", (e) => pickDeadline(e.currentTarget, (x) => { cd.text = x.title + (cd.text ? " " + parseQuick(cd.text, now).hits.join(" ") : ""); cd.course = x.course || null; inp.value = cd.text; upd(); }), { cls: "soft", title: "Plan time for a deadline" }));
       if (v.clash) parts.push(h("span", { class: "clash", text: "Overlaps " + v.clash.title + " " + fmtTime(v.clash.start) + "–" + fmtTime(v.clash.end) }));
@@ -3118,12 +3034,9 @@ function taskMenu(x, anchor, at) {
     own && { label: "Rename", kbd: "R", run: () => renameInline(x) },
     own && { label: "Change date…", kbd: "T", run: () => pickDay(anchorFor(), x.d.day, (k) => updateDue(x, { day: k }), { title: "Move to" }) },
     own && dayKey(addDays(now, 1, 12)) !== x.d.day && { label: "Move to tomorrow", run: () => updateDue(x, { day: dayKey(addDays(now, 1, 12)) }) },
-    own && { label: "Change time…", run: () => pickTime(anchorFor(), x.d.dueAt ? fmtTime(x.d.dueAt) : null, (tv) => updateDue(x, { time: tv }), { classAt: classStart(x.course, x.d.day), title: "Due time" }) },
     own && { label: "Change class…", run: () => pickCourse(anchorFor(), x.course, (k) => updateDue(x, { title: withCourse(name, k) })) },
-    own && { label: "Change type…", run: () => pickType(anchorFor(), typeOf(name), (k) => updateDue(x, { title: withType(name, k) })) },
     !x.done && { label: star ? "Unstar" : "Star", kbd: "S", run: () => setStar(x, !star, now) },
     !x.done && { label: "Merge with…", run: () => pickMergeTarget(x, anchorFor()) },
-    own && { label: "Duplicate", run: () => { const ev = evOf(ownRef(x)); createDue({ title: name + " (copy)", day: x.d.day, time: x.d.dueAt ? fmtTime(x.d.dueAt) : "", notes: ev ? ev.notes : "" }); } },
     !x.auto && { label: x.done ? "Mark not done" : "Mark done", kbd: "D", run: () => toggleDone(x) },
     "-",
     own ? { label: "Delete", kbd: "Del", danger: true, run: () => deleteDue(x) }
@@ -3157,7 +3070,7 @@ function renameInline(x) {
 // ---- Right-click (or ⋯) on a block
 function blockMenu(ev, anchor, at) {
   const study = ev.src === "study" && !ev.pending;
-  const now = new Date(), len = ev.end - ev.start;
+  const now = new Date();
   if (!study) return menu(anchor, [{ label: "Details", run: () => openEvent(ev, anchor) }, { label: "Open in Google Calendar ↗", run: () => window.open(gcalLink(ev), "_blank", "noopener") }], at);
   menu(anchor, [
     { label: "Edit…", kbd: "Enter", run: () => editBlock(ev) },
@@ -3166,12 +3079,9 @@ function blockMenu(ev, anchor, at) {
     { label: "Rename…", run: () => quickRename(ev, anchor, at) },
     { label: "Change class…", run: () => pickCourse(anchor || document.body, courseOf(ev.title), (k) => renameBlock(ev, withCourse(ev.title, k))) },
     "-",
-    { label: "15 min later", kbd: "Alt ↓", run: () => moveBlock(ev, ev.start + 15 * 60000, ev.end + 15 * 60000) },
-    { label: "15 min earlier", kbd: "Alt ↑", run: () => moveBlock(ev, ev.start - 15 * 60000, ev.end - 15 * 60000) },
     { label: "Move to tomorrow", run: () => moveBlock(ev, ev.start + DAY, ev.end + DAY) },
     { label: "Next free slot", run: () => apiPost({ action: "saveBlock", block: { cal: "study", id: ev.id, start: ev.start }, nextFree: true })
       .then((d) => { const from = { s: ev.start, e: ev.end }; toast("Moved to " + whenText(d.start) + " · “" + ev.title + "”", () => moveBlockById(d, from)); load(); }, (err) => toast("Didn't move it: " + errText(err) + ".")) },
-    { label: "Duplicate right after", run: () => createBlock({ title: ev.title, start: ev.end, end: ev.end + len, where: ev.where, steps: stepsOf(ev).map((s) => ({ text: s.text, digest: s.digest })), modes: ev.modes }) },
     { label: "Duplicate tomorrow", run: () => createBlock({ title: ev.title, start: ev.start + DAY, end: ev.end + DAY, where: ev.where, steps: stepsOf(ev).map((s) => ({ text: s.text, digest: s.digest })), modes: ev.modes }) },
     ev.end <= now.getTime() && checkable(ev) && "-",
     ev.end <= now.getTime() && checkable(ev) && { label: "Went: Done", run: () => rateBlock(ev, "done") },
@@ -3394,8 +3304,7 @@ function quickCreate(a, b, anchor, onClose) {
   const tplNow = () => (st.tpl !== undefined ? st.tpl : templateFor(inp.value));
   const draw = () => {
     const T = tplNow();
-    tplRow.replaceChildren(h("span", { class: "hint", text: "Kind:" }), ...TEMPLATES.map((X) => h("button", { type: "button", class: "mini", "aria-pressed": T === X ? "true" : "false",
-      title: X.steps.length ? "Steps: " + X.steps.join(" · ") : "", onclick: () => { st.tpl = T === X ? null : X; if (st.tpl) st.b = st.a + X.mins * 60000; draw(); inp.focus(); }, text: X.name })));
+    tplRow.replaceChildren(T ? h("span", { class: "hint", text: T.name + " · " + plural(T.steps.length, "step") + " ready" }) : null);
     const course = st.course !== undefined ? st.course : courseOf(inp.value);
     const clash = timedFor(events, new Date(st.a)).filter((e) => e.src !== "sleep" && e.start < st.b && e.end > st.a)[0] || sleepClash(st.a, st.b);
     when.replaceChildren(h("b", { text: whenText(st.a) + "–" + fmtTime(st.b) }), h("span", { text: " · " + fmtDur(st.b - st.a) }),
@@ -3459,8 +3368,7 @@ function openPalette(seed) {
     shownCourses().filter((k) => !q || match(k + " " + COURSES[k].name)).slice(0, q ? 3 : 0).forEach((k) =>
       rows.push({ group: "Classes", label: nameOf(k), meta: "show its work", color: colorOf(k), run: () => setFilter(k) }));
     [["New task", "N", () => focusComposer("task")], ["New block", "B", () => focusComposer("block")], ["Start or pause the timer", "", () => toggleTimer()],
-      ["Full-screen timer", "F", () => setFs(true)], ["Sound: off", "", () => setSound("off")], ["Show To do", "", () => setView("todo")], ["Show Classes", "", () => setView("classes")], ["Keyboard shortcuts", "?", () => showKeys()]]
-      .concat(SOUNDS.map((x) => ["Sound: " + x.name.toLowerCase(), "", () => setSound(x.id)]))
+      ["Full-screen timer", "F", () => setFs(true)], ["Show To do", "", () => setView("todo")], ["Show Classes", "", () => setView("classes")], ["Keyboard shortcuts", "?", () => showKeys()]]
       .filter(([l]) => !q || match(l)).forEach(([l, k, run]) => rows.push({ group: "Actions", label: l, meta: k, run }));
     sel = Math.min(sel, Math.max(0, rows.length - 1));
     let lastGroup = "";
@@ -3497,10 +3405,8 @@ function openTask(x) {
   const r = rowOf(x); if (r) { r.scrollIntoView({ block: "center", behavior: "smooth" }); r.focus({ preventScroll: true }); }
 }
 function showKeys() {
-  const rows = [["N", "New task"], ["B", "New block"], ["Ctrl/⌘ K", "Command bar: search or add anything"], ["Ctrl/⌘ Z", "Undo the last change"],
-    ["↑ ↓ or J K", "Move between tasks"], ["Enter", "Open a task"], ["E", "Edit"], ["R", "Rename"], ["T", "Change the date"], ["D", "Done"], ["S", "Star"],
-    ["X or ⌘/Ctrl-click", "Select several (Shift for a range)"], ["G", "Start the timer on it"], ["P", "Plan time for it"], ["Delete", "Delete (your own tasks and blocks)"], ["Right-click or M", "All actions"],
-    ["Alt ↑ ↓", "Move a block 15 min (on the timeline)"], ["F", "Full-screen timer"]];
+  const rows = [["Space", "Start or pause the timer"], ["N", "New task"], ["Ctrl/⌘ K", "Search or add anything"], ["Ctrl/⌘ Z", "Undo"],
+    ["↑ ↓", "Move between tasks"], ["Enter", "Open one"], ["D", "Done"], ["F", "Full-screen timer"], ["Right-click", "Everything else"]];
   openDrawer("Keyboard shortcuts", h("dl", { class: "keys-list" }, rows.flatMap(([k, v]) => [h("dt", null, h("span", { class: "kbd", text: k })), h("dd", { text: v })])));
 }
 function newMenu(anchor) {
@@ -3843,7 +3749,7 @@ function loadLine(dayMs) {
 // ---- List filters
 let listFilter = store("deskboard-filter") || "all";
 let filtersOpen = false;
-const FILTERS = [["all", "All"], ["unplanned", "Not planned"], ["exams", "Exams & quizzes"], ["mine", "Added by me"], ["canvas", "From Canvas"]];
+const FILTERS = [["all", "All"], ["unplanned", "Not planned"], ["exams", "Exams & quizzes"]];
 function passesFilter(x) {
   if (listFilter === "unplanned") return !x.done && !x.past && !x.planned.min;
   if (listFilter === "exams") return isExam(x.d);
@@ -4137,8 +4043,7 @@ function renderFs(now) {
 $("#fs-time").addEventListener("click", () => setFs(false));
 $("#fs-exit").addEventListener("click", () => setFs(false));
 $("#fs-keep").addEventListener("click", keepGoing);
-$("#fs-sound").addEventListener("click", () => setSound(sound ? "off" : soundId));
-$("#fs-sound-more").addEventListener("click", (e) => soundMenu(e.currentTarget));
+$("#fs-sound").addEventListener("click", () => setSound(!sound));
 $("#fs-toggle").addEventListener("click", () => { toggleTimer(); renderFs(new Date()); });
 $("#fs-reset").addEventListener("click", () => { resetTimer(); renderFs(new Date()); });
 $("#fs-discard").addEventListener("click", discardTimer);
@@ -4169,7 +4074,7 @@ document.addEventListener("keydown", (e) => {
 
 // The sound was on when you last closed the board, so bring it back at the first touch.
 if (store("deskboard-sound-on")) {
-  const resume = () => { document.removeEventListener("pointerdown", resume, true); document.removeEventListener("keydown", resume, true); if (!sound) setSound(soundId); };
+  const resume = () => { document.removeEventListener("pointerdown", resume, true); document.removeEventListener("keydown", resume, true); if (!sound) setSound(true); };
   document.addEventListener("pointerdown", resume, true);
   document.addEventListener("keydown", resume, true);
 }
