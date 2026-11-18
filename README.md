@@ -136,6 +136,19 @@ Built around the patterns that actually cost grades, so they're there without be
 - **Quick add:** "tonight" / "this evening" (today, 21:00) and "someday" (four weeks out, so it stops nagging).
 - Ticking a task pops the check before the row goes.
 
+### Styles
+
+Three skins over one structure, in the sidebar under **Style** (or Ctrl/⌘K → "style"). Each one
+sets the same tokens, so every control keeps its shape, its place, its wording and its weight;
+only the surface changes. Each follows the light or dark setting of the machine it's on.
+
+- **Paper** — warm and quiet. The default.
+- **Ink** — flat and neutral, hairline rules, plain tabular numbers.
+- **Signal** — bigger type, heavier edges, stronger colour, for reading from across the room.
+
+All three were checked for contrast in light and dark: every piece of text that carries meaning
+clears WCAG AA (4.5:1). It's a setting you pick once, not a decision in the middle of work.
+
 ### What was deliberately left out
 
 The board is for one person, one semester, five classes. Anything that was a second way to say

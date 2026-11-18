@@ -34,14 +34,14 @@
   --line: #ddd7c8;
   --ink: #15301b;
   --ink-2: #4a5d4c;
-  --ink-3: #7d8a7c;
+  --ink-3: #5f6c5e;
   --sage: #86a98c;
-  --sage-deep: #5f8a67;
+  --sage-deep: #47724f;
   --mint: #cfe6c8;
   --lcd: #bfdcb8;
   --alert: #b4532a;
   --alert-bg: #f6e1d6;
-  --warn: #a8761c;
+  --warn: #905e04;
   --warn-bg: #f4ead2;
   --ok: #3f7d4c;
   --shadow: 0 1px 0 rgba(21, 48, 27, 0.04), 0 6px 18px rgba(21, 48, 27, 0.06);
@@ -61,6 +61,62 @@
     color-scheme: dark;
   }
 }
+/* ---------- Styles ----------
+   Three skins over one structure. Each sets the same tokens, so every component keeps its
+   shape, its hierarchy and its signifiers; only the surface changes. Pick one once. */
+:root[data-style="ink"] {
+  --page: #f2f2f0; --page-2: #e9e9e6; --card: #fff; --card-2: #f5f5f3; --line: #d8d8d4;
+  --ink: #16181c; --ink-2: #4b4f57; --ink-3: #686d76; --sage: #5c6672; --sage-deep: #2c313a; --mint: #e6e8ec; --lcd: #dfe2e6;
+  --alert: #b23b2e; --alert-bg: #f6e5e2; --warn: #8a6a12; --warn-bg: #f3ecd8; --ok: #2f6d46;
+  --shadow: 0 1px 0 rgba(0, 0, 0, 0.04); --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --f-num: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --f-label: "Hanken Grotesk", system-ui, sans-serif;
+  --radius: 10px;
+}
+:root[data-style="signal"] {
+  --page: #f6f4ec; --page-2: #ebe7da; --card: #fff; --card-2: #f2efe4; --line: #2a2a24;
+  --ink: #101010; --ink-2: #33332c; --ink-3: #5c5c52; --sage: #1f6b3a; --sage-deep: #14512b; --mint: #bfe7c6; --lcd: #bfe7c6;
+  --alert: #a5260f; --alert-bg: #ffd9cf; --warn: #7a5200; --warn-bg: #ffe9b8; --ok: #14512b;
+  --shadow: 0 2px 0 rgba(0, 0, 0, 0.12); --shadow-lift: 0 6px 0 rgba(0, 0, 0, 0.18);
+  --radius: 8px;
+  font-size: 17.5px;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-style="ink"]:not([data-theme="light"]) {
+    --page: #0f1012; --page-2: #141518; --card: #1a1c1f; --card-2: #212328; --line: #30333a;
+    --ink: #eceef2; --ink-2: #b2b7c0; --ink-3: #80858f; --sage: #8d97a5; --sage-deep: #cdd3dc; --mint: #262a31; --lcd: #2a2e35;
+    --alert: #f0836f; --alert-bg: #35201c; --warn: #d9b25e; --warn-bg: #332a16; --ok: #7fc99b;
+    color-scheme: dark;
+  }
+  :root[data-style="signal"]:not([data-theme="light"]) {
+    --page: #000; --page-2: #0b0b0b; --card: #141414; --card-2: #1c1c1c; --line: #d8d8d0;
+    --ink: #fff; --ink-2: #e2e2da; --ink-3: #b0b0a6; --sage: #76e49a; --sage-deep: #9df5b8; --mint: #15351f; --lcd: #15351f;
+    --alert: #ff8f6b; --alert-bg: #3d1a0d; --warn: #ffcc4d; --warn-bg: #3a2c00; --ok: #76e49a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"][data-style="ink"] {
+  --page: #0f1012; --page-2: #141518; --card: #1a1c1f; --card-2: #212328; --line: #30333a;
+  --ink: #eceef2; --ink-2: #b2b7c0; --ink-3: #80858f; --sage: #8d97a5; --sage-deep: #cdd3dc; --mint: #262a31; --lcd: #2a2e35;
+  --alert: #f0836f; --alert-bg: #35201c; --warn: #d9b25e; --warn-bg: #332a16; --ok: #7fc99b;
+}
+:root[data-theme="dark"][data-style="signal"] {
+  --page: #000; --page-2: #0b0b0b; --card: #141414; --card-2: #1c1c1c; --line: #d8d8d0;
+  --ink: #fff; --ink-2: #e2e2da; --ink-3: #b0b0a6; --sage: #76e49a; --sage-deep: #9df5b8; --mint: #15351f; --lcd: #15351f;
+  --alert: #ff8f6b; --alert-bg: #3d1a0d; --warn: #ffcc4d; --warn-bg: #3a2c00; --ok: #76e49a;
+}
+/* Ink is flat and quiet: no pixel labels, plain tabular numbers, hairline rules. */
+[data-style="ink"] .label, [data-style="ink"] .side h3 { letter-spacing: 0.1em; font-weight: 700; font-size: 0.68rem; }
+[data-style="ink"] .fs-time, [data-style="ink"] .big-time { letter-spacing: -0.02em; font-weight: 700; }
+/* Signal is for reading from across the room: heavier edges, stronger weights. */
+[data-style="signal"] .panel, [data-style="signal"] .group, [data-style="signal"] .chip-btn, [data-style="signal"] .pill-btn,
+[data-style="signal"] .mini, [data-style="signal"] .tl-ev, [data-style="signal"] .exam, [data-style="signal"] .wk-d,
+[data-style="signal"] .gofab, [data-style="signal"] .composer { border-width: 2px; }
+[data-style="signal"] .task-title, [data-style="signal"] .tl-ev b { font-weight: 700; }
+/* the hour rules are a backdrop, not a border: keep them light even where edges are heavy */
+[data-style="signal"] .tl-hour { border-top-color: color-mix(in srgb, var(--line) 28%, var(--card)); }
+[data-style="signal"] .side .nav-btn.on { outline: 2px solid var(--sage-deep); outline-offset: -2px; }
+
 :root[data-theme="dark"] {
   --page: #111713; --page-2: #161e18; --card: #1a231c; --card-2: #212b23; --line: #2e3a30;
   --ink: #e4eedf; --ink-2: #b4c4b0; --ink-3: #85947f; --sage: #86a98c; --sage-deep: #9cc4a3; --mint: #23352a; --lcd: #2c4433;
@@ -211,6 +267,9 @@ body.night .gofab { display: none; }
 .course-item .dot { width: 12px; height: 12px; border-radius: 4px; background: var(--course); flex: none; }
 .course-item .nm { min-width: 0; line-height: 1.25; overflow-wrap: anywhere; }
 .side-foot { margin: 22px 0 0 14px; font-size: 0.78rem; color: var(--ink-3); line-height: 1.9; }
+.side-style { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 6px; padding: 7px 10px; border: 0; border-radius: 10px; background: none; color: var(--ink-3); font: inherit; font-size: 0.82rem; cursor: pointer; }
+.side-style:hover { background: var(--card-2); color: var(--ink-2); }
+.side-style .sw { width: 13px; height: 13px; border-radius: 4px; border: 1px solid var(--line); background: linear-gradient(135deg, var(--sage-deep) 50%, var(--card) 50%); }
 .side-foot summary { cursor: pointer; list-style: none; font-weight: 500; }
 .side-foot summary::-webkit-details-marker { display: none; }
 .side-foot summary::before { content: "⌨  "; }
@@ -488,6 +547,7 @@ body.night .composer { display: none; }
 .chip-btn .cl { color: var(--ink-3); font-weight: 600; }
 .chip-btn .cv { color: var(--ink); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip-btn.soft { border-style: dashed; }
+.chip-btn.flat { cursor: default; background: var(--card-2); color: var(--ink-2); }
 .chip-btn.set.star-chip, .chip-btn.star-chip[aria-pressed="true"] { color: var(--gold, #b88a2e); border-color: currentColor; }
 .chip-btn .ico { width: 14px; height: 14px; }
 .chip-btn .dot, .mi .dot, .pal-row .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; display: inline-block; }
@@ -833,6 +893,13 @@ function parseEvents(list) {
 
 // Conditional children: append(cond ? node : null) adds nothing, instead of the text "null".
 ["append", "replaceChildren"].forEach((m) => { const orig = Element.prototype[m]; Element.prototype[m] = function (...kids) { return orig.apply(this, kids.flat().filter((k) => k != null && k !== false)); }; });
+const STYLES = [["paper", "Paper", "Warm and quiet, the default"], ["ink", "Ink", "Flat and neutral, hairline rules"], ["signal", "Signal", "Bigger and heavier, for reading across the room"]];
+function setStyle(id) {
+  const k = STYLES.some((x) => x[0] === id) ? id : "paper";
+  document.documentElement.setAttribute("data-style", k);
+  try { localStorage.setItem("deskboard-style", JSON.stringify(k)); } catch (e) {}
+}
+setStyle((() => { try { return JSON.parse(localStorage.getItem("deskboard-style")); } catch (e) { return "paper"; } })());
 const $ = (sel, root) => (root || document).querySelector(sel);
 const h = (tag, attrs, ...kids) => {
   const el = document.createElement(tag);
@@ -1107,7 +1174,7 @@ function paintSound() {
 /* ---------- The headphone button ----------
    Web Audio on its own doesn't own the system's media controls, so a near-silent looping
    element does: once it's playing, macOS, the menu bar and the AirPods stem all talk to us. */
-let mediaEl = null;
+let mediaEl = null, mediaShown = "";
 function silentWav() {
   const sr = 8000, n = sr * 2, bytes = 44 + n * 2, b = new ArrayBuffer(bytes), v = new DataView(b);
   const str = (at, t) => { for (let i = 0; i < t.length; i++) v.setUint8(at + i, t.charCodeAt(i)); };
@@ -1144,7 +1211,8 @@ function paintMedia() {
     if (hold && mediaEl.paused) mediaEl.play().catch(() => {});
     else if (!hold && !mediaEl.paused) mediaEl.pause();
     const title = (pomo.due && pomo.due.title) || (blk && blk.title) || "Desk Board";
-    navigator.mediaSession.metadata = new MediaMetadata({ title, artist: timerText(pomo, t) + " · " + timerLabel(pomo, t).toLowerCase(), album: "Desk Board" });
+    const artist = timerText(pomo, t) + " · " + timerLabel(pomo, t).toLowerCase();
+    if (mediaShown !== title + "|" + artist) { mediaShown = title + "|" + artist; navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: "Desk Board" }); }
     navigator.mediaSession.playbackState = timerRunning(pomo) ? "playing" : "paused";
   } catch (e) {}
 }
@@ -1747,8 +1815,10 @@ function renderSide(now) {
     h("div", null, h("span", { class: "kbd", text: "N" }), " new task · ", h("span", { class: "kbd", text: "B" }), " new block · ", h("span", { class: "kbd", text: "⌘K" }), " search"),
     h("div", { text: "Right-click anything for more. Drag to reorder or star." }),
     h("button", { class: "edit-link", type: "button", onclick: showKeys, text: "All shortcuts" }));
+  const styleBtn = h("button", { class: "side-style", type: "button", "aria-haspopup": "menu", title: "How the board looks",
+    onclick: (e) => styleMenu(e.currentTarget) }, h("span", { class: "sw", "aria-hidden": "true" }), "Style");
   help.addEventListener("toggle", () => store("deskboard-keys", help.open ? 1 : 0));
-  side.append(help);
+  side.append(help, styleBtn);
   return side;
 }
 
@@ -1936,7 +2006,7 @@ function renderNow(now) {
   if (notStarted) main.querySelector(".label").textContent = "Now · " + fmtDur(t - ev.start).replace(" min", " min") + " in, not started";
   const act = h("div", { class: "hero-act" },
     h("div", { class: "big-time" }, fmtDur(remaining).replace(" min", "m"), h("small", { text: isNow ? "left in block" : "until it starts" })),
-    ev.src === "study" && (isNow || ev.start - t <= 2 * 3600000) ? h("button", { class: "pill-btn primary big", type: "button", onclick: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); },
+    ev.src === "study" && (isNow || ev.start - t <= 2 * 3600000) ? h("button", { class: "pill-btn primary big", type: "button", "data-timer": "1", onclick: () => { toggleTimer(); if (timerRunning(pomo)) setFs(true); },
       text: timerRunning(pomo) ? "Pause timer" : notStarted ? "Start · just step 1" : isNow ? "Start timer" : "Start early" }) : null);
   panel.append(main, act);
   return panel;
@@ -2138,13 +2208,16 @@ function renderGo(now) {
   const t = now.getTime(), on = timerRunning(pomo);
   const blk = studyBlockAt(t), mid = pomo.mode === "flow" ? pomo.acc > 0 : pomo.left < TIMER_LEN.focus;
   let want = conn.ok && !(inSleep(now) && !nightPass()) && (on || mid || (blk && !/\b(eat|break|lunch|dinner|breakfast|commute|sleep)\b/i.test(blk.title)));
-  const hero = $(".now.hero .hero-act .pill-btn.primary");
+  const hero = $(".now.hero [data-timer]");
   if (want && hero) { const r = hero.getBoundingClientRect(); if (r.top >= 0 && r.bottom <= innerHeight) want = false; }
   let el = $("#gofab");
   if (!want) { if (el) el.remove(); return; }
   const label = on ? "Pause" : mid ? "Resume" : "Start";
   const sub = on ? timerText(pomo, t) : blk ? blk.title : "";
   if (!el) { el = h("button", { class: "gofab", id: "gofab", type: "button", onclick: toggleTimer }); document.body.append(el); }
+  const shown = label + "|" + sub;
+  if (el.dataset.shown === shown) return;
+  el.dataset.shown = shown;
   el.classList.toggle("on", on);
   el.title = label + " the timer (space)";
   el.replaceChildren(h("span", { class: on ? "ico-pause" : "ico-play", "aria-hidden": "true" }), h("span", { text: label }),
@@ -2654,7 +2727,6 @@ const TYPES = [
   { k: "exam", label: "Exam or test", word: "exam", rx: /\b(exam|test|midterm|final)\b/i }
 ];
 const typeOf = (title) => (TYPES.slice(1).reverse().find((T) => T.rx.test(title)) || TYPES[0]).k;
-const typeLabel = (k) => (TYPES.find((T) => T.k === k) || TYPES[0]).label;
 function withType(title, k) {
   const T = TYPES.find((x) => x.k === k);
   return !T || !T.word || T.rx.test(title) ? title : title + " " + T.word;
@@ -2761,9 +2833,6 @@ function pickCourse(anchor, current, onPick) {
   q.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); const b = list.querySelector(".mi"); if (b) b.click(); } });
   draw();
   openPop(anchor, [h("div", { class: "row pad" }, q), list], { cls: "coursepop" });
-}
-function pickType(anchor, current, onPick) {
-  menu(anchor, TYPES.map((T) => ({ label: (T.k === current ? "✓ " : "") + T.label, run: () => onPick(T.k) })));
 }
 // A chip button: icon-ish label + value, opens a picker.
 function chip(label, value, onclick, o) {
@@ -2955,6 +3024,7 @@ function composer() {
         chip(v.course ? "" : "Class", v.course || "", (e) => pickCourse(e.currentTarget, v.course, (k) => { cd.course = k; upd(); }), { color: v.course ? colorOf(v.course) : null, title: "Class" }),
         h("button", { type: "button", class: "chip-btn star-chip" + (v.star ? " set" : ""), "aria-pressed": v.star ? "true" : "false", title: "Star it (or add !)",
           onclick: () => { cd.star = !v.star; upd(); } }, ico("star"), h("span", { class: "cl", text: v.star ? "Starred" : "Star" })),
+        v.days.length > 1 ? h("span", { class: "chip-btn flat" }, h("span", { class: "cl", text: "Repeats · " + v.days.length + " dates" })) : null,
         h("button", { type: "button", class: "chip-btn" + (cd.notes != null ? " set" : " soft"), onclick: () => { cd.notes = cd.notes == null ? "" : cd.notes; notes.hidden = false; notes.focus(); draw(); } },
           h("span", { class: "cl", text: "Notes" })));
     } else {
@@ -2993,7 +3063,7 @@ function composer() {
     if (!v.title && cd.mode === "task") { inp.classList.add("shake"); setTimeout(() => inp.classList.remove("shake"), 400); inp.focus(); return; }
     if (cd.mode === "task") {
       const title = withType(withCourse(v.title, v.course), v.type);
-      if (v.days.length > 1) createDues(v.days.map((day) => ({ title, day, time: v.time || "", notes: cd.notes || "" })), "Added " + v.days.length + " × “" + dueName(title) + "” (" + repeatLabel(v.repeat, v.days.length).split(" · ")[0].toLowerCase() + ")");
+      if (v.days.length > 1) createDues(v.days.map((day) => ({ title, day, time: v.time || "", notes: cd.notes || "", star: v.star })), "Added " + v.days.length + " × “" + dueName(title) + "” (" + repeatLabel(v.repeat, v.days.length).split(" · ")[0].toLowerCase() + ")");
       else createDue({ title, day: v.day, time: v.time || "", notes: cd.notes || "", star: v.star }).catch(() => {});
     } else {
       if (isNaN(v.start)) { toast("Check the start time (24-hour, like 14:00)."); return; }
@@ -3368,7 +3438,9 @@ function openPalette(seed) {
     shownCourses().filter((k) => !q || match(k + " " + COURSES[k].name)).slice(0, q ? 3 : 0).forEach((k) =>
       rows.push({ group: "Classes", label: nameOf(k), meta: "show its work", color: colorOf(k), run: () => setFilter(k) }));
     [["New task", "N", () => focusComposer("task")], ["New block", "B", () => focusComposer("block")], ["Start or pause the timer", "", () => toggleTimer()],
-      ["Full-screen timer", "F", () => setFs(true)], ["Show To do", "", () => setView("todo")], ["Show Classes", "", () => setView("classes")], ["Keyboard shortcuts", "?", () => showKeys()]]
+      ["Full-screen timer", "F", () => setFs(true)]]
+      .concat(STYLES.map(([k, name]) => ["Style: " + name.toLowerCase(), "", () => { setStyle(k); render(); }]))
+      .concat([["Show To do", "", () => setView("todo")], ["Show Classes", "", () => setView("classes")], ["Keyboard shortcuts", "?", () => showKeys()]])
       .filter(([l]) => !q || match(l)).forEach(([l, k, run]) => rows.push({ group: "Actions", label: l, meta: k, run }));
     sel = Math.min(sel, Math.max(0, rows.length - 1));
     let lastGroup = "";
@@ -3403,6 +3475,11 @@ function openTask(x) {
   expanded = x.key; collapsed[groupOf(x, new Date())] = false;
   render();
   const r = rowOf(x); if (r) { r.scrollIntoView({ block: "center", behavior: "smooth" }); r.focus({ preventScroll: true }); }
+}
+// The skin, set once. The controls, their order and their words are the same in all three.
+function styleMenu(anchor) {
+  const cur = document.documentElement.getAttribute("data-style") || "paper";
+  menu(anchor, STYLES.map(([k, name, hint]) => ({ label: (cur === k ? "✓ " : "") + name, kbd: hint, run: () => { setStyle(k); render(); } })));
 }
 function showKeys() {
   const rows = [["Space", "Start or pause the timer"], ["N", "New task"], ["Ctrl/⌘ K", "Search or add anything"], ["Ctrl/⌘ Z", "Undo"],
@@ -3504,6 +3581,11 @@ function parseRepeat(s, out, now) {
   });
   return s;
 }
+function repeatLabel(rep, n) {
+  if (!rep) return "";
+  const names = { daily: "Every day", weekdays: "Weekdays", weekly: rep.every === 2 ? "Every 2 weeks" : "Weekly" };
+  return (names[rep.kind] || "Every " + rep.days.map((d) => WEEKDAYS[d][0].toUpperCase() + WEEKDAYS[d].slice(1)).join(", ")) + " · " + n + "×";
+}
 function occurrences(first, rep, count, until) {
   if (!rep) return [first];
   const max = Math.min(30, count || (rep.kind === "daily" ? 14 : rep.kind === "weekdays" ? 10 : 8));
@@ -3519,22 +3601,6 @@ function occurrences(first, rep, count, until) {
   }
   return out.length ? out : [first];
 }
-function repeatLabel(rep, n) {
-  if (!rep) return "";
-  const names = { daily: "Every day", weekdays: "Weekdays", weekly: rep.every === 2 ? "Every 2 weeks" : "Weekly" };
-  return (names[rep.kind] || "Every " + rep.days.map((d) => WEEKDAYS[d][0].toUpperCase() + WEEKDAYS[d].slice(1)).join(", ")) + " · " + n + "×";
-}
-function pickRepeat(anchor, cur, onPick) {
-  menu(anchor, [
-    { label: (!cur.repeat ? "✓ " : "") + "Doesn't repeat", run: () => onPick(null) },
-    { label: "Every day", run: () => onPick({ kind: "daily" }) },
-    { label: "Weekdays", run: () => onPick({ kind: "weekdays" }) },
-    { label: "Every week", run: () => onPick({ kind: "weekly", every: 1 }) },
-    { label: "Every 2 weeks", run: () => onPick({ kind: "weekly", every: 2 }) },
-    "-",
-    ...[4, 8, 12, 16].map((n) => ({ label: (cur.count === n ? "✓ " : "") + n + " times", disabled: !cur.repeat, run: () => onPick(cur.repeat, n) }))
-  ]);
-}
 // Many deadlines in one request, shown at once, with one Undo for all of them.
 function createDues(list, label) {
   const temps = list.map((o) => ({ id: tmpId(), src: "personal", title: dueName(o.title) + " due" + (o.time ? " " + o.time : ""), allDay: true,
@@ -3544,6 +3610,8 @@ function createDues(list, label) {
     const refs = [];
     d.results.forEach((r, i) => { if (r.ok && r.ref) { Object.assign(temps[i], { id: r.ref.id, src: r.ref.cal, start: Number(r.ref.start), pending: false }); refs.push(r.ref); } else removeEv(temps[i]); });
     render();
+    const now = new Date();
+    list.forEach((o, i) => { if (o.star && !temps[i].pending) { const x = itemFor(temps[i]); if (x) setStar(x, true, now); } });
     toast((label || "Added " + refs.length + " tasks") + (d.failed ? " (" + d.failed + " didn't save)" : ""),
       () => { temps.forEach(removeEv); render(); return batchPost(refs.map((ref) => ({ action: "deleteDue", ref }))).then(load); });
     load();
