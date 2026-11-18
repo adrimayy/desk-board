@@ -18,6 +18,12 @@
   var want = pin === "board" || pin === "desk" ? pin : (phone ? "board" : "desk");
   var here = /desk\.html$/i.test(location.pathname) ? "desk" : "board";
   if (want !== here) location.replace((want === "desk" ? "desk.html" : "index.html") + location.hash);
+  try {
+    var ask = new URLSearchParams(location.search).get("style");
+    if (ask) localStorage.setItem("deskboard-style", JSON.stringify(ask));
+    var cur = JSON.parse(localStorage.getItem("deskboard-style") || "\"paper\"");
+    document.documentElement.setAttribute("data-style", ["paper", "ink", "signal", "cockpit"].indexOf(cur) >= 0 ? cur : "paper");
+  } catch (e) {}
 })();
 </script>
 <title>Desk Board</title>
@@ -55,6 +61,33 @@
   --f-ui: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
   color-scheme: light;
 }
+/* ---------- Styles ----------
+   The desk board's four, translated to a physical object: the case, the key caps and the LCD tint
+   change; the screen stays light so everything printed on it keeps its contrast. */
+:root[data-style="ink"] {
+  --case: #d7d9d6; --case-edge: #bdc0bd; --cap-cream: #edeeee; --cap-cream-side: #c6c9c8;
+  --cap-sage: #7c8891; --cap-sage-side: #525c64; --lcd-hi: #eceeed; --lcd: #d3d7d6; --lcd-lo: #b6bcbb; --lcd-rim: #8d9594;
+  --ink: #14181c; --ink-soft: #414951; --ghost: rgba(20, 24, 28, 0.08); --legend: #566069; --alert: #9b3220;
+}
+:root[data-style="signal"] {
+  --case: #14160f; --case-edge: #000; --cap-cream: #efede2; --cap-cream-side: #b9b6a8;
+  --cap-sage: #19a861; --cap-sage-side: #0c6b3d; --lcd-hi: #e6ffd9; --lcd: #c3f5a8; --lcd-lo: #9ade84; --lcd-rim: #4f8f3f;
+  --ink: #06170a; --ink-soft: #1d4a24; --ghost: rgba(6, 23, 10, 0.12); --legend: #d8d5c6; --alert: #a82a10;
+}
+:root[data-style="cockpit"] {
+  --case: #0d1211; --case-edge: #040706; --cap-cream: #20302b; --cap-cream-side: #0b1512;
+  --cap-sage: #1f9d63; --cap-sage-side: #0c5d3a; --lcd-hi: #dff6e9; --lcd: #bfe9d3; --lcd-lo: #99d4b5; --lcd-rim: #3c7a5d;
+  --ink: #062014; --ink-soft: #1d5b3e; --ghost: rgba(6, 32, 20, 0.1); --legend: #8fb8a4; --alert: #b03a1c;
+}
+/* A dark case needs light lettering on it, and its sheets need dark lettering back. */
+:root[data-style="signal"] .sheet-card .note, :root[data-style="signal"] .field .label,
+:root[data-style="cockpit"] .sheet-card .note, :root[data-style="cockpit"] .field .label { color: #5c6a62; }
+:root[data-style="cockpit"] .sheet-card, :root[data-style="cockpit"] .btn.ghost { background: #eef3f0; }
+/* Key caps take their highlight from whatever colour the cap is. */
+:root:not([data-style="paper"]) .cap { background: linear-gradient(180deg, color-mix(in srgb, var(--cap-sage) 58%, #fff) 0%, var(--cap-sage) 100%); }
+:root:not([data-style="paper"]) .cap.cream { background: linear-gradient(180deg, color-mix(in srgb, var(--cap-cream) 55%, #fff) 0%, var(--cap-cream) 100%); }
+:root[data-style="cockpit"] .cap.cream { background: linear-gradient(180deg, #32433d 0%, var(--cap-cream) 100%); color: #e8f3ee; }
+
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
@@ -252,6 +285,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
 .sheet-card { width: 100%; max-width: 560px; background: var(--cap-cream); border-radius: 16px; box-shadow: 0 6px 0 var(--cap-cream-side), 0 16px 40px rgba(30, 40, 30, 0.25); padding: 18px; display: flex; flex-direction: column; gap: 12px; font-family: var(--f-ui); color: var(--ink); }
 .sheet-card h2 { margin: 0; font-size: 1.2rem; font-weight: 700; }
 .sheet-card .note { font: 400 0.9rem/1.4 var(--f-ui); color: var(--legend); }
+.style-pick { display: inline-flex; flex-wrap: wrap; gap: 6px; vertical-align: middle; }
+.style-pick button { font: 600 0.8rem/1 var(--f-ui); border: 1px solid var(--cap-cream-side); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.style-pick button[aria-pressed="true"] { background: var(--cap-sage); border-color: var(--cap-sage-side); color: var(--ink); }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field .label { color: var(--legend); }
 .field input { width: 100%; background: #fff; border: 1px solid var(--case-edge); border-radius: 10px; color: var(--ink); font: 16px var(--f-ui); padding: 10px 12px; }
@@ -476,6 +512,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--cap-sage-si
     <section class="info-sec">
       <h3>Where it comes from</h3>
       <p>Your Columbia calendar, your Gmail calendar, Study Calendar, Classes, Sleep and the Canvas feed. Changes show up within about two minutes. Without Wi-Fi the board keeps the last copy and says "Offline".</p>
+      <p><b>Style:</b> <span class="style-pick" id="style-pick"></span></p>
       <p>Hold the date for one second to open setup. The same address opens the big desktop board on a computer or iPad, where you can star, reorder and plan assignments.</p>
     </section>
   </div>
@@ -1520,6 +1557,24 @@ document.querySelectorAll("[data-seg]").forEach(function (g) { segText(g, g.text
   }
   $("#info-btn").addEventListener("click", openInfo);
   $("#info-close").addEventListener("click", function () { $("#info").hidden = true; });
+  // The style picker: the case, the caps and the LCD tint. Takes effect at once, remembered on this device.
+  (function () {
+    var box = $("#style-pick"); if (!box) return;
+    var list = [["paper", "Paper"], ["ink", "Ink"], ["signal", "Signal"], ["cockpit", "Cockpit"]];
+    var cur = document.documentElement.getAttribute("data-style") || "paper";
+    list.forEach(function (x) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = x[1];
+      b.setAttribute("aria-pressed", cur === x[0] ? "true" : "false");
+      b.addEventListener("click", function () {
+        cur = x[0];
+        document.documentElement.setAttribute("data-style", cur);
+        try { localStorage.setItem("deskboard-style", JSON.stringify(cur)); } catch (e) {}
+        [].forEach.call(box.children, function (n, i) { n.setAttribute("aria-pressed", list[i][0] === cur ? "true" : "false"); });
+      });
+      box.append(b);
+    });
+  })();
   $("#info").addEventListener("click", function (e) { if (e.target === $("#info")) $("#info").hidden = true; });
 
   /* ---------- Keep the screen on ---------- */

@@ -147,7 +147,13 @@ only the surface changes. Each follows the light or dark setting of the machine 
 - **Signal** — bigger type, heavier edges, stronger colour, for reading from across the room.
 - **Cockpit** — borrowed from car instrument panels, which have a day mode as well as a night one: depth instead of outlines, condensed tabular numerals wherever a number appears, one lit accent and a soft field behind the cards. Nothing is simplified away — the list, the editors, merging and the timeline are all there, and all fifteen suites pass with it on.
 
-All three were checked for contrast in light and dark: every piece of text that carries meaning
+The phone board has the same four, picked from the info sheet (hold the date, or add `?style=cockpit`
+to the address): there the case, the key caps and the LCD tint change rather than the page colours.
+
+Scrollbars stay out of the way — up to four panes can scroll at once, so each one's bar only appears
+while the pointer is in that pane, and none appear on a touch screen.
+
+All four were checked for contrast in light and dark: every piece of text that carries meaning
 clears WCAG AA (4.5:1). It's a setting you pick once, not a decision in the middle of work.
 
 ### What was deliberately left out

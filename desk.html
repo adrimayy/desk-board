@@ -179,6 +179,15 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; }
+/* Scrollbars: four panes can scroll at once, so they stay out of sight until you're in that pane. */
+* { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+*:hover::-webkit-scrollbar-thumb, *:focus-within::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--ink-3) 42%, transparent); }
+*::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ink-3) 75%, transparent); }
+*:hover, *:focus-within { scrollbar-color: color-mix(in srgb, var(--ink-3) 42%, transparent) transparent; }
+@media (pointer: coarse) { *::-webkit-scrollbar { width: 0; height: 0; } }
 body { background: var(--page); color: var(--ink); font: 400 15px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; min-height: 100vh; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--sage-deep); outline-offset: 2px; }
@@ -308,7 +317,7 @@ body.night .gofab { display: none; }
 .ico svg { width: 100%; height: 100%; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Sidebar */
-.side { grid-area: side; position: sticky; top: 82px; display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 100px); overflow-y: auto; }
+.side { grid-area: side; position: sticky; top: 82px; display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 100px); overflow-y: auto; overscroll-behavior: contain; }
 .nav-item, .course-item { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; background: transparent; text-align: left; padding: 9px 14px; border-radius: 0 999px 999px 0; margin-left: -24px; padding-left: 38px; width: calc(100% + 24px); color: var(--ink-2); font-weight: 600; font-size: 0.93rem; }
 .nav-item:hover, .course-item:hover { background: var(--page-2); }
 .nav-item[aria-current="true"], .course-item[aria-current="true"] { background: var(--mint); color: var(--ink); }
